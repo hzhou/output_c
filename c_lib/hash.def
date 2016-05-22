@@ -1,0 +1,10 @@
+include: c/hash.def
+
+page: inthash
+    subcode: main
+        $call libhash, int
+
+page: strhash
+    subcode: main
+        $call libhash, str
+
