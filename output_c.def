@@ -81,14 +81,6 @@ page: output_c, output_main
             $page->{"has_stub_$1"}=1
             next
 
-    subcode: case_flag_set
-        $global $case_flag="b_flag_case"
-        global_add_var($case_flag)
-        push @$out, "b_flag_case=1;"
-
-    subcode: case_flag_reset
-        push @$out, "b_flag_case=0;"
-
     subcode: dumpout
         # ----  Main Function -------------------
         my $mainfunc=$functions{"main"};

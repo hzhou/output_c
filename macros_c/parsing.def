@@ -72,7 +72,13 @@ subcode: parsecode_func
     $elif $func =~ /^(while|switch)$/
         my $name=$1;
         $if $name eq "while" and $param=~/^(.*?);\s*(.*?);?\s*$/
-            return single_block_pre_post(["while($1){", "INDENT"], ["$2;", "DEDENT", "}"])
+            &call return_newblock, while
+                push @src, "while($1){"
+                push @src, "INDENT"
+                push @src, "BLOCK"
+                push @src, "$2;"
+                push @src, "DEDENT"
+                push @src, "}"
         $else
             $param=parse_condition($param)
             return single_block("$name($param){", "}")
@@ -106,7 +112,7 @@ subcode: parsecode_func
         $enums{$name}=$param;
         return
     $elsif $func eq "uselib"
-        my @flist=split /,\s+/, $param;
+        my @flist=split /,\s*/, $param;
         $foreach $f in @flist
             $if $f=~/^\w+$/
                 $objects{"lib$f"}=1

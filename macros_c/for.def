@@ -37,7 +37,9 @@ subcode: for_c_style_protect
         return single_block("for($param){", "}", "for")
     $(else)
         my $end="PARSE:\$unprotect_var $var"
-        return single_block_pre_post(["for($param){", "INDENT"], ["DEDENT", "}",$end], "for")
+        &call return_newblock, for
+            $call push_single_block, "for($param){", "}"
+            push @src, $end
 
 #---------------------------------------- 
 subcode: foreach_array
@@ -58,5 +60,7 @@ subcode: foreach_array
         protect_var($i)
         MyDef::compileutil::set_current_macro("t", "$v\[$i\]")
         my $end="PARSE:\$unprotect_var $i"
-        return single_block_pre_post(["for($i=0;$i<$(range);$i++){", "INDENT"], ["DEDENT", "}",$end], "for")
+        &call return_newblock, for
+            $call push_single_block, "for($i=0;$i<$(range);$i++){", "}"
+            push @src, $end
 
