@@ -275,16 +275,32 @@ fncode: parse_var($name, $type, $value)
             $type=$2
 
     subcode: infer_type
-        $type=get_c_type($name)
         $if $fntype{$name}
             $type="function"
-        $if !name_type_authortative($name, $type) and defined $value
+        $else
+            $type=get_c_type($name)
+            $if $type and $type eq "void"
+                undef $type
+        $if defined $value
             my $val_type=infer_c_type($value)
-            $if $debug eq "type"
-                print "    infer_c_type: [$value] -> $val_type\n"
-            $if $val_type and $val_type ne "void"
-                $type = $val_type
-
+            $if $val_type
+                $if !$type
+                    $type= $val_type
+                $elif $type ne $val_type
+                    $call warn_conflict
+        # --
+        subcode: warn_conflict
+            $if $val_type eq "float" and $type=~/double/
+                NOOP
+            $elif $val_type eq "char" and $type=~/unsigned|int/
+                NOOP
+            $elif $val_type eq "int" and $type=~/(double|float|bool)/
+                NOOP
+            $elif $val_type eq "void *" and $type=~/\*$/
+                NOOP
+            $else
+                $call warn, var $name set to type $type, different from value type $val_type
+    # --
     subcode: debug
         $if $debug eq "type"
             $call warn, add_var: type:[$type] - $name ($array) - $init ($value)

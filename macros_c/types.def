@@ -45,6 +45,7 @@ subcode:: package_globals
         s=>"char *",
         f=>"float",
         d=>"double",
+        z=>"double complex",
         "size"=>"size_t",
         "time"=>"time_t",
         "file"=>"FILE *",
@@ -72,6 +73,7 @@ subcode:: package_globals
         uint16_t=>"stdint",
         uint32_t=>"stdint",
         uint64_t=>"stdint",
+        "double complex"=>"complex",
     );
 
     # TODO: limit to function call?
@@ -86,17 +88,17 @@ subcode:: package_globals
         "assert"=>"assert",
     );
 
-fncode: infer_c_type
-    my $val=shift;
+fncode: infer_c_type($val)
+    $val=~s/^[+-]//
     $if $val=~/^\((float|int|char|unsigned .*|.+\*)\)/
         return $1
     $elif $val=~/^\((.*)/
         return infer_c_type($1)
-    $elif $val=~/^[+-]?\d+\./
+    $elif $val=~/^\d+\./
         return "float"
-    $elif $val=~/^[+-]?\d+[eE]/
+    $elif $val=~/^\d+[eE]/
         return "float"
-    $elif $val=~/^[+-]?\d/
+    $elif $val=~/^\d/
         return "int"
     $elif $val=~/^"/
         return "char *";
@@ -109,7 +111,12 @@ fncode: infer_c_type
         return "bool"
     $elif $val=~/(\w+)\(.*\)/
         my $func=$functions{$1}
-        return $func->{ret_type}
+        $if $debug
+            $print infer_c_type: function $1 [$func]
+        $if $func and $func->{ret_type}
+            return $func->{ret_type}
+    $elif $val=~/NULL/
+        return "void *"
     $elif $val=~/(\w+)(.*)/
         my $type=get_var_type($val, 1)
         return $type
@@ -120,6 +127,7 @@ fncode: infer_c_type
             push @plist, infer_c_type($v)
         my $tuple_name=declare_tuple(join(", ", @plist))
         return "struct $tuple_name"
+    return undef
 
 fncode: type_default($type)
     $if $type=~/\*$/
@@ -170,8 +178,8 @@ fncode: get_c_type($name)
             $type = $type_name{$parts[-1]}
             $if $parts[0] =~/^t?(p+)$/
                 $type.='*' x length($1)
-            $elif $parts[0] =~/^t?p*(.+)$/ and $type_prefix{$1}
-                $call warn, type of $name set to $type (ambiguous)
+            $else
+                $call @check_name_prefix_ambiguity
         $else
             my $t1=shift @parts
             my $t2=join('_', @parts)
@@ -188,8 +196,8 @@ fncode: get_c_type($name)
         $type="void";
     $elif $type eq "bool"
         $page->{use_bool}=1
-    #----------------------------------------  
-    $if $type=~/^(\w+)/
+    # --------------------------
+    $if $type=~/^(\w.*?)\s*\**$/
         $if $type_include{$1}
             add_include($type_include{$1})
     # --
@@ -199,6 +207,21 @@ fncode: get_c_type($name)
     $if $debug eq "type"
         print "    get_c_type:   $name: $type\n";
     return $type;
+    #----------------------------------------------- 
+    subcode: check_name_prefix_ambiguity
+        my $weak
+        $if $parts[-1]=~/^[a-z]$/
+            $weak=1
+        $if $parts[0] =~/^t?(p*)(.+)$/ and $type_prefix{$2}
+            my $t1=$type
+            my $t2=$type_prefix{$2}
+            $if $1
+                $t2.='*' x length($1)
+            $if $t1 ne $t2
+                $if $weak
+                    $type = $t2
+                $if !$weak or !$page->{use_prefix}
+                    $call warn, type of $name set to $type (ambiguous)
 
 fncode: pointer_type($t)
     $t=~s/\s*\*\s*$//;
