@@ -16,24 +16,6 @@ subcode: parsecode_func_param
     $if $func eq "dump"
         debug_dump($param2, $param1, $out);
         return
-    $elsif $func eq "register_prefix"
-        $param2=~s/^\s+//;
-        $param2=~s/\s+$//;
-        $type_prefix{$param1}=$param2;
-        return
-    $elsif $func eq "register_name"
-        $param2=~s/^\s+//;
-        $param2=~s/\s+$//;
-        $type_name{$param1}=$param2;
-        return
-    $elsif $func eq "register_include"
-        $param2=~s/^\s+//;
-        $param2=~s/\s+$//;
-        $if $type_include{$param1}
-            $type_include{$param1}.=",$param2";
-        $else
-            $type_include{$param1}.="$param2";
-        return
     $elif $func eq "get_type"
         my $type=get_var_type($param2);
         MyDef::compileutil::set_current_macro($param1, $type)

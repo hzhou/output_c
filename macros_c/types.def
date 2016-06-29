@@ -1,3 +1,23 @@
+subcode:: parsecode_func_param_other
+    $elif $func eq "register_prefix"
+        $param2=~s/^\s+//;
+        $param2=~s/\s+$//;
+        $type_prefix{$param1}=$param2;
+        return
+    $elif $func eq "register_name"
+        $param2=~s/^\s+//;
+        $param2=~s/\s+$//;
+        $type_name{$param1}=$param2;
+        return
+    $elif $func eq "register_include"
+        $param2=~s/^\s+//;
+        $param2=~s/\s+$//;
+        $if $type_include{$param1}
+            $type_include{$param1}.=",$param2";
+        $else
+            $type_include{$param1}.="$param2";
+        return
+#----------------------------------------------- 
 subcode:: package_globals
     $global %basic_types
     %basic_types=(
@@ -162,6 +182,8 @@ fncode: get_c_type_word($name)
     return undef
 
 fncode: get_c_type($name)
+    $if $debug eq "type"
+        $print "    get_c_type: $name"
     my $check;
     my $type="void";
     $if $name=~/.*\.([a-zA-Z].+)/

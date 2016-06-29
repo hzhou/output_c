@@ -146,6 +146,8 @@ fncode: declare_struct($name, $param)
                 $else
                     $type=get_c_type($p);
 
+            $if $type eq "bool"
+                $page->{use_bool}=1
             #---------------------------------------- 
             $if !$s_hash->{$m_name}
                 push @$s_list, $m_name
