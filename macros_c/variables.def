@@ -290,11 +290,13 @@ fncode: parse_var($name, $type, $value)
                     $call warn_conflict
         # --
         subcode: warn_conflict
-            $if $val_type eq "float" and $type=~/double/
+            $if $val_type eq "void"
+                NOOP
+            $elif $val_type eq "float" and $type=~/double/
                 NOOP
             $elif $val_type eq "char" and $type=~/unsigned|int/
                 NOOP
-            $elif $val_type eq "int" and $type=~/(double|float|bool)/
+            $elif $val_type eq "int" and $type=~/(double|float|bool|int)/
                 NOOP
             $elif $val_type eq "void *" and $type=~/\*$/
                 NOOP
