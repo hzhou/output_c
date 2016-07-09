@@ -4,6 +4,8 @@ include: c/regex.def
 # Reference: http://hz2.org/blog/pcre_regex.html
 
 page: test, basic_frame
+    module: c
+
     #-- assume you have this file --
     s_file="t.html"
 

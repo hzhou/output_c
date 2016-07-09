@@ -1,6 +1,8 @@
 #-- MyDef should give us some warning
 
 page: test, basic_frame
+    module: c
+
     # DEBUG type
     $global s="global string"
     print_global()
