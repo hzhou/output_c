@@ -243,7 +243,8 @@ fncode: get_c_type($name)
             $if $t1 ne $t2
                 $if $weak
                     $type = $t2
-                $if !$weak or !$page->{use_prefix}
+                my $use_prefix = MyDef::compileutil::get_macro_word("use_prefix", 1)
+                $if !$weak or !$use_prefix
                     $call warn, type of $name set to $type (ambiguous)
 
 fncode: pointer_type($t)
