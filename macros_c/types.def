@@ -71,6 +71,7 @@ subcode:: package_globals
         "file"=>"FILE *",
         "has"=>"bool",
         "is"=>"bool",
+        "do"=>"bool",
     );
 
     $global %stock_functions

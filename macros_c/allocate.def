@@ -18,6 +18,9 @@ subcode:: parsecode_func_other
 fncode: allocate($dim, $param2, $alloc_type)
     add_include("stdlib, string")
     $call get_dimension
+    $if defined $init_value and $init_value eq '0'
+        $alloc_type = "calloc"
+        undef $init_value
     $call auto_post
     my @plist=split /,\s+/, $param2;
     $foreach $p in @plist
@@ -32,9 +35,8 @@ fncode: allocate($dim, $param2, $alloc_type)
 
             $if $alloc_type eq "realloc"
                 push @$out, "$p=($type*)realloc($p, $tsize);";
-            $elif defined $init_value and $init_value eq '0'
+            $elif $alloc_type eq "calloc"
                 push @$out, "$p=($type*)calloc($dim, $size);";
-                undef $init_value
             $else
                 push @$out, "$p=($type*)malloc($tsize);";
 
