@@ -442,7 +442,7 @@ subcode: process_extern_binary
         print PIPE join("\n", @externS), "\n"
         close PIPE
     $if -f $ofile
-        $objects{"extern.o"}=1
+        add_object("extern.o")
 
 #---------------------------------------- 
 subcode:: parsecode_func_other

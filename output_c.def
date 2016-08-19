@@ -38,6 +38,8 @@ page: output_c, output_main
             $(for:v in use_double,skip_bool,use_int64,use_prefix)
                 $if $macros->{$(v)} and !defined $page->{$(v)}
                     $page->{$(v)}=$macros->{$(v)}
+            $if $page->{pageext} eq "cpp"
+                $page->{skip_bool}=1
 
             $if $page->{"use_double"}
                 $type_name{f}="double";
@@ -118,8 +120,10 @@ page: output_c, output_main
     subcode: process_link_objects
         my @objlist
         my @liblist
-        $foreach $i in keys %objects
-            $if $i=~/^lib(.*)/
+        $foreach $i in @object_list
+            $if $i=~/^lib(.*)\.a/
+                push @liblist, "-Wl,-Bstatic -l$1"
+            $elif $i=~/^lib(.*)/
                 push @liblist, "-l$1"
             $else
                 push @objlist, $i
