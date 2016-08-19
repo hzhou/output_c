@@ -33,10 +33,15 @@ subcode: dump_classes
 # ---- Includes ----
 subcode:: c_init
     $global @include_list
-    $global %includes, %objects
+    $global %includes, %objects, @object_list
     @include_list=()
     %includes=()
     %objects=()
+
+fncode: add_object($l)
+    $if !$objects{$l}
+        $objects{$l}=1
+        push @object_list, $l
 
 fncode: add_include($l)
     my @flist=split /,\s*/, $l
