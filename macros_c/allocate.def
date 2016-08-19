@@ -16,12 +16,13 @@ subcode:: parsecode_func_other
 
 #---------------------------------------- 
 fncode: allocate($dim, $param2, $alloc_type)
+    $call auto_init
+    $call auto_post
     add_include("stdlib, string")
     $call get_dimension
     $if defined $init_value and $init_value eq '0'
         $alloc_type = "calloc"
         undef $init_value
-    $call auto_post
     my @plist=split /,\s+/, $param2;
     $foreach $p in @plist
         $if $p
@@ -44,12 +45,16 @@ fncode: allocate($dim, $param2, $alloc_type)
             $call allocate_init
 
     # ----------------------------------
+    subcode: auto_init
+        my $auto_free
+        $if $alloc_type eq "auto"
+            $auto_free = 1
     subcode: auto_post
         my $post
-        $if $alloc_type eq "auto"
+        $if $auto_free
             $post=MyDef::compileutil::get_named_block("_post")
     subcode: auto_post_p
-        $if $alloc_type eq "auto"
+        $if $auto_free
             push @$post, "free($p);"
 
     subcode: get_dimension

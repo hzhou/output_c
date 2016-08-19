@@ -92,8 +92,6 @@ page: output_c, output_main
             $mainfunc->{skip_declare}=1;
             $mainfunc->{ret_type}="int";
             $mainfunc->{param_list}=["int argc", "char** argv"];
-            unshift @{$mainfunc->{init}}, "DUMP_STUB main_init"
-            push @{$mainfunc->{finish}}, "DUMP_STUB main_exit"
             $if !$mainfunc->{return}
                 $mainfunc->{return}="return 0;"
 
