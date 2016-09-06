@@ -1,7 +1,7 @@
 # to keep it simple, here uses local buffer
 #     define SPLIT_MAX
 #  e.g. $call split, ts_argument, '-'
-subcode: split(s, sep_char)
+subcode: simple_split(s, sep_char)
     $(if:!SPLIT_MAX)
         $(set:SPLIT_MAX=10)
     $(if:s!=s)
