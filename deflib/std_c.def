@@ -142,6 +142,11 @@ subcode: open_w(file)
         BLOCK
         fclose(file_out)
 
+    subcode: write_int(n)
+        fwrite(&$(n), 1, 4, file_out)
+    subcode: write_array(a, n, size)
+        fwrite($(a), $(n), $(size), file_out)
+
 subcode: open_r(file)
     $include stdio
     file_in=fopen($(file), "rb")
@@ -151,6 +156,22 @@ subcode: open_r(file)
         BLOCK
         fclose(file_in)
 
+    subcode: read_int(n)
+        fread(&$(n), 1, 4, file_in)
+    subcode: read_array(a, n, size)
+        fread($(a), $(n), $(size), file_in)
+
+subcode: try_open_r(file)
+    # multi-callback: &call2 try_open_r, file
+    $include stdio
+    file_in=fopen($(file), "rb")
+    $if file_in==NULL
+        BLOCK2
+    $else
+        BLOCK1
+        fclose(file_in)
+
+# ----------------
 subcode: skip_r(n)
     t_n=fseek(file_in, $(n), SEEK_CUR)
 

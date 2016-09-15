@@ -6,12 +6,12 @@ subcode: simple_split(s, sep_char)
         $(set:SPLIT_MAX=10)
     $(if:s!=s)
         s = $(s)
-    $local ts_split[$(SPLIT_MAX)], int split_count
+    $local char* tps_split[$(SPLIT_MAX)], int split_count
     split_count=0
 
     $if *s
         $for i=0:$(SPLIT_MAX)
-            ts_split[i]=s
+            tps_split[i]=s
             split_count++
             s++  # excludes empty splits
             $while *s && *s!=$(sep_char)
