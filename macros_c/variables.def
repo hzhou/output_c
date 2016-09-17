@@ -140,7 +140,9 @@ fncode: my_add_var($name, $type, $value)
         return $name
 
 fncode: auto_add_var($name, $type, $value)
-    my $var=find_var($name)
+    my $var
+    $if $name=~/^(\w+)/
+        $var=find_var($1)
     $if !$var
         $if $debug eq "type"
             $call warn, auto_add_var: $name - $type - $value
@@ -168,7 +170,7 @@ fncode: temp_add_var($name, $type, $value)
     $if !$hash->{$name}
         $var->{name}=$name
         $var->{temptype}=$type
-        $hash->{$name}=$var
+$hash->{$name}=$var
         my $var_list=$cur_scope->{var_list}
         push @$var_list, $name
 
