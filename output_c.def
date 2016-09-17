@@ -12,7 +12,7 @@ include: macros_c/list_functions.def
 include: macros_output/case.def
 
 subcode:: package_globals
-    $global %misc_vars;
+    $global %misc_vars
     our $except;
 
 page: output_c, output_main
