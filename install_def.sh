@@ -1,0 +1,1 @@
+mydef_install deflib .
