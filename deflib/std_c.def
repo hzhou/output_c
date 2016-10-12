@@ -89,6 +89,9 @@ subcode: update_min(min, a)
     $if $(min)>$(a)
         $(min)=$(a)
 
+subcode: get_2d_l(i, j, ldi)
+    $(export:l=$(i)*$(ldi)+$(j))
+
 subcode: free(v)
     free($(v))
 
