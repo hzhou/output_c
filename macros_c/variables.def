@@ -140,7 +140,9 @@ fncode: my_add_var($name, $type, $value)
         return $name
 
 fncode: auto_add_var($name, $type, $value)
-    my $var=find_var($name)
+    my $var
+    $if $name=~/^(\w+)/
+        $var=find_var($1)
     $if !$var
         $if $debug eq "type"
             $call warn, auto_add_var: $name - $type - $value
@@ -442,7 +444,7 @@ subcode: process_extern_binary
         print PIPE join("\n", @externS), "\n"
         close PIPE
     $if -f $ofile
-        $objects{"extern.o"}=1
+        add_object("extern.o")
 
 #---------------------------------------- 
 subcode:: parsecode_func_other

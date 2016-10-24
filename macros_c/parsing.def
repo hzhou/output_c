@@ -97,11 +97,11 @@ subcode: parsecode_func
         my @flist=split /,\s*/, $param;
         $foreach $f in @flist
             $if $f=~/^\w+$/
-                $objects{"lib$f"}=1
+                add_object("lib$f")
                 $if $lib_include{$f}
                     add_include($lib_include{$f})
             $else
-                $objects{$f}=1
+                add_object($f)
         return
     $elsif $func eq "fntype"
         # Similar to type_name, but for funtion pointer types

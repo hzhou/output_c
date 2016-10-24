@@ -335,7 +335,7 @@ subcode: check_exp_fcall(primary, token)
     # print "fcall: $(primary)  $(token)\n"
     $if $(primary)=~/^(sin|cos|tan|asin|acos|atan|atan2|exp|log|log10|pow|sqrt|ceil|floor|fabs)$/
         add_include("math")
-        $objects{"libm"}=1
+        add_object("libm")
     $elif $(primary)=~/^(mem|str)[a-z]+$/
         add_include("string")
     $elif $(primary)=~/^(malloc|free)$/

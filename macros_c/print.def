@@ -52,6 +52,7 @@ fncode: fmt_string($str, $add_newline)
 
     my @fmt_list
     my @arg_list
+    my $missing = 0
 
     my @group
     my $flag_hyphen=0
@@ -61,6 +62,8 @@ fncode: fmt_string($str, $add_newline)
                 push @fmt_list, '%%'
             &call if_lex, [-+ #]*[0-9]*(\.\d+)?[diufFeEgGxXoscpaAn]
                 #---------------------------------------- 
+                $if !@pre_list
+                    $missing++
                 push @arg_list, shift @pre_list
                 push @fmt_list, "%$&"
             $else
@@ -118,7 +121,10 @@ fncode: fmt_string($str, $add_newline)
             push @fmt_list, $&
 
     $if @pre_list
-        warn "Extra fmt arg list: ", join(", ", @pre_list), "\n"
+        my $s = join(', ', @pre_list)
+        $call warn, Extra fmt arg list: $s
+    $elif $missing>0
+        $call warn, Missing $missing fmt arguments
 
     $if $add_newline
         my $tail=$fmt_list[-1]

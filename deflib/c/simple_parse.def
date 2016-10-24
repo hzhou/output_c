@@ -1,0 +1,47 @@
+# to keep it simple, here uses local buffer
+#     define SPLIT_MAX
+#  e.g. $call split, ts_argument, '-'
+subcode: simple_split(s, sep_char)
+    $(if:!SPLIT_MAX)
+        $(set:SPLIT_MAX=10)
+    $(if:s!=s)
+        s = $(s)
+    $local char* tps_split[$(SPLIT_MAX)], int split_count
+    split_count=0
+
+    $if *s
+        $for i=0:$(SPLIT_MAX)
+            tps_split[i]=s
+            split_count++
+            s++  # excludes empty splits
+            $while *s && *s!=$(sep_char)
+                s++
+
+            $if *s
+                *s = '\0' # mods the original
+                s++       # skip the sep_char
+            $else
+                break
+
+#----------------------------------- 
+subcode: parse_command_line
+    $for i=1:argc
+        $(set:a=argv[i])
+        # name=xxx --> global variables
+        BLOCK
+
+    subcode: get_arg_s(name)
+        $elif $(a) $eq "$(name)="
+            $global s_$(name)
+            s_$(name) = $(a)+$(name:len)+1
+
+    subcode: get_arg_f(name, default)
+        $elif $(a) $eq "$(name)="
+            $global f_$(name)=$(default)
+            f_$(name) = atof($(a)+$(name:len)+1)
+
+
+    subcode: get_arg_i(name, default)
+        $elif $(a) $eq "$(name)="
+            $global n_$(name)=$(default)
+            n_$(name) = atoi($(a)+$(name:len)+1)

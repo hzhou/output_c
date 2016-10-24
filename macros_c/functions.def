@@ -1,4 +1,6 @@
 include: macros_output/scope.def
+macros:
+    scope_return_pattern: ^(return|break)
 
 subcode:: c_init
     $global @scope_stack, $cur_scope
@@ -69,6 +71,9 @@ fncode: open_function($fname, $param)
         my $name=$func->{name};
         push @function_declare_list, $name;
         $functions{$name}=$func;
+        $if $name eq "main"
+            MyDef::compileutil::set_named_block("main_init", $func->{init})
+            MyDef::compileutil::set_named_block("main_exit", $func->{finish})
     # --
     return $func
 
@@ -178,47 +183,58 @@ fncode: func_return($t)
         return join("; ", @rlist)
 
 # -----------------------------------------------------------------
-subcode:: support_subs
-    $sub process_function_std($func)
-        my $name=$func->{name};
+fncode: process_function_std($func)
+    my $name=$func->{name};
 
-        my $open=$func->{openblock}
-        my $close=$func->{closeblock}
-        my $pre=$func->{preblock}
-        my $post=$func->{postblock}
+    my $open=$func->{openblock}
+    my $close=$func->{closeblock}
+    my $pre=$func->{preblock}
+    my $post=$func->{postblock}
 
-        my $ret_type=$func->{ret_type};
-        $if !$ret_type
-            $ret_type="void"
-            $func->{ret_type}=$ret_type
-        $if $func->{ret_type} eq "void" and $func->{ret_var}
-            $call warn, Failed to infer function $name return type from [$func->{ret_var}]
+    my $ret_type=$func->{ret_type};
+    $if !$ret_type
+        $ret_type="void"
+        $func->{ret_type}=$ret_type
+    $if $func->{ret_type} eq "void" and $func->{ret_var}
+        $call warn, Failed to infer function $name return type from [$func->{ret_var}]
 
-        # ---- open block ------------------
-        my $declare=$func->{declare}
-        $if !$declare
-            my $param_list=$func->{"param_list"};
-            my $param=join(', ', @$param_list);
-            $declare="$ret_type $name($param)"
-            $func->{declare}=$declare
-        push @$open, $declare."{"
+    # ---- open block ------------------
+    my $declare=$func->{declare}
+    $if !$declare
+        my $param_list=$func->{"param_list"};
+        my $param=join(', ', @$param_list);
+        $declare="$ret_type $name($param)"
+        $func->{declare}=$declare
+    push @$open, $declare."{"
 
-        # ---- close block ----------------------
-        push @$close, "}";
-        push @$close, "NEWLINE";
+    # ---- close block ----------------------
+    push @$close, "}";
+    push @$close, "NEWLINE";
 
-        #---------------------------------------- 
-        close_scope($func, $pre, $post)
+    #---- scope general -------------------- 
+    close_scope($func, $pre, $post)
 
-        # ---- pre block -----------------------
-        $if @{$func->{var_list}}
-            push @$pre, "NEWLINE";
+    #---- function specific ---------------- 
+    # ---- pre block -----------------------
+    $if @{$func->{var_list}}
+        push @$pre, "NEWLINE";
 
-        $foreach $t in @{$func->{init}}
-            push @$pre, $t
+    $foreach $t in @{$func->{init}}
+        push @$pre, $t
 
-        # ---- post block ----------------------- 
+    # ---- post block ----------------------- 
+    $if $post->[-1]=~/^return/
+        # return need to be placed last, hack it
+        my $t = pop @$post
+        $call add_finish
+        push @$post, $t
+    $else
+        $call add_finish
+
+    subcode: add_finish
         $foreach $t in @{$func->{finish}}
             push @$post, $t
+
+
 
 

@@ -141,6 +141,23 @@ subcode: open_w(file)
     $else
         BLOCK
         fclose(file_out)
+    # --
+    subcode: write_int(n)
+        t_n = fwrite(&$(n), 4, 1, file_out)
+    subcode: write_array(a, n, size)
+        t_n = fwrite($(a), $(size), $(n), file_out)
+    # --
+    subcode: write_sig(name)
+        t_n=fwrite("$(name)", 1, $(name:len), file_out)
+    subcode: write_sig_n(quoted_sig, n)
+        t_n=fwrite($(quoted_sig), 1, $(n), file_out)
+    subcode: write_var(name)
+        t_n=fwrite(&$(name), sizeof($(name)), 1, file_out)
+    subcode: write_int_n(i, n)
+        tn_value=$(i)
+        t_n=fwrite(&tn_value, $(n), 1, file_out)
+    subcode: write_data(name, size)
+        t_n=fwrite($(name), 1, $(size), file_out)
 
 subcode: open_r(file)
     $include stdio
@@ -150,33 +167,36 @@ subcode: open_r(file)
     $else
         BLOCK
         fclose(file_in)
+    # --
+    subcode: read_int(n)
+        t_n = fread(&$(n), 4, 1, file_in)
+    subcode: read_array(a, n, size)
+        t_n = fread($(a), $(size), $(n), file_in)
+    # --
+    subcode: get_size(n)
+        fseek(file_in, 0L, SEEK_END)
+        $(n) = ftell(file_in)
+        fseek(file_in, 0L, SEEK_SET)
+    subcode: skip_r(n)
+        t_n=fseek(file_in, $(n), SEEK_CUR)
+    # --
+    subcode: read_sig(name, len)
+        t_n=fread($(name), 1, $(len), file_in)
+        $(name)[$(len)]=0
+    subcode: read_var(name)
+        t_n=fread(&$(name), sizeof($(name)), 1, file_in)
+    subcode: read_data(name, size)
+        t_n=fread($(name), 1, $(size), file_in)
 
-subcode: skip_r(n)
-    t_n=fseek(file_in, $(n), SEEK_CUR)
-
-subcode: write_sig(name)
-    t_n=fwrite("$(name)", 1, $(name:len), file_out)
-subcode: write_sig_n(quoted_sig, n)
-    t_n=fwrite($(quoted_sig), 1, $(n), file_out)
-
-subcode: read_sig(name, len)
-    t_n=fread($(name), 1, $(len), file_in)
-    $(name)[$(len)]=0
-
-subcode: write_var(name)
-    t_n=fwrite(&$(name), sizeof($(name)), 1, file_out)
-subcode: write_int_n(i, n)
-    tn_value=$(i)
-    t_n=fwrite(&tn_value, $(n), 1, file_out)
-
-subcode: read_var(name)
-    t_n=fread(&$(name), sizeof($(name)), 1, file_in)
-
-subcode: write_data(name, size)
-    t_n=fwrite($(name), 1, $(size), file_out)
-
-subcode: read_data(name, size)
-    t_n=fread($(name), 1, $(size), file_in)
+subcode: try_open_r(file)
+    # multi-callback: &call2 try_open_r, file
+    $include stdio
+    file_in=fopen($(file), "rb")
+    $if file_in==NULL
+        BLOCK2
+    $else
+        BLOCK1
+        fclose(file_in)
 
 # ---- time -------------------------------------------
 subcode: tick_loop

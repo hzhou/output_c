@@ -14,15 +14,14 @@ fncode: do_assignment($left, $right)
     $call @check_tuple_assignment
 
     my $type;
-    $if $left=~/^(\w.*)\s+(\S+)$/
+    $if $left=~/^(\w.*)\s+(\w+)$/
         $type=$1;
         $left=$2;
 
-    $if $left=~/^(\w+)(.*)/
+    $if $left=~/^(\w+)/
         $if $protected_var{$1}
             $call warn, Variable $1 protected (unmutable)
-        $if !$2
-            auto_add_var($left, $type, $right)
+        auto_add_var($left, $type, $right)
     $else
         # ToDo, complex left value
 
