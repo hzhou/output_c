@@ -122,6 +122,7 @@ subcode: parsecode_post
         $elif $function_autolist{$funcname} eq "declare"
             push @function_declare_list, $funcname
         $else
+            MyDef::compileutil::set_current_macro("funcname", $funcname)
             $call list_function, $(f)
 
 # ---- Direct $function ------------------
