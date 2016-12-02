@@ -48,9 +48,9 @@ subcode: get_str_pool(var, i)
 subcode: each_str_pool(var)
     $temp unsigned char * s, int l, c
     $(set:strlen=$(l))
-    $for i=0:$(var)->i_str
-        $(s)=$(var)->pc_pool+$(var)->pn_str[i]
-        $(strlen) = $(var)->pn_str[i+1]-$(var)->pn_str[i]
+    $for 0:$(var)->i_str
+        $(s)=$(var)->pc_pool+$(var)->pn_str[$(i)]
+        $(strlen) = $(var)->pn_str[$(i)+1]-$(var)->pn_str[$(i)]
         $(c) = $(s)[$(strlen)]
         $(s)[$(strlen)] = '\0'
         BLOCK
