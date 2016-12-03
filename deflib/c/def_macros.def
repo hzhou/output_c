@@ -83,35 +83,44 @@ fncode: def_parse(s_text)
         s_text = ts_next
 
     subcode: get_block
-        ts_block = ts_next
-        ts_next = def_indented_block(ts_next, tn_indent)
-
+        tn_indent_2 = get_indent(ts_next)
+        $if tn_indent_2 <= tn_indent
+            ts_block = NULL
+        $else
+            ts_block = ts_next
+            ts_next = def_indented_block(ts_next, tn_indent_2)
 
 fncode: def_indented_block(s_text, tn_indent)
+    $(set:do_not_terminate_line=1)
     &call iter_text_lines, s_text
-        $if get_indent(s_text) <= tn_indent
-            ts_next = s_text
+        $if get_indent(s_text) < tn_indent
+            # return next line after the indented block
+            $if s_text
+                s_text[-1]='\0'
+            return s_text
             
-
-
 subcode: iter_text_lines(text)
     ts_next = $(text)
+    i_line = 0
     $while ts_next
-        s = ts_next
-        $while *s; s++
-            $if *s == '\n'
-                break
-        # ----
+        $call get_line_end
         $if *s
+            $(if:!do_not_terminate_line)
+                *s = '\0'
             ts_next = s+1
         $else
             ts_next = NULL
-        *s = '\0'
         # ----
         BLOCK
 
         $(text) = ts_next
+        i_line++
 
+    subcode: get_line_end
+        s = ts_next
+        $while *s; s++
+            $if *s == '\n'
+                break
 
 fncode: get_indent(s)
     i = 0
