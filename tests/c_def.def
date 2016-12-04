@@ -1,0 +1,12 @@
+include: c/def_macro.def
+
+page: test, basic_frame
+    module: c
+
+    &call open_r, simple_macro.txt
+        $call get_size, n
+        $allocate(n) s_text
+        $call read_data, s_text, n
+
+    def_parse(s_text)
+
