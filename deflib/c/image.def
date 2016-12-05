@@ -1,6 +1,7 @@
 subcode: _autoload
     $class image
 
+#---- an alternative interface ----
 subcode: image_declare(type)
     $(if:type=gray)
         $struct(image_gray) int w, int h, unsigned char * image
@@ -31,7 +32,13 @@ subcode: image_init(var, scope, @type)
 subcode: image_set_size(var, w, h)
     $(var)_w=$(w)
     $(var)_h=$(h)
-    $allocate($(w)*$(h)) $(var)
+    $get_var_attr $(var), image_type(type1)
+    $(if:type1=rgb)
+        $allocate($(w)*$(h)*3) $(var)
+    $(elif:type1=rgb)
+        $allocate($(w)*$(h)*4) $(var)
+    $(else)
+        $allocate($(w)*$(h)) $(var)
 
 subcode: image_clear(var)
     free($(var))
@@ -96,8 +103,6 @@ subcode: image_interp(var, x, y)
     k2=tn_y*$(var)_w+tn_x
     tf_val = $(a1)*$(b1)*$(p0) + $(a)*$(b1)*$(p1) + $(a1)*$(b)*$(p2) + $(a)*$(b)*$(p3)
 
-
-
 #---- conversion ------------------------------------ 
 subcode: image_convert(var, var2)
     $call image_set_size, $(var2), $(var)_w, $(var)_h
@@ -107,14 +112,24 @@ subcode: image_convert(var, var2)
         $(if:type1!=rgb and type1!=rgba)
             $for i=0:$(var)_w*$(var)_h
                 $(var2)[i]=($(type2))$(var)[i]
+        $(elif:type1=rgb)
+            $for i=0:$(var)_w*$(var)_h
+                $(set:r=$(var)[i*3])
+                $(set:g=$(var)[i*3+1])
+                $(set:b=$(var)[i*3+2])
+                $(var2)[i]=0.212671*$(r)+0.715160*$(g)+0.072169*$(b)
     $(elif:type1=float and type2=gray)
         $for i=0:$(var)_w*$(var)_h
-            $if $(var)[i]<0
-                $(var2)[i]=0
-            $elif $(var)[i]>255
-                $(var2)[i]=255
+            $(if:convert_scale)
+                tf_pixel = $(var)[i]*$(convert_scale)
+            $(else)
+                tf_pixel = $(var)[i]
+            $if tf_pixel<0
+                tf_pixel=0
+            $elif tf_pixel>255
+                tf_pixel=255
             $else
-                $(var2)[i]=(unsigned char)$(var)[i]
+                $(var2)[i]=(unsigned char)tf_pixel
 
 #---- fft ------------------------------------ 
 subcode: image_fft(var, var2)

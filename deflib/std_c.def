@@ -142,8 +142,9 @@ subcode: open_w(file)
         BLOCK
         fclose(file_out)
     # --
-    subcode: write_int(n)
-        t_n = fwrite(&$(n), 4, 1, file_out)
+    subcode: write_var_n(name, n)
+        t_n=fwrite(&$(name), $(n), 1, file_out)
+    # --
     subcode: write_array(a, n, size)
         t_n = fwrite($(a), $(size), $(n), file_out)
     # --
@@ -151,13 +152,6 @@ subcode: open_w(file)
         t_n=fwrite("$(name)", 1, $(name:len), file_out)
     subcode: write_sig_n(quoted_sig, n)
         t_n=fwrite($(quoted_sig), 1, $(n), file_out)
-    subcode: write_var(name)
-        t_n=fwrite(&$(name), sizeof($(name)), 1, file_out)
-    subcode: write_int_n(i, n)
-        tn_value=$(i)
-        t_n=fwrite(&tn_value, $(n), 1, file_out)
-    subcode: write_data(name, size)
-        t_n=fwrite($(name), 1, $(size), file_out)
 
 subcode: open_r(file)
     $include stdio
@@ -184,7 +178,8 @@ subcode: open_r(file)
         t_n=fread($(name), 1, $(len), file_in)
         $(name)[$(len)]=0
     subcode: read_var(name)
-        t_n=fread(&$(name), sizeof($(name)), 1, file_in)
+        # 4-byte variable
+        t_n=fread(&$(name), 4, 1, file_in)
     subcode: read_data(name, size)
         t_n=fread($(name), 1, $(size), file_in)
 
