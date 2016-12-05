@@ -89,6 +89,9 @@ subcode: update_min(min, a)
     $if $(min)>$(a)
         $(min)=$(a)
 
+subcode: get_2d_l(i, j, ldi)
+    $(export:l=$(i)*$(ldi)+$(j))
+
 subcode: free(v)
     free($(v))
 
@@ -200,17 +203,17 @@ subcode: tick_loop
     $while 1
         BLOCK
 
-subcode: on_tick(sec)
-    $if time(NULL)-time_tick_set>=$(sec)
-        BLOCK
+    subcode: on_tick(sec)
+        $if time(NULL)-time_tick_set>=$(sec)
+            BLOCK
 
-subcode: every_tick(sec)
-    $if time(NULL)-time_tick_set>=$(sec)
-        $call tick_reset
-        BLOCK
+    subcode: every_tick(sec)
+        $if time(NULL)-time_tick_set>=$(sec)
+            $call tick_reset
+            BLOCK
 
-subcode: tick_reset
-    time_tick_set=time(NULL)
+    subcode: tick_reset
+        time_tick_set=time(NULL)
 
 subcode: print_time(type)
     $include time
@@ -221,15 +224,27 @@ subcode: print_time(type)
         printf("%d/%d %02d:%02d ", p_now->tm_mon+1, p_now->tm_mday, p_now->tm_hour, p_now->tm_min)
     $(else)
         printf("%d/%d %02d:%02d ", p_now->tm_mon+1, p_now->tm_mday, p_now->tm_hour, p_now->tm_min)
-
-subcode: bench(n)
+# --
+subcode: start_clock
     $include time
-    $local double time_start, double time_finish
-    time_start = (double)clock()/CLOCKS_PER_SEC
-    $for i_bench_iter=0:$(n)
-        BLOCK
-    time_finish = (double)clock()/CLOCKS_PER_SEC
-    $print "Bench %d iterations, average %f sec/iter.", $(n), (time_finish-time_start)/$(n)
+    $global clock_t clock_start
+    clock_start = clock()
+
+subcode: report_clock(msg)
+    tf_clock = (double)clock()/CLOCKS_PER_SEC
+    $print "$(msg): %f seconds", (double)(clock()-clock_start)/CLOCKS_PER_SEC
+# --
+subcode: add_clock(name)
+    $global clock_t clock_$(name)=0.0
+    $my clock_t clock_temp
+    clock_temp = clock()
+    BLOCK
+    clock_$(name) += clock() - clock_temp
+    # $dump clock_$(name)
+
+subcode: report_clocks(@namelist)
+    $(for:i in $(namelist))
+        $print "    clock_$(i): %f sec", (double)clock_$(i)/CLOCKS_PER_SEC
 
 # ---- sort -------------------------------------
 subcode: qsort(list, size, type)

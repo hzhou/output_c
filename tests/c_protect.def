@@ -1,0 +1,21 @@
+page: test, basic_frame
+    module: c
+
+    i=10
+    $protect_var i
+    $call test_protection, 1
+    $unprotect_var i
+    $call test_protection, 2
+
+    $for i=0:10
+        $print  - $i
+        $call test_protection, 2
+
+
+
+subcode: test_protection(type)
+    $(if:type=1)
+        $for i=1:10
+            $print $i
+    $(elif:type=2)
+        i=100
