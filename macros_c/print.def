@@ -5,31 +5,36 @@ subcode:: parsecode_func_other
         MyDef::compileutil::set_current_macro("fmt", $fmt)
         return
     $elif $func eq "print"
-        $global $print_type=1, $print_newline=1
+        $global $print_type=1
         $if !$param
             push @$out, "puts(\"\");"
         $else
             $param=~s/^\s+//
             $if $param=~/^usesub:\s*(\w+)/
                 $print_type=$1
-            $elif $param=~/^newline:\s*(\w+)/
-                $if $1 eq '0'
-                    $print_newline=0
-                $else
-                    $print_newline=1
             $else
                 #--- fmt_string, add newline
-                my ($n, $fmt)=fmt_string($param, $print_newline)
+                my ($n, $fmt)=fmt_string($param, 1)
                 $if $print_type==1
-                    $if $n==0 and $fmt=~/^"(.*)\\n"/
-                        push @$out, "puts(\"$1\");"
-                    $elif $fmt=~/^"%s\\n", (.*)/
-                        push @$out, "puts($1);"
+                    my $print_to = MyDef::compileutil::get_macro_word("print_to", 1)
+                    $if $print_to
+                        $call print_to
                     $else
-                        push @$out, "printf($fmt);"
+                        $call print_1
                 $elif $print_type
                     MyDef::compileutil::call_sub("$print_type, $fmt")
         return
+
+    subcode: print_1
+        $if $n==0 and $fmt=~/^"(.*)\\n"/
+            push @$out, "puts(\"$1\");"
+        $elif $fmt=~/^"%s\\n", (.*)/
+            push @$out, "puts($1);"
+        $else
+            push @$out, "printf($fmt);"
+
+    subcode: print_to
+        push @$out, "fprintf($print_to, $fmt);"
 
 #---------------------------------------- 
 fncode: fmt_string($str, $add_newline)
