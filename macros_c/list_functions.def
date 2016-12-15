@@ -54,6 +54,7 @@ subcode: autolist_functions
                 $return_type = $1
             $else
                 last
+        # $print function_autolist: $name
         $function_autolist{$name}="static"
         $if $return_type
             $functions{$name}={ret_type=>$return_type}
@@ -95,7 +96,7 @@ subcode:: parsecode_func_other
             $call add_list_function, $1
             $l="$1()"
 
-# ------------------------------------
+#------------------------------------
 subcode: add_list_function(f)
     $if !$list_function_hash{$(f)}
         $list_function_hash{$(f)}=1
@@ -107,8 +108,11 @@ subcode: add_list_function(f)
 subcode: parsecode_post
     #---- NOOP POST_MAIN: called at end of parse or 
     #-      end of each parse group as in output_xs.def
-    
+
+    #- NOTE: it won't work for functions added in exit calls, which are processed at the begining of dumpout at process_function
+
     $while my $f=shift @list_function_list
+        # $print parse_function_list_item $f ...
         $call parse_function_list_item, $f
 
     # ------------------------------------
@@ -137,7 +141,7 @@ subcode: parse_function
 
         my $funcname=MyDef::utils::uniq_name($fname, \%list_function_hash)
         my ($func, $block)=function_block($funcname, $paramline)
-        $call @function_push
+        func_push($func)
         push @$block, "PARSE:\$function_pop"
 
         $lambda_functions{$funcname}=$block
@@ -149,24 +153,34 @@ subcode: parse_function
         return "SKIPBLOCK"
 
 #---------------------------------------- 
-subcode: function_push
+#---- interface to macros_output/functions.def ----
+#--     list_function
+subcode: function_push(func)
+    func_push($(func))
+
+subcode: function_pop
+    func_pop()
+
+#----
+fncode: func_push($func)
     push @function_stack, $cur_function
-    $cur_function=$func
+    $cur_function = $func
 
     push @scope_stack, $cur_scope
     $cur_scope=$cur_function
 
-subcode:: parsecode_func_other
-    $elsif $func eq "function_pop"
-        $call function_pop
-        return
-
-subcode: function_pop
+fncode: func_pop
     $cur_function=pop @function_stack
     $cur_scope=pop @scope_stack
     my $level=@function_stack
     $if $level==0
+        my $l = "\$function_pop" # for debug_case_unwrap
         $call case_reset
+
+subcode:: parsecode_func_other
+    $elsif $func eq "function_pop"
+        func_pop()
+        return
 
 #---------------------------------------- 
 fncode: inject_function($name, $params, $source)

@@ -53,6 +53,7 @@ subcode:: parsecode_func_other
             temp_add_var($v)
         return
     $elif $func eq "set_var_attr"
+        # $set_var_attr var, class=darray, ...
         my @plist=split /,\s*/, $param
         my $name=shift @plist
         my $var=find_var($name)
@@ -65,6 +66,7 @@ subcode:: parsecode_func_other
                         $var->{$1}=$2
         return
     $elif $func eq "get_var_attr"
+        # $get_var_attr var, dimension(N), mask, ...
         my @plist=split /,\s*/, $param
         my $name=shift @plist
         my $var=find_var($name)

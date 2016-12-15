@@ -6,7 +6,13 @@ include: c/string.def
 page: test, basic_frame
     module: c
 
-    $my hash H
+    # $call test_str_hash_int
+    # $call test_str_hash_str
+    $call test_int_hash_int
+
+#---------------------------------------- 
+subcode: test_str_hash_int
+    $my hash H: int
     
     $local string s
     $for i=0:10
@@ -31,8 +37,26 @@ page: test, basic_frame
     $if H{a8}
         $print "Got a8"
 
-#---- other tests ------------------------------------ 
-subcode: test_hash_int
+#---------------------------------------- 
+subcode: test_str_hash_str
+    $my hash H
+    
+    $local string s
+    $local s_buf[100]
+    $for i=0:10
+        s.$clear
+        s.$add "a", i
+        sprintf(s_buf, "str-%d", i)
+        H{s}=strdup(s_buf)
+        
+    #-- actually an ordered hash ----
+    &call str_hash_foreach, H
+        $print "%s => %s", $(key), $(value)
+
+    $print "  a7: %s", H{a7}
+    
+#---------------------------------------- 
+subcode: test_int_hash_int
     $my int_hash H: int
     H.$resize 80000
     

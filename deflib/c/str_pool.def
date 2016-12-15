@@ -1,60 +1,78 @@
 #---- String Pool, similar to Knuth's TeX implementation
 #---- currently being used by c/hash.def
 
-macros:
-    strpool: i_str, i_pool, n_str, n_pool, pn_str, pc_pool
+subcode:: _autoload
+    $struct(strpool) i_str, i_pool, n_str, n_pool, pn_str, pc_pool
+    $register_name(p_strpool) struct strpool *
 
-#-- * add $(strpool) to a structure
+    $list f_resize_strpool_n, f_addto_strpool, f_free_strpool
+
 #-- * always check & $call resize_str_pool_n
 #---------------------------------------- 
-subcode: resize_str_pool_n(var, size)
+fncode: f_resize_strpool_n(p_strpool, n_size)
+    $(set:this=p_strpool->)
+
     tn_avg_str_size=6
-    $if $(var)->i_str>0
-        tn_avg_str_size = $(var)->i_pool/$(var)->i_str + 1
+    $if $.i_str>0
+        tn_avg_str_size = $.i_pool/$.i_str + 1
 
-    $(var)->n_str = $(size)
-    $(var)->n_pool = tn_avg_str_size * $(var)->n_str
-    $(var)->pn_str = realloc($(var)->pn_str, $(var)->n_str * sizeof(int))
-    $(var)->pc_pool = realloc($(var)->pc_pool, $(var)->n_pool)
+    $.n_str = n_size
+    $.n_pool = tn_avg_str_size * $.n_str
+    $.pn_str = realloc($.pn_str, $.n_str * sizeof(int))
+    $.pc_pool = realloc($.pc_pool, $.n_pool)
 
-    $(var)->pc_pool[$(var)->n_pool-1]=0
+    $.pc_pool[$.n_pool-1]=0
 
-    $if $(var)->i_str==0
-        $(var)->pn_str[0]=0
+    $if $.i_str==0
+        $.pn_str[0]=0
 
 #---------------------------------------- 
-subcode: addto_str_pool(var, str, len)
-    # assert $(var)->i_str + 2 <$(var)->n_str
-    $if $(var)->i_pool+$(len) >= $(var)->n_pool
-        $call resize_str_pool_c, $(var), $(len)
-    memcpy($(var)->pc_pool+$(var)->i_pool, $(str), $(len))
-    $(var)->i_str++
-    $(var)->i_pool+=$(len)
-    $(var)->pn_str[$(var)->i_str]=$(var)->i_pool
+fncode: f_addto_strpool(p_strpool, s, n)
+    $(set:this=p_strpool->)
+
+    # assert $.i_str + 2 <$.n_str
+    $if $.i_pool+n >= $.n_pool
+        $call resize_str_pool_c, n
+    memcpy($.pc_pool+$.i_pool, s, n)
+    $.i_str++
+    $.i_pool+=n
+    # lets zero-terminate it for convenience
+    $.pc_pool[$.i_pool]='\0'
+    $.i_pool+=1
+    $.pn_str[$.i_str]=$.i_pool
+
+    return $.i_str-1
     
-subcode: resize_str_pool_c(var, len)
-    tn_avg_str_size = $(var)->i_pool/$(var)->i_str + 1
-    $if tn_avg_str_size < $(len)
-        tn_avg_str_size = $(len)
-    $(var)->n_pool = tn_avg_str_size * $(var)->n_str
-    $(var)->pc_pool = realloc($(var)->pc_pool, $(var)->n_pool)
+    subcode: resize_str_pool_c(len)
+        tn_avg_str_size = $.i_pool/$.i_str + 1
+        $.n_pool = tn_avg_str_size*$.n_str + $(len)
+        $.pc_pool = realloc($.pc_pool, $.n_pool)
+
+#---------------------------------------- 
+fncode: f_free_strpool(p_strpool)
+    $(set:this=p_strpool->)
+
+    free($.pn_str)
+    free($.pc_pool)
+    memset(p_strpool, 0, sizeof(struct strpool))
 
 #---------------------------------------- 
 subcode: get_str_pool(var, i)
-    $(export:s=($(var)->pc_pool+$(var)->pn_str[$(i)]))
-    $(export:strlen=($(var)->pn_str[$(i)+1]-$(var)->pn_str[$(i)]))
+    $(if:var!=p_strpool)
+        p_strpool=$(var)
+    $(set:this=p_strpool->)
+
+    $(export:s=($.pc_pool+$.pn_str[$(i)]))
+    $(export:strlen=($.pn_str[$(i)+1]-$.pn_str[$(i)]-1))
 
 #---------------------------------------- 
-subcode: each_str_pool(var)
-    $temp unsigned char * s, int l, c
-    $(set:strlen=$(l))
-    $for 0:$(var)->i_str
-        $(s)=$(var)->pc_pool+$(var)->pn_str[$(i)]
-        $(strlen) = $(var)->pn_str[$(i)+1]-$(var)->pn_str[$(i)]
-        $(c) = $(s)[$(strlen)]
-        $(s)[$(strlen)] = '\0'
+subcode: each_str_pool(pool)
+    $(if:pool!=p_strpool)
+        p_strpool=$(pool)
+    $(set:this=p_strpool->)
+
+    $for 0:$.i_str
+        $temp unsigned char * s
+        $(s)=$.pc_pool+$.pn_str[$(i)]
+        $(set:strlen=$.pn_str[$(i)+1]-$.pn_str[$(i)]-1)
         BLOCK
-        $(s)[$(strlen)] = $(c)
-
-
-

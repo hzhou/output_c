@@ -65,7 +65,7 @@ fncode: open_function($fname, $param)
     $if $param =~/^api(\s+(\w+))?$/
         $call open_function_api
     $if $param
-        $call add_function_params
+        $call add_function_params, $func
     # --
     $if $func->{name}
         my $name=$func->{name};
@@ -97,21 +97,20 @@ fncode: open_function($fname, $param)
 subcode:: parsecode_func_other
     $elif $func =~/^(return_type|parameter|lexical)/
         $if $cur_function
-            my $func = $cur_function
             $if $1 eq "return_type"
                 $cur_function->{ret_type}=$param;
                 $if $param=~/bool/
                     $page->{use_bool}=1
                 return
             $elif $1 eq "parameter"
-                $call add_function_params
+                $call add_function_params, $cur_function
                 return
         return 1
 
 #----
-subcode: add_function_params
-    my $param_list=$func->{param_list}
-    my $var_hash=$func->{var_hash}
+subcode: add_function_params(func)
+    my $param_list=$(func)->{param_list}
+    my $var_hash=$(func)->{var_hash}
     my @plist=split /,\s*/, $param
     my $i=0
     $foreach $p in @plist
@@ -148,7 +147,7 @@ subcode: add_function_params
             push @$param_list, "$type $name"
 
 
-# -----------------------------------------------------------------
+# ------------------------------------------------------
 fncode: func_return($t)
     MyDef::compileutil::trigger_block_post()
 

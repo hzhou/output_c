@@ -240,7 +240,7 @@ fncode: get_c_type($name)
 
             $if $t1 ne $t2
                 my $use_prefix
-                $if $2 eq 'n' || $2 eq 'f'
+                $if $2 eq 'n' || $2 eq 'f' || $2 eq 's'
                     # conventional preferred prefix
                     $use_prefix = 1
                 $else

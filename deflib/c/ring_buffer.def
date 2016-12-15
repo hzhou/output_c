@@ -1,0 +1,46 @@
+# interesting read: 
+#   https://www.snellman.net/blog/archive/2016-12-13-ring-buffers/
+
+subcode:: _autoload
+    $class ring_buffer
+
+# $global ring_buffer ring: 1024, int
+subcode: ring_buffer_init(var, scope, @type)
+    $(set:N=$(type:list:0))
+    $(set:type=$(type:list:pop 1))
+    $call assert_power_of_2, $(N)
+    $(if:$(type:list:n)=1)
+        $$(scope) $(type) $(var)[$(N)]
+    $(else)
+        $tuple $(type)
+        $$(scope) struct $(T) $(var)[$(N)]
+
+    $set_var_attr $(var), class=ring_buffer, N=$(N), mask=($(N)-1)
+    $$(scope) unsigned int $(var)_read=0
+    $$(scope) unsigned int $(var)_write=0
+
+    subcode: assert_power_of_2(N)
+        $(set:cond) join, ' and ', 'N!=*', 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192
+        $(if:$(cond))
+            $call warn, ring_buffer N must be power of 2
+
+macros:
+    ring_size: $1_write-$1_read
+    ring_full: $1_write-$1_read==$2
+    ring_empty: $1_write==$1_read
+
+subcode: ring_buffer_push(var, @p)
+    $call get_var_attr $(var), N, mask
+    $if $(ring_full:$(var),$(N))
+        $call die, ring full
+    $(var)[$(var)_write & $(mask)] = $(p)
+    $(var)_write++
+
+subcode: ring_buffer_shift(var)
+    $call get_var_attr $(var), N, mask
+    $if $(ring_empty:$(var))
+        $call die, ring empty
+    $temp i
+    $(var)_read++
+    $yield $(var)[($(var)_read-1) & $(mask)]
+
