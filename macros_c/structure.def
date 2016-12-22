@@ -2,6 +2,9 @@ subcode:: parsecode_func_other
     $elif $func eq "tuple"
         declare_tuple($param)
         return
+    $elif $func eq "tuple_name"
+        get_T_name($param)
+        return
     $elif $func eq "union"
         declare_union($param)
         return
@@ -12,17 +15,23 @@ subcode:: parsecode_func_param_other
         return
 
 #-----------------------------------------
-#-- $tuple declares anonymous struct with a1, a2, ...
-#--   ref: deflib/c/darray.def
-fncode: declare_tuple($param) 
+fncode: get_T_name($param)
     $global %tuple_hash
     my $name
     $if $tuple_hash{$param}
-        $name=$tuple_hash{$param}
+        $name = $tuple_hash{$param}
     $else
         $name=MyDef::utils::uniq_name("T", \%structs)
         $tuple_hash{$param}=$name
+
     MyDef::compileutil::set_current_macro("T", $name)
+    return $name
+
+#-----------------------------------------
+#-- $tuple declares anonymous struct with a1, a2, ...
+#--   ref: deflib/c/darray.def
+fncode: declare_tuple($param) 
+    my $name=get_T_name($param)
 
     my $s_list=[]
     my $s_hash={}

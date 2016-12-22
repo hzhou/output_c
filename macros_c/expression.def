@@ -49,6 +49,7 @@ fncode: check_expression($l, $context)
         $else
             $right=join("", @stack)
 
+        $call process_expression_cache, $right
         $if $assign
             $if $assign eq "="
                 $if $context && $context eq "condition"
@@ -64,7 +65,6 @@ fncode: check_expression($l, $context)
                 return "($left = $right)"
             $else
                 $right= "$left $assign $right"
-        $call process_expression_cache, $right
         return $right
 
     macros:
@@ -377,6 +377,8 @@ subcode: check_exp_dict(primary, token)
     $processed=1
     $token=$primary.$open.$exp.$close
     $cache{$token}=1
+    $if $debug
+        $print add dict cache {$token}
 
 subcode:: check_expression_init
     #- %cache, for parsing hash: T{key}
@@ -387,6 +389,8 @@ subcode:: check_expression_init
 subcode: process_expression_cache(t)
     $if %cache
         $foreach $t in keys %cache
+            $if $debug
+                $print check dict cache {$t}
             $if $t=~/(\w+)\{(.*)\}/
                 my ($t1, $t2)=($1, $2)
                 my $var=find_var($t1)

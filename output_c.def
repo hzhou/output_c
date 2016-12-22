@@ -59,7 +59,7 @@ page: output_c, output_main
                     $type_name{$(i)}="int";
                 $type_prefix{i}="int";
                 $type_prefix{n}="int";
-                $type_prefix{u}="uint";
+                $type_prefix{u}="unsigned int";
 
     subcode: parsecode
         $(set:parse_condition=1)
