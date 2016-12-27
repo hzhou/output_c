@@ -294,7 +294,7 @@ subcode: check_exp_callsub
         my $arg=$'
         $if $l=~/\G\((.*)\)/gc
             $arg=$1
-        my $var=find_var($varname)
+        my $var=find_var_x($varname)
         my $call_line
         $if !$var
             $if $class_names{$varname}
@@ -393,7 +393,7 @@ subcode: process_expression_cache(t)
                 $print check dict cache {$t}
             $if $t=~/(\w+)\{(.*)\}/
                 my ($t1, $t2)=($1, $2)
-                my $var=find_var($t1)
+                my $var=find_var_x($t1)
                 $if $var and $var->{class}
                     $(if:t=$left)
                         my $call_line=$var->{class}."_lookup_left, $t1, $t2"

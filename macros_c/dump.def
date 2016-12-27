@@ -214,7 +214,7 @@ subcode: dump_structs
             my $indent=4
             my $sp=' 'x$indent
             $foreach $p in @$s_list
-                my $type=$s_hash->{$p}
+                my $type=$s_hash->{$p}->{type}
                 $if $type eq "function"
                     push @$dump_out, "$sp".$fntype{$p}.";\n";
                 $elif $type eq "union"

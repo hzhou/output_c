@@ -43,7 +43,7 @@ fncode: declare_tuple($param)
         $i++
         my $m_name="a$i"
         push @$s_list, $m_name
-        $s_hash->{$m_name}=$p
+        $s_hash->{$m_name}={name=>$m_name, type=>$p, struct=>1}
 
     return $name
 
@@ -94,6 +94,7 @@ fncode: declare_struct($name, $param)
 
     $type_prefix{"st$name"}="struct $name";
 
+    $call check_var_special, "struct($name)"
     $call declare_struct_elements
 
     subcode: declare_struct_elements
@@ -160,31 +161,60 @@ fncode: declare_struct($name, $param)
             #---------------------------------------- 
             $if !$s_hash->{$m_name}
                 push @$s_list, $m_name
-            $s_hash->{$m_name}=$type
+                $s_hash->{$m_name}={name=>$m_name, type=>$type, struct=>1}
+
             $if $needfree
                 $s_hash->{"$name-needfree"}=1
 
             $if $type eq "union"
                 $s_hash->{-union}=declare_union()
 
-fncode: get_struct_element_type 
-    my ($stype, $evar)=@_;
+#- structure_autolist: 
+#-     ref list_functions.def, variables.def
+subcode: check_structure_autolist
+    $if $structure_autolist{$1}
+        my $s_list=[]
+        my $s_hash={}
+        $structs{$1}={list=>$s_list, hash=>$s_hash}
+        push @struct_list, $1
+        $if ref($structure_autolist{$1}) eq "ARRAY"
+            $foreach $t in @{$structure_autolist{$1}}
+                $if $t=~/^\s*(.*\S)\s+(\w+);/
+                    push @$s_list, $2
+                    $s_hash->{$2}={name=>$2, type=>$1, struct=>1}
+        $else
+            $s_hash->{"-opaque"}=1
+
+fncode: get_struct_element($stype, $name)
     $if $stype=~/(\w+)(.*)/
         $if $typedef_hash{$1}
             $stype=$typedef_hash{$1}.$2
     $if $stype=~/struct\s+(\w+)/
         my $struc=$structs{$1};
         my $h=$struc->{hash}
-        $if $h->{$evar}
-            return $h->{$evar}
+        $if $h->{$name}
+            return $h->{$name}
         $else
             $foreach $k in keys(%$h)
-                $if $k=~/^$evar\[/
-                    return "$h->{$k} *"
+                $if $k=~/^$name\[/
+                    return "$h->{$k}"
+        $call @debug
+    subcode: debug
         $if $debug eq "type"
             $while my ($k, $v)=each %$h
                 print "  :|$k: $v\n"
-            print "$evar not defined in struct $1\n"
+            print "$name not defined in struct $1\n"
+
+fncode: get_struct_element_type($stype, $name)
+    my $var=get_struct_element($stype, $name)
+    $if $var
+        $if $var->{name} eq $name
+            return $var->{type}
+        $else
+            my $type=$var->{type}
+            $while $var->{name}=~/\[.*?\]/g
+                $type .='*'
+            return $type
     return "void"
 
 fncode: struct_free
@@ -193,7 +223,7 @@ fncode: struct_free
     $if $type=~/struct\s+(\w+)/ and $structs{$1}
         my $s_list=$structs{$1}->{list}
         my $s_hash=$structs{$1}->{hash}
-        $foreach my $p in @$s_list
+        $foreach $p in @$s_list
             $if $s_hash->{"$p-needfree"}
                 struct_free($out, $s_hash->{$p}, "$name->$p")
     push @$out, "free($name);";
@@ -226,24 +256,22 @@ fncode: get_struct_constructor($name)
         my @initializer
         my %init_hash
         $foreach $l in @$s_init
-            $if $l=~/^(\w+)=\$(\w+)/ and $s_hash->{$1}
+            $if $l=~/^(\w+)=\$(\w*)/ and $s_hash->{$1}
+                $(set:type=$s_hash->{$1}->{type})
                 my $dummy=$2
-                push @param_list, $s_hash->{$1}." $dummy"
+                $if !$2
+                    $dummy="dummy_$1"
+                push @param_list, $(type)." $dummy"
                 push @initializer, "$1=$dummy"
                 $init_hash{$1}=1
             $elif $l=~/^(\w+)=(.*)/ and $s_hash->{$1}
-                $if $2 eq "\$"
-                    my $dummy="dummy_$1"
-                    push @param_list, $s_hash->{$1}." $dummy"
-                    push @initializer, "$1=$dummy"
-                $else
-                    push @initializer, "$1=$2"
+                push @initializer, "$1=$2"
                 $init_hash{$1}=1
             $else
                 #- not supported
         $foreach $m in @$s_list
             $if !$init_hash{$m}
-                my $default=type_default($s_hash->{$m})
+                my $default=type_default($s_hash->{$m}->{type})
                 $if $default
                     push @initializer, "$m=$default"
         return (\@param_list, \@initializer)
