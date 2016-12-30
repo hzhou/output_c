@@ -1,0 +1,16 @@
+subcode: autoload_hack
+    # need avoid loading order chaos
+    my $subcode=$MyDef::def->{codes}->{_autoload}
+    my $source=$subcode->{source}
+    #  move all the simple declarations upfront
+    my @t
+    $foreach $l in @$source
+        $if $l=~/\$class\s+(.*)/
+            push @t, $l
+            $l="NOOP"
+
+    # ----------------------
+    $if @t
+        unshift @$source, @t
+
+

@@ -3,13 +3,11 @@ include: macros_c/parsing.def
 include: macros_c/structure.def
 include: macros_c/functions.def
 include: macros_c/variables.def
-
 include: macros_c/types.def
 include: macros_c/dump.def
-
 include: macros_c/list_functions.def
-
 include: macros_output/case.def
+include: macros_c/hacks.def
 
 subcode:: package_globals
     $global %misc_vars
@@ -30,6 +28,7 @@ page: output_c, output_main
             my @tlist=split /,\s*/, $page->{autodecl}
             $foreach $f in @tlist
                 $call load_autodecl, $f
+        $call @autoload_hack
         $call @autolist_functions
 
         # -------------

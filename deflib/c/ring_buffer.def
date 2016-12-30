@@ -6,6 +6,8 @@ subcode:: _autoload
 
 # $global ring_buffer ring: 1024, int
 subcode: ring_buffer_init(var, scope, @type)
+    $(set:uint=unsigned int)
+
     $(set:N=$(type:list:0))
     $(set:type=$(type:list:pop 1))
     $call assert_power_of_2, $(N)
@@ -16,8 +18,8 @@ subcode: ring_buffer_init(var, scope, @type)
         $$(scope) struct $(T) $(var)[$(N)]
 
     $set_var_attr $(var), class=ring_buffer, N=$(N), mask=($(N)-1)
-    $$(scope) unsigned int $(var)_read=0
-    $$(scope) unsigned int $(var)_write=0
+    $$(scope) $(uint) $(var)_read=0
+    $$(scope) $(uint) $(var)_write=0
 
     subcode: assert_power_of_2(N)
         $(set:cond) join, ' and ', 'N!=*', 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192
