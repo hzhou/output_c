@@ -21,11 +21,18 @@ subcode: load_autodecl(inc)
             my ($name, $type, $param)=($2, $1, $3)
             $functions{$name}={declare=>"$type $name($param)", ret_type=>$type}
             $function_autolist{$name}="declare"
+        # ------------------------
         $elif $l=~/^S\s+(.*)/
+            # S mystruct --> an opaque struct
             my @tlist=split /,\s*/, $1
             $foreach $t in @tlist
                 $structure_autolist{$t}=1
+        # ------------------------
         $elif $l=~/^struct (\w+){/
+            # struct(name){
+            #     struct_line
+            #     ...
+            # }
             $struct_lines=[]
             $structure_autolist{$1}=$struct_lines
         $elif $l=~/^}/

@@ -89,11 +89,15 @@ fncode: do_assignment($left, $right)
             my $s_list=$structs{$(name)}->{list}
             my $i=0
             $foreach $p in @$s_list
-                $(if:is_ref=1)
-                    do_assignment("$left->$p", $right_list[$i])
-                $(else)
-                    do_assignment("$left.$p", $right_list[$i])
+                $if $right_list[$i] ne "-"
+                    $(if:is_ref=1)
+                        do_assignment("$left->$p", $right_list[$i])
+                    $(else)
+                        do_assignment("$left.$p", $right_list[$i])
                 $i++
+                # so it is ok to assign to part of the struct
+                $if !defined $right_list[$i]
+                    last
 
         subcode: assign_from_struct(name, is_ref)
             $if !$structs{$(name)}

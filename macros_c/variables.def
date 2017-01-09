@@ -25,8 +25,7 @@ subcode:: parsecode_func_other
 
 subcode:: parsecode_func_other
     $elif $func=~/^(global|static|symbol|extern)$/
-        $call check_var_special
-
+        $call check_var_special, $func
         &call each_param_v
             $if $func eq "global"
                 my $name=global_add_var($v)
@@ -41,7 +40,7 @@ subcode:: parsecode_func_other
                 $call do_declare, "extern $decl"
         return
     $elif $func eq "local" or $func eq "my"
-        $call check_var_special
+        $call check_var_special, $func
         &call each_param_v
             $if $func eq "my" and !$page->{disable_scope}
                 my_add_var($v)
@@ -56,7 +55,7 @@ subcode:: parsecode_func_other
         # $set_var_attr var, class=darray, ...
         my @plist=split /,\s*/, $param
         my $name=shift @plist
-        my $var=find_var($name)
+        my $var=find_var_x($name)
         $if $var
             $foreach $a in @plist
                 $if $a=~/(\w+)=(.*)/
@@ -69,7 +68,7 @@ subcode:: parsecode_func_other
         # $get_var_attr var, dimension(N), mask, ...
         my @plist=split /,\s*/, $param
         my $name=shift @plist
-        my $var=find_var($name)
+        my $var=find_var_x($name)
         $if $var
             $foreach $a in @plist
                 $if $a=~/^(\w+)\((\w+)\)/
@@ -78,11 +77,12 @@ subcode:: parsecode_func_other
                     MyDef::compileutil::set_current_macro($a, $var->{$a})
         return
 
-subcode: each_param_v
-    $param=~s/\s*;\s*$//
-    my @vlist=MyDef::utils::proper_split($param)
-    $foreach $v in @vlist
-        BLOCK
+    # --------------------
+    subcode: each_param_v
+        $param=~s/\s*;\s*$//
+        my @vlist=MyDef::utils::proper_split($param)
+        $foreach $v in @vlist
+            BLOCK
 
 #---------------------------------------- 
 subcode:: parsecode_func_other
@@ -93,10 +93,10 @@ subcode:: parsecode_func_other
             $class_names{$t}=1
         return
 
-subcode: check_var_special
+subcode: check_var_special(scope)
     $if $param=~/^(\w+)\s+(.*)$/
         $if $class_names{$1}
-            my $scope=$func
+            my $scope=$(scope)
             my ($class, $param)=($1, $2)
             my $initname=$class."_init"
             $if $debug eq "type"
@@ -240,18 +240,7 @@ fncode: parse_var($name, $type, $value)
 
     #----------------------
     $if $type=~/struct\s+(\w+)/ and !$structs{$1}
-        $if $structure_autolist{$1}
-            my $s_list=[]
-            my $s_hash={}
-            $structs{$1}={list=>$s_list, hash=>$s_hash}
-            push @struct_list, $1
-            $if ref($structure_autolist{$1}) eq "ARRAY"
-                $foreach $t in @{$structure_autolist{$1}}
-                    $if $t=~/^\s*(.*\S)\s+(\w+);/
-                        push @$s_list, $2
-                        $s_hash->{$2}=$1
-            $else
-                $s_hash->{"-opaque"}=1
+        $call @check_structure_autolist
 
     #---- put it together ----
     my $var={}
@@ -404,7 +393,22 @@ fncode: get_sub_type($type0, $tail, $nowarn)
     $else
         return $type0
 
-#-#########################################################
+#-----------------------
+fncode: find_var_x($name)
+    $if $name=~/(.*)(\.|->)(\w+)$/
+        my ($vdot, $mem)=("$1$2", $3)
+        my $t = get_var_type($1)
+        my $var= get_struct_element($t, $mem)
+        $var->{struct}=$vdot
+        return $var
+    $elif $name=~/^\w+$/
+        my $scope=MyDef::compileutil::get_current_macro("scope")
+        $if $scope=~/struct\((\w+)\)/
+            return get_struct_element("struct $1", $name)
+        $else
+            return find_var($name)
+
+#-###############################################
 subcode:: package_globals
     use File::stat
     $sub get_mtime($fname)

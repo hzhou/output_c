@@ -20,25 +20,23 @@ subcode: darray_init(var, scope, @type)
         $$(scope) struct $(T) * $(var)=NULL
 
     $set_var_attr $(var), class=darray, dimension=$(var)_len
-    $set_var_attr $(var), exit=darray_exit
+    $set_var_attr $(var), exit=darray_free
     $$(scope) int $(var)_len=0
     $$(scope) int $(var)_size=0
 
-subcode: darray_exit(var)
+subcode: darray_free(var)
     $if $(var)_size>0
         free($(var))
+        $(var)=NULL
+        $(var)_len=0
+        $(var)_size=0
 
 subcode: darray_resize(var, n)
-    $(if:n=0)
-        $if $(var)_size>0
-            free($(var))
-            $(var)=NULL
-            $(var)_len=0
-            $(var)_size=0
-    $(else)
-        $if $(var)_size<$(n)
-            $(var)_size=$(n)
-            $call darray_expand, $(var) 
+    # note: len doesn't change unless > size
+    $if $(var)_size<$(n)
+        $(var)_size=$(n)
+        $realloc($(var)_size) $(var)
+    $elif $(var)_len>$(n)
         $(var)_len=$(n)
 
 subcode: darray_clear(var)
@@ -63,10 +61,6 @@ subcode: darray_check(var)
         $get_pointer_type(type) $(var)
         $fcall $(var)=f_darray_expand($(var), sizeof($(type)), &$(var)_size)
 
-subcode: darray_expand(var)
-    $get_pointer_type(type) $(var)
-    $(var)=($(type) *)realloc($(var), $(var)_size*sizeof($(type)))
-    # $call @assert, $(var)
 
 fncode: f_darray_expand(void * P, n_rec_size, pn_size)
     $return_type void *

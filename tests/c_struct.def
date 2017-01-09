@@ -1,0 +1,53 @@
+include: c/darray.def
+
+page: test, basic_frame
+    module: c
+
+    # $call test_1
+    $call test_2
+
+subcode: test_1
+    $struct(T) n, pf_array
+    $register_name(T) struct T
+
+    $local T
+    $call test_alloc
+    $call test_assign
+
+    subcode: test_alloc
+        T.n = 10
+        # type recognition
+        $allocate(T.n, 1.0) T.pf_array
+
+        T.n=15
+        $realloc(T.n) T.pf_array
+        $for i=10:T.n
+            T.pf_array[i]=2.0
+
+        $for i=0:T.n
+            $print "$i: %f", T.pf_array[i]
+
+    subcode: test_assign
+        $local i=11
+        # initialization
+        $allocate(10, i) pf_test
+        # tuple assignment
+        T = 10, pf_test
+        $print "%d %p", T.n, T.pf_array
+        $for i=0:T.n
+            $print "$i: %f", T.pf_array[i]
+
+subcode: test_2
+    # darray
+    $struct(T) darray list: float
+    $local struct T T
+    T.list.$resize 10
+    $for i=0:15
+        T.list.$push i
+    $print "T %d/%d", T.list_len, T.list_size
+    $for i=0:T.list_len
+        $print "$i: %.2f", T.list[i]
+
+
+
+
