@@ -41,9 +41,9 @@ subcode:: package_globals
         l=>"long",
         m=>"int",
         n=>"int",
-        s=>"char *",
-        buf=>"unsigned char *",
-        buffer=>"unsigned char *",
+        s=>"char*",
+        buf=>"unsigned char*",
+        buffer=>"unsigned char*",
         count=>"int",
     );
     %type_prefix=(
@@ -62,7 +62,7 @@ subcode:: package_globals
         c=>"unsigned char",
         uc=>"unsigned char",
         b=>"bool",
-        s=>"char *",
+        s=>"char*",
         f=>"float",
         d=>"double",
         z=>"double complex",
@@ -122,7 +122,7 @@ fncode: infer_c_type($val)
     $elif $val=~/^\d/
         return "int"
     $elif $val=~/^"/
-        return "char *";
+        return "char*";
     $elif $val=~/^'/
         return "char";
     $elif $val=~/^\((\w+)\)\w/
@@ -249,7 +249,7 @@ fncode: get_c_type($name)
                 $if $use_prefix
                     $type = $t2
                 $else
-                    $call warn, type of $name set to $type (ambiguous)
+                    $call warn, type of $name set to $t1 (prefix type: $t2)
 
 fncode: pointer_type($t)
     $t=~s/\s*\*\s*$//;
@@ -267,7 +267,7 @@ fncode: get_var_fmt($v, $warn)
     my $type=get_var_type($v, 1)
     $if !$type or $type eq "void"
         $type=get_c_type($v);
-    $if $type=~/^char \*/
+    $if $type=~/^char\*/
         return "\%s";
     $elsif $type=~/\*\s*$/
         return "\%p";
