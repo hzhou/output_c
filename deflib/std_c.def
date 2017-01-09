@@ -3,9 +3,9 @@ subcode: basic_frame
     $include stdio
     $include stdlib
     $call @global
-    $list n_main
+    $list _basic_main
 
-fncode: n_main
+fncode: _basic_main(main)
     $call main2
 
 #---------------------------------------- 
@@ -111,29 +111,17 @@ subcode: mmap(filename, strname, strsize)
     close(tn_fd)
 
 fncode: get_file_s(s_file, pn_size)
-    $include sys/stat
-    $include fcntl
-    $include unistd
-    tn_fd=open(s_file, O_RDONLY)
-    $if tn_fd<0
-        $print get_file_s error
-        exit(-1)
-    struct stat st
-    fstat(tn_fd, &st)
-    n=st.st_size
-    $local s
-    $allocate(n+1) s
-    n_read=0
-    $while n_read<n
-        tn_temp = read(tn_fd, s+n_read, n-n_read)
-        $if tn_temp<=0
-            break
-        $else
-            n_read+=tn_temp
-    s[n_read]='\0'
-    $if pn_size
-        *pn_size=n
-    return s
+    &call2 try_open_r, s_file
+        $my n, s
+        $call get_size, n
+        $allocate(n+1) s
+        n=fread(s, 1, n, file_in)
+        s[n]='\0'
+        $if pn_size
+            *pn_size=n
+        return s
+    fail:
+        return NULL
 
 # --------------------------------
 subcode: open_w(file)
@@ -162,8 +150,23 @@ subcode: open_r(file)
     $if file_in==NULL
         fprintf(stderr, "Can't open %s\n", $(file))
     $else
-        BLOCK
+        &call fread_frame
+            BLOCK
         fclose(file_in)
+
+subcode: try_open_r(file)
+    # multi-callback: &call2 try_open_r, file
+    $include stdio
+    file_in=fopen($(file), "rb")
+    $if file_in==NULL
+        BLOCK2
+    $else
+        &call fread_frame
+            BLOCK1
+        fclose(file_in)
+
+subcode: fread_frame
+    BLOCK
     # --
     subcode: read_int(n)
         t_n = fread(&$(n), 4, 1, file_in)
@@ -185,17 +188,6 @@ subcode: open_r(file)
         t_n=fread(&$(name), 4, 1, file_in)
     subcode: read_data(name, size)
         t_n=fread($(name), 1, $(size), file_in)
-
-subcode: try_open_r(file)
-    # multi-callback: &call2 try_open_r, file
-    $include stdio
-    file_in=fopen($(file), "rb")
-    $if file_in==NULL
-        BLOCK2
-    $else
-        BLOCK1
-        fclose(file_in)
-
 # ---- time -------------------------------------------
 subcode: tick_loop
     $include time
