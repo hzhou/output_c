@@ -1,0 +1,10 @@
+subcode: _autoload
+    $plugin(regex) regex_simple_condition
+
+perlcode: regex_simple_condition
+    $if $param=~/^(\S+)\s*=~\s*(\[.*\])/
+        $condition = regex_char_condition($1, $2)
+    $elif $param=~/^(\S+)\s*=~\s*\/(.*)\/(.*)/
+        # ($str, $pattern, $option)=($1, $2, $3)
+        $condition = regex_s_condition($1, $2, $3)
+

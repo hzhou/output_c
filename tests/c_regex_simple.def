@@ -1,0 +1,16 @@
+include: c/regex_simple.def
+
+page: test, basic_frame
+    module: c
+
+    $local s[]="Hello World!\n"
+
+    $if s[0]=~ [abcHLK]
+        $print "s[0] match [abcHLK]"
+
+    $if s=~/H[ie]/
+        $print "s match /H[ie]/"
+
+    $if s=~/She|He/
+        $print "s match /She|He/"
+
