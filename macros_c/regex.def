@@ -1,0 +1,57 @@
+#---- support functions for c/regex_simple.def
+#-      ref: tests/c_regex_simple.def
+fncode: regex_char_condition($c, $pat)
+    my @tlist
+    $if $pat=~/^\[(.*)\]$/
+        $pat = $1
+
+    $while 1
+        $if $pat=~/\G$/gc
+            break
+        $elif $pat=~/\G(\\[abtfnr])/gc
+            push @tlist, "$c=='$1'"
+        $elif $pat=~/\G\\(.)/gc
+            push @tlist, "$c=='$1'"
+        $elif $pat=~/\G(.)-(.)/gc
+            push @tlist, "$c>='$1'&&$c<='$2'"
+        $elif $pat=~/\G(.)/gc
+            push @tlist, "$c=='$1'"
+        $else
+            break
+
+    $if !@tlist
+        die "empty char regex $pat\n"
+    $elif @tlist==1
+        return $tlist[0]
+    $else
+        return '('.join(' || ', @tlist).')'
+
+
+fncode: regex_s_condition($s, $pat, $option)
+    # $option is not supported yet
+    my @or_list
+    my @and_list
+    my $i=0
+    $while 1
+        $if $pat=~/\G$/gc
+            break
+        $elif $pat=~/\G(\[.*?\])/gc
+            $call parse_char
+        $elif $pat=~/\G(\\.)/gc
+            $call parse_char
+        $elif $pat=~/\G\|/gc
+            push @or_list, '('.join(' && ', @and_list).')'
+            $i=0
+            @and_list=()
+        $elif $pat=~/\G(.)/gc
+            $call parse_char
+    $if @and_list
+        $if !@or_list
+            return join(' && ', @and_list)
+        push @or_list, '('.join(' && ', @and_list).')'
+    return join(' || ', @or_list)
+
+
+    subcode: parse_char
+        push @and_list, regex_char_condition("${s}[$i]", $1)
+        $i++

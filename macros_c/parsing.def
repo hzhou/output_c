@@ -38,10 +38,10 @@ subcode: parsecode_func_param
         return
     $elsif $func eq "enum"
         $if !$enums{$param1}
-            push @enum_list, $param1;
-            $enums{$param1}=$param2;
-            $if $param1=~/^,\s*(\w+)/
-                global_add_symbol("int $1")
+            push @enum_list, $param1
+            $enums{$param1}=$param2
+        $else
+            $enums{$param1}.=", $param2"
         return
     $call @parsecode_func_param_other
 

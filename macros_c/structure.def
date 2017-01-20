@@ -167,7 +167,7 @@ fncode: declare_struct($name, $param)
                 $s_hash->{"$name-needfree"}=1
 
             $if $type eq "union"
-                $s_hash->{-union}=declare_union()
+                $s_hash->{"-union-$m_name"}=declare_union()
 
 #- structure_autolist: 
 #-     ref list_functions.def, variables.def

@@ -444,6 +444,8 @@ subcode: check_exp_regex
             $pat=$1
         $elif $l=~/\G\s*(s\/$(pat)\/$(pat)\/\w*)/gc
             $pat=$1
+        $elif $l=~/\G\s*(\[.*\])/gc
+            $pat=$1
         $else
             $call warn, =~ missing regex pattern
         my $regex_plugin=$plugin_condition{regex}

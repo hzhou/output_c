@@ -9,6 +9,8 @@ include: macros_c/list_functions.def
 include: macros_output/case.def
 include: macros_c/hacks.def
 
+include: macros_c/regex.def
+
 subcode:: package_globals
     $global %misc_vars
     our $except;

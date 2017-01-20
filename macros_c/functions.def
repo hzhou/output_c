@@ -153,7 +153,7 @@ fncode: func_return($t)
 
     $if !$cur_function->{ret_type}
         # print "func_return: $cur_function->{name} [$t]\n";
-        $if $t=~/,/
+        $if $t=~/^[^(]+,/
             $cur_function->{ret_type}="void";
             $call set_return_tuple
         $elif $t or $t eq '0'
