@@ -1,8 +1,11 @@
 #---- String Pool, similar to Knuth's TeX implementation
 #---- currently being used by c/hash.def
 
+macros:
+    strpool_member: i_str, i_pool, n_str, n_pool, pn_str, pc_pool
+
 subcode:: _autoload
-    $struct(strpool) i_str, i_pool, n_str, n_pool, pn_str, pc_pool
+    $struct(strpool) $(strpool_member)
     $register_name(p_strpool) struct strpool *
 
     $list f_resize_strpool_n, f_addto_strpool, f_free_strpool

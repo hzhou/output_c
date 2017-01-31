@@ -211,6 +211,12 @@ fncode: check_expression($l, $context)
             $else
                 #---- open bracket ---------
                 $call exp_push, $token, $type
+        # -----------------
+        subcode: debug_exp
+            $if $debug eq "exp"
+                my $t1 = $types[-1]."-".$stack[-1]
+                my $t2 = $types[-2]."-".$stack[-2]
+                $print check atom token [$token], T-1: $t1, T-2: $t2
 
 subcode: check_exp_bracket
     my $close=$1
@@ -437,6 +443,10 @@ subcode: check_exp_string_op
 subcode: check_exp_regex
     $if $(type1) =~/^atom/
         $call exp_pop, $atom
+        $if $stack[-1] eq "*"
+            # *s or it will be syntax error anyway
+            $call exp_pop, undef
+            $atom = "*$atom"
         my $func="regex"
         my $pat
         $(set:pat=(?:[^\/\\]|\\.)*)

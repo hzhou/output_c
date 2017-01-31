@@ -6,13 +6,17 @@ subcode:: parsecode_func_other
         get_T_name($param)
         return
     $elif $func eq "union"
-        declare_union($param)
+        declare_union_anon($param)
         return
 
 subcode:: parsecode_func_param_other
     $elif $func eq "struct"
         declare_struct($param1, $param2)
         return
+    $elif $func eq "union"
+        declare_union($param1, $param2)
+        return
+
 
 #-----------------------------------------
 fncode: get_T_name($param)
@@ -47,14 +51,15 @@ fncode: declare_tuple($param)
 
     return $name
 
-#---------------------------------------- 
+#---- anonymous union -----------------------
 #-- $union only supported as structure member
 #--     each delcare overwites previous definition
 #--     to be used by nearby $struct delcaration
 #--      ref: calc
-fncode: declare_union($param)
+fncode: declare_union_anon($param)
     $global $union_hash
     $if !$param
+        # to be called from $struct
         $union_hash={}
         return $union_hash
     $elif !defined $union_hash or %$union_hash
@@ -74,6 +79,15 @@ fncode: declare_union($param)
             $type=get_c_type($p)
 
         $union_hash->{$name}=$type
+
+fncode: declare_union($name, $param)
+    $if $structs{$name}
+        return
+    $else
+        my $h = declare_union_anon()
+        declare_union_anon($param)
+        $structs{$name}={hash=>$h, list=>undef}
+        push @struct_list, $name
 
 #-----------------------------------------
 fncode: declare_struct($name, $param)
@@ -100,6 +114,7 @@ fncode: declare_struct($name, $param)
     subcode: declare_struct_elements
         my @plist=split /,\s+/, $param;
         my $i=0
+        my $anon_union
         $foreach $p in @plist
             my ($m_name, $type, $needfree);
             $if $p=~/^\s*$/
@@ -143,11 +158,7 @@ fncode: declare_struct($name, $param)
                 $type=$p
             $else
                 $m_name=$p;
-                $if $p=~/^(next|prev)$/
-                    #---- linked list ----
-                    $type="struct $name *"
-                $elif $p=~/^(left|right)$/
-                    #---- binary tree ----
+                $if $p=~/^(next|prev|left|right)$/
                     $type="struct $name *"
                 $elif $p=~/^(u|data)$/
                     $type="union"
@@ -167,7 +178,9 @@ fncode: declare_struct($name, $param)
                 $s_hash->{"$name-needfree"}=1
 
             $if $type eq "union"
-                $s_hash->{"-union-$m_name"}=declare_union()
+                $if !$anon_union
+                    $anon_union = declare_union_anon()
+                $s_hash->{"-union-$m_name"}=$anon_union
 
 #- structure_autolist: 
 #-     ref list_functions.def, variables.def

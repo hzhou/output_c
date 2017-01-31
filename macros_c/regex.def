@@ -15,7 +15,10 @@ fncode: regex_char_condition($c, $pat)
         $elif $pat=~/\G(.)-(.)/gc
             push @tlist, "$c>='$1'&&$c<='$2'"
         $elif $pat=~/\G(.)/gc
-            push @tlist, "$c=='$1'"
+            $if $1 eq "'"
+                push @tlist, "$c=='\\''"
+            $else
+                push @tlist, "$c=='$1'"
         $else
             break
 

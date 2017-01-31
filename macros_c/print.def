@@ -34,7 +34,10 @@ subcode:: parsecode_func_other
             push @$out, "printf($fmt);"
 
     subcode: print_to
-        push @$out, "fprintf($print_to, $fmt);"
+        $if $print_to =~/s_/
+            push @$out, "sprintf($print_to, $fmt);"
+        $else
+            push @$out, "fprintf($print_to, $fmt);"
 
 #---------------------------------------- 
 fncode: fmt_string($str, $add_newline)

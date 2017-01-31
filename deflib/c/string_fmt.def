@@ -1,0 +1,149 @@
+#---------------------------------------- 
+#-- all f_string function use this pattern
+subcode: f_string(l, @p)
+    $parameter s, pn_len, pn_size
+    $parameter $(p)
+    $call string_expand, s, *pn_len, *pn_size, $(l)
+    s2=s+(*pn_len)
+    BLOCK
+    $(if:l>6)
+        *pn_len = s2-s
+    $(else)
+        # char, hex, n_len
+        *pn_len+=$(l)
+    return s
+
+#---------------------------------------- 
+fncode: f_string_append
+    &call f_string, n_len, s_src, n_len
+        memcpy(s2, s_src, n_len)
+
+fncode: f_string_append_char
+    &call f_string, 1, c
+        *s2=c
+
+fncode: f_string_append_hex
+    &call f_string, 2, c
+        t_c=c>>4
+        $if t_c<10
+            *s2=t_c+'0'
+        $else
+            *s2=t_c-10+'a'
+        t_c=c&0xf
+        s2++
+        $if t_c<10
+            *s2=t_c+'0'
+        $else
+            *s2=t_c-10+'a'
+
+fncode: f_string_append_int
+    #-- maximum uint_64 is 18446744073709551615 (20 digits)
+    &call f_string, 30, n
+        $if n==0
+            *s2++='0'
+        $else
+            $call get_sign, n
+            $call itoa, n, 10
+            $call itoa_copy
+
+fncode: f_string_append_float
+    &call f_string, 40, d, n_digits
+        $call get_sign, d
+
+        n=(int)d
+        d-=n
+
+        $if 1.0-d<5e-7
+            n++
+            d=0.0
+
+        $call itoa, n, 10
+        $call ftoa_get_precision
+        $call ftoa_carryover_int
+        $call itoa_copy
+        $if d>f_eps && n_digits>0
+            *s2++='.'
+            $for i=0:n_digits
+                d *= 10
+                n=(int)d
+                d-=n
+                s2[i]=n+'0'
+                # $print "s2 $i ($d): %c", s2[i]
+            $if d>0.5
+                $call ftoa_carryover_float
+            $else
+                $call ftoa_remove_zeros
+            s2+=i
+        $else
+            #- omit decimals
+
+#---------------------------------------- 
+subcode: get_sign(n)
+    $if $(n)<0
+        *s2++='-'
+        $(n)=(-$(n))
+
+subcode: itoa(n, base)
+    $local tpn_digits[40]
+    $if $(n)==0
+        tpn_digits[0]=0
+        i=1
+    $else
+        i=0
+        $while $(n)>0
+            tpn_digits[i++]=$(n) % $(base)
+            $(n)/=$(base)
+
+subcode: itoa_copy
+    $while i>0
+        i--
+        *s2++=tpn_digits[i] + '0'
+
+#-------
+subcode: ftoa_get_precision
+    n_digits-=i
+    $local double f_eps=0.5
+    $for j=0:n_digits
+        f_eps/=10.0
+
+subcode: ftoa_carryover_int
+    $if 1.0-d<f_eps
+        $for j=0:i
+            $if tpn_digits[j]<9
+                tpn_digits[j]++
+                break
+            $else
+                tpn_digits[j]=0
+        $if j==i
+            tpn_digits[j]=1
+            i++
+
+subcode: ftoa_carryover_float
+    $while i>0
+        i--
+        $if s2[i]<'9'
+            s2[i]+=1
+            break
+        $else
+            s2[i]='0'
+
+subcode: ftoa_remove_zeros
+    $while i>0 && s2[i-1]=='0'
+        i--
+        s2[i]='\0'
+
+#---------------------------------------- 
+subcode: string_expand(var, len, size, inc)
+    $if $(len)+$(inc)>$(size)
+        $temp n
+        $if $(size)==0
+            $(n)=100
+        $else
+            $(n)=$(size)
+        $while $(len)+$(inc)>$(n)
+            $(n)=$(n)*5/3
+        $(var)=(char *)realloc($(var), $(n)+1)
+        # $call @assert, $(var)
+        memset($(var)+$(size), 0, $(n)-$(size)+1)
+        $(size)=$(n)
+

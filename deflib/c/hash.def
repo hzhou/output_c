@@ -71,7 +71,7 @@ subcode: hash_init(var, scope, @type)
         $$(scope) struct $(int)hash_$(T) * $(var)
 
         $allocate $(var)
-        memset($(var), 0, sizeof($(var)))
+        memset($(var), 0, sizeof(*$(var)))
         $(var)->n_val_size=sizeof($(type))
 
 #---- lookup ------------------------------------ 
@@ -79,14 +79,14 @@ subcode: hash_init(var, scope, @type)
 subcode: str_hash_lookup(var, key)
     $call strhash_check_key, $(key)
 
-    $(set:k=f_strhash_lookup($(var),$(key),$(keylen)))
+    $(set:k=f_strhash_lookup($(var),(unsigned char*)$(key),$(keylen)))
     $yield $(var)->p_val[$(k)]
 
 subcode: str_hash_lookup_left(var, key)
     $call strhash_check_key, $(key)
 
     $temp int k
-    $(k)=f_strhash_lookup_left($(var),$(key),$(keylen))
+    $(k)=f_strhash_lookup_left($(var),(unsigned char*)$(key),$(keylen))
     $yield $(var)->p_val[$(k)]
 
 subcode: str_hash_exist(var, key)
@@ -100,7 +100,7 @@ subcode: strhash_check_key(key)
         $get_type(keytype) $(key)
         $(if:keytype!=char *)
             $(export:key="$(key)")
-            $(export:keylen=$(key:len))
+            $(export:keylen=$(key:length))
         $(else)
             $get_var_attr $(key), strlen
             $(if:!strlen)
@@ -185,6 +185,8 @@ subcode: hash_resize(type)
 #---------------------------------------- 
 #---------------------------------------- 
 fncode: f_strhash_lookup(void* hash, pc_key, int keylen)
+    $if keylen==0
+        keylen=strlen((char*)pc_key)
     $call hash_lookup, str
 
 fncode: f_inthash_lookup(void * hash, int key)
@@ -243,10 +245,12 @@ subcode: get_inthash_k
 #---------------------------------------- 
 #-  _left refer to lvalue in a assignment
 fncode: f_strhash_lookup_left(void* hash, pc_key, int keylen)
+    $if keylen==0
+        keylen=strlen((char*)pc_key)
     $call hash_lookup_left, str
     k=f_strhash_lookup(h, pc_key, keylen)
     $if !h->p_exist[k]
-        h->p_key[k] = f_addto_strpool(&h->pool, pc_key, keylen)
+        h->p_key[k] = f_addto_strpool(&h->pool, (char*)pc_key, keylen)
         h->p_exist[k]=1
         h->n_count++
     return k

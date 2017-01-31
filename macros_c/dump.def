@@ -77,12 +77,12 @@ subcode:: c_init
     @define_list=()
     %defines=()
 
-fncode: add_define($name, $var)
+fncode: add_define($name, $definition)
     $if !defined $defines{$name}
         push @define_list, $name
     $else
-        warn "Duplicate define $name: [$defines{$name}] -> [$var]\n"
-    $defines{$name}=$var
+        warn "Duplicate define $name: [$defines{$name}] -> [$definition]\n"
+    $defines{$name}=$definition
 
 subcode: dump_defines
     $if $page->{use_bool} and !$page->{skip_bool}
@@ -153,7 +153,14 @@ subcode: dump_globals
             my $v=$global_hash->{$name}
             my $decl=var_declare($v)
             $if $decl
-                push @$dump_out, "$decl;\n";
+                $if $decl=~/(.*=\s*)\{DUMP_STUB\s*(\w+)\s*\}/
+                    push @$dump_out, "$1\{\n"
+                    push @$dump_out, "INDENT"
+                    push @$dump_out, "DUMP_STUB $2"
+                    push @$dump_out, "DEDENT"
+                    push @$dump_out, "};\n"
+                $else
+                    push @$dump_out, "$decl;\n";
         push @$dump_out, "\n";
 
 #---- Function Delcares ----
@@ -207,7 +214,10 @@ subcode: dump_structs
         $if $s_hash->{"-opaque"}
             push @$dump_out, "struct $name;\n"
         $else
-            $if $s_hash->{"-public"}
+            $if !$s_list
+                $call dump_union, $name, $s_hash
+                next
+            $elif $s_hash->{"-public"}
                 push @$dump_out, "struct $name { /*public*/\n";
             $else
                 push @$dump_out, "struct $name {\n";
@@ -228,6 +238,14 @@ subcode: dump_structs
                 $else
                     push @$dump_out, "$sp$type $p;\n";
             push @$dump_out, "};\n\n";
+
+subcode: dump_union(name, hash)
+    my @t = sort keys %$(hash)
+    push @$dump_out, "union $(name) {\n";
+    $foreach $p in @t
+        my $type = $(hash)->{$p}
+        push @$dump_out, "    $type $p;\n"
+    push @$dump_out, "};\n\n"
 
 #---- Simple Constructors/Destructors ----------------------------------------
 subcode: dump_structs_functions

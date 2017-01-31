@@ -5,10 +5,13 @@ include: c/string.def
 
 page: test, basic_frame
     module: c
+    output_dir: ./tests
 
-    # $call test_str_hash_int
-    # $call test_str_hash_str
-    $call test_int_hash_int
+    $(if:1)
+        $call test_str_hash_int
+    $(else)
+        # $call test_str_hash_str
+        $call test_int_hash_int
 
 #---------------------------------------- 
 subcode: test_str_hash_int

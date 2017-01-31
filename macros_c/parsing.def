@@ -103,12 +103,6 @@ subcode: parsecode_func
             $else
                 add_object($f)
         return
-    $elsif $func eq "fntype"
-        # Similar to type_name, but for funtion pointer types
-        $if $param=~/^(.*?)\((\s*\*\s*)?(\w+)\s*\)(.*)/
-            my ($pre, $star, $name, $post)=($1, $2, $3, $4)
-            $fntype{$name}="$pre(*$name)$post"
-        return
     $elsif $func eq "debug_mem"
         push @$out, "debug_mem=1;";
         $misc_vars{"debug_mem"}=1;
