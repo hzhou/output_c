@@ -29,10 +29,8 @@ subcode: die(@msg)
     exit(-1)
 
 subcode: warn(@msg)
-    $(if:msg~")
-        fprintf(stderr, $(msg))
-    $(else)
-        fprintf(stderr, "$(msg)\n")
+    $(set:print_to=stderr)
+    $print $(msg)
 
 #----
 subcode: try

@@ -59,6 +59,7 @@ subcode:: package_globals
         buf=>"unsigned char*",
         buffer=>"unsigned char*",
         count=>"int",
+        size=>"int",
     );
     %type_prefix=(
         i=>"int",

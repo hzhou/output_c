@@ -155,7 +155,10 @@ fncode: parse_condition($param)
         $call parse_condition_check_plugin
     $elif $param=~/^\/(.*)\/(i?)\s*$/
         return translate_regex($1, $2)
-
+    $elif $param=~/^(.*)\s*:([^'"]*):\s*(.*)/
+        my ($pat, $sep, $t)=($1, $2, $3)
+        my $plist = MyDef::utils::for_list_expand($pat, $t)
+        return join($sep, @$plist)
     return check_expression($param, "condition")
 
 # ---------------------------------------------------

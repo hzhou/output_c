@@ -63,6 +63,12 @@ fncode: check_expression($l, $context)
                 # a hack for assignment in condition
                 #   double parentheses is clang's trick to supress warning
                 return "($left = $right)"
+            $elif $assign =~/^\?(.*)=/
+                # another hack
+                $if $1
+                    $right = "if (!($left)) { $left = $right;}"
+                $else
+                    $right = "if (!($left $1 $right)) { $left = $right;}"
             $else
                 $right= "$left $assign $right"
         return $right
