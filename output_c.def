@@ -87,52 +87,53 @@ page: output_c, output_main
             next
 
     subcode: dumpout
-        # ----  Main Function -------------------
-        my $mainfunc=$functions{"main"};
-        $if $mainfunc and !$mainfunc->{processed}
-            $global $has_main
-            $has_main=1
-            $mainfunc->{skip_declare}=1;
-            $mainfunc->{ret_type}="int";
-            $mainfunc->{param_list}=["int argc", "char** argv"];
-            $if !$mainfunc->{return}
-                $mainfunc->{return}="return 0;"
-
-        # ---- process_function ------------------------
-        $foreach $func in @function_list
-            $if !$func->{processed}
-                process_function_std($func)
-                $if !$has_main
-                    my $name=$func->{name}
-                    $if $function_autolist{$name} eq "static"
-                        $func->{declare}="static ".$func->{declare}
-
+        $call process_main_function
+        $call process_functions
         $call process_extern_binary
         $call process_link_objects
-        # $call dump_Makefile
 
         # ---- Header stuff --------------------------
         $if !$page->{has_stub_global_init}
-            # unshift @$out, "\n/**** END GLOBAL INIT ****/\n"
             unshift @$out, "DUMP_STUB global_init"
 
         $call c_dump_init
 
-    subcode: process_link_objects
-        my @objlist
-        my @liblist
-        $foreach $i in @object_list
-            $if $i=~/^lib(.*)\.a/
-                push @liblist, "-Wl,-Bstatic -l$1"
-            $elif $i=~/^lib(.*)/
-                push @liblist, "-l$1"
-            $else
-                push @objlist, $i
-        my ($lib_list, $obj_list)
-        $if @liblist
-            $lib_list=join(" ", @liblist)
-            $page->{lib_list}=$lib_list
-        $if @objlist
-            $obj_list=join(" ", @objlist)
-            $page->{lib_list}.=" ".$obj_list
+        # -------------------------------
+        subcode: process_main_function
+            my $mainfunc=$functions{"main"};
+            $if $mainfunc and !$mainfunc->{processed}
+                $global $has_main
+                $has_main=1
+                $mainfunc->{skip_declare}=1;
+                $mainfunc->{ret_type}="int";
+                $mainfunc->{param_list}=["int argc", "char** argv"];
+                $if !$mainfunc->{return}
+                    $mainfunc->{return}="return 0;"
+
+        subcode: process_functions
+            $foreach $func in @function_list
+                $if !$func->{processed}
+                    process_function_std($func)
+                    $if !$has_main
+                        my $name=$func->{name}
+                        $if $function_autolist{$name} eq "static"
+                            $func->{declare}="static ".$func->{declare}
+
+        subcode: process_link_objects
+            my @objlist
+            my @liblist
+            $foreach $i in @object_list
+                $if $i=~/^lib(.*)\.a/
+                    push @liblist, "-Wl,-Bstatic -l$1"
+                $elif $i=~/^lib(.*)/
+                    push @liblist, "-l$1"
+                $else
+                    push @objlist, $i
+            my ($lib_list, $obj_list)
+            $if @liblist
+                $lib_list=join(" ", @liblist)
+                $page->{lib_list}=$lib_list
+            $if @objlist
+                $obj_list=join(" ", @objlist)
+                $page->{lib_list}.=" ".$obj_list
 
