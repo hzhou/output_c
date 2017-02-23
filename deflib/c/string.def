@@ -41,7 +41,7 @@ subcode: string_clear(var)
 
 subcode: string_resize(var, n)
     $(set:string=$(var), &$(var)_len, &$(var)_size)
-    $fcall $(var)=f_string_resize($(string), $(n))
+    $fcall $(var)=f_string_resize($(string), (int)$(n))
 
 fncode: f_string_resize(s, pn_len, pn_size, n)
     $(mset:len=*pn_len, size=*pn_size)

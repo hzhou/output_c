@@ -124,10 +124,13 @@ fncode: global_add_var($name, $type, $value)
     $call add_var, $global_hash, $global_list
 
 fncode: func_add_var($name, $type, $value)
+    my ($var_list, $var_hash)
     $if !$cur_function
-        return $name
-    my $var_list=$cur_function->{var_list}
-    my $var_hash=$cur_function->{var_hash}
+        $var_list=$main_func->{var_list}
+        $var_hash=$main_func->{var_hash}
+    $else
+        $var_list=$cur_function->{var_list}
+        $var_hash=$cur_function->{var_hash}
     $call add_var, $var_hash, $var_list
 
 fncode: my_add_var($name, $type, $value)
@@ -282,8 +285,10 @@ fncode: parse_var($name, $type, $value)
             $if $val_type
                 $if !$type
                     $type= $val_type
-                $elif $type ne $val_type
-                    $call warn_conflict
+                $else
+                    $val_type=~s/\s+(\*+)$/\1/
+                    $if $type ne $val_type
+                        $call warn_conflict
         # --
         subcode: warn_conflict
             $if $val_type eq "void"
@@ -294,7 +299,7 @@ fncode: parse_var($name, $type, $value)
                 NOOP
             $elif $val_type eq "int" and $type=~/(double|float|bool|int)/
                 NOOP
-            $elif $val_type eq "void *" and $type=~/\*$/
+            $elif $val_type eq "void*" and $type=~/\*$/
                 NOOP
             $else
                 $call warn, var $name set to type $type, different from value type $val_type

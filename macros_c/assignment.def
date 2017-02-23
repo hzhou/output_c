@@ -5,7 +5,7 @@ fncode: do_assignment($left, $right)
             $right=type_default($type)
             $call done_assignment
         return
-    $if !defined $left
+    $if !defined $left or $left eq "_"
         return
 
     $if $debug eq "type"

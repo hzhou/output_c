@@ -59,6 +59,7 @@ subcode:: package_globals
         buf=>"unsigned char*",
         buffer=>"unsigned char*",
         count=>"int",
+        size=>"int",
     );
     %type_prefix=(
         i=>"int",
@@ -152,7 +153,7 @@ fncode: infer_c_type($val)
         $if $func and $func->{ret_type}
             return $func->{ret_type}
     $elif $val=~/NULL/
-        return "void *"
+        return "void*"
     $elif $val=~/(\w+)(.*)/
         my $type=get_var_type($val, 1)
         return $type
@@ -235,6 +236,7 @@ fncode: get_c_type($name)
     $elif $type eq "bool"
         $page->{use_bool}=1
     # --------------------------
+    $type=~s/\s+(\*+)$/\1/
     $if $type=~/^(\w.*?)\s*\**$/
         $if $type_include{$1}
             add_include($type_include{$1})
