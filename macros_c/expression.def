@@ -60,15 +60,11 @@ fncode: check_expression($l, $context)
                     do_assignment($left, $right)
                     return
             $elif $assign eq ":="
-                # a hack for assignment in condition
-                #   double parentheses is clang's trick to supress warning
-                return "($left = $right)"
-            $elif $assign =~/^\?(.*)=/
-                # another hack
-                $if $1
-                    $right = "if (!($left)) { $left = $right;}"
+                # a hack to bypass checking
+                $if $context eq "condition"
+                    return "($left = $right)"
                 $else
-                    $right = "if (!($left $1 $right)) { $left = $right;}"
+                    return "$left = $right"
             $else
                 $right= "$left $assign $right"
         return $right
@@ -175,16 +171,19 @@ fncode: check_expression($l, $context)
             # ---------------
             subcode: is_assignment
                 $assign=$token
+                $(set:equal=$assign eq '=')
                 $if $left
-                    $call warn,  Chained assignment not supported [left=$left, assign=$assign]!
-                $if !$1 and @stack==1 and $types[0] eq "atom-("
+                    # assume previous $assign to be '='
+                    $left .= ' = '.join("", @stack)
+                $elif $(equal) and @stack==1 and $types[0] eq "atom-("
                     $left=substr($stack[0], 1, -1)
-                    $call exp_pop, undef
                 $else
                     $left=join("", @stack)
-                    @stack=()
-                    @types=()
-                $if $assign eq "="
+
+                @stack=()
+                @types=()
+
+                $if $(equal)
                     $call process_expression_cache, $left
         # -----------------
         subcode: is_atom
@@ -425,25 +424,31 @@ subcode: check_exp_string_op
     $call exp_pop, $exp
     my %str_op=(eq=>"==", ne=>"!=", lt=>"<", gt=>">", le=>"<=", ge=>">=")
     my $sop=$str_op{lc($op)}.' 0'
-    $if $type eq "atom-string"
-        $if $token=~/^"(.*)"/
-            $if ord($op) < 91
-                # upper case
-                $token= "strcmp($exp, $token) $sop"
-            $else
-                my $len=length($1)
-                $token= "strncmp($exp, $token, $len) $sop"
-        $else
-            $token= "strcmp($exp, $token) $sop"
-        $type="atom"
+
+    $call get_var_n, $exp, $n1
+    $call get_var_n, $token, $n2
+
+    $if ord($op) < 91 or !($n1 || $n2)
+        $token= "strcmp($exp, $token) $sop"
     $else
-        my $var=find_var($token)
-        $if $var and $var->{strlen}
-            $token="strncmp($exp, $token, $var->{strlen}) $sop"
-            $type="atom"
+        $if $n1 and $n2 and ($op eq "eq")
+            $token= "$n1==$n2 && strncmp($exp, $token, $n2)==0"
         $else
-            $token="strcmp($exp, $token) $sop"
-            $type="atom"
+            $if !$n2
+                $n2 = $n1
+            $token= "strncmp($exp, $token, $n2) $sop"
+    $type = "atom"
+
+    # --------------
+    subcode: get_var_n(v, n)
+        my $(n)
+        $if $(v)=~/^"(.*)"/
+            $(n) = length($1)
+        $elif $(v)=~/^\w+$/
+            my $var = find_var($(v))
+            $if $var && $var->{strlen}
+                $(n) = $var->{strlen}
+
 
 #---------------------------------------- 
 subcode: check_exp_regex

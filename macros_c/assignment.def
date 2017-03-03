@@ -11,6 +11,7 @@ fncode: do_assignment($left, $right)
     $if $debug eq "type"
         $print $cyan do_assignment: $left = $right
 
+    $call @check_chain_assignment
     $call @check_tuple_assignment
 
     my $type;
@@ -32,6 +33,15 @@ fncode: do_assignment($left, $right)
         push @$out, "$left = $right;";
         return
 
+    # -------------------------
+    subcode: check_chain_assignment
+        my @left_list = split /\s+=\s+/, $left
+        $if @left_list>1
+            $foreach $var in @left_list
+                $if $var=~/^\w+$/
+                    auto_add_var($var, undef, $right)
+            push @$out, "$left = $right;";
+            return
     # -------------------------
     subcode: check_tuple_assignment
         my @left_list=MyDef::utils::proper_split($left)

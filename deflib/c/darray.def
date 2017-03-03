@@ -24,6 +24,12 @@ subcode: darray_init(var, scope, @type)
     $$(scope) int $(var)_len=0
     $$(scope) int $(var)_size=0
 
+subcode: darray_new(var)
+    # sometime we need push them to stack
+    $(var)=NULL
+    $(var)_len=0
+    $(var)_size=0
+
 subcode: darray_free(var)
     $if $(var)_size>0
         free($(var))
@@ -58,6 +64,8 @@ subcode: darray_pop(var)
     $(var)_len--
     $yield $(var)[$(var)_len]
 
+subcode: darray_empty(var)
+    $(var)_len = 0
 #----------------------------------------------------
 subcode: darray_check(var)
     $(export:len=$(var)_len)
