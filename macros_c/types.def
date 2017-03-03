@@ -32,17 +32,7 @@ subcode: parsecode_func_other
             $call warn, fntype declaration error: [$param]
         return
 #----------------------------------------------- 
-subcode:: package_globals
-    $global %basic_types
-    %basic_types=(
-        "int"=>1,
-        "char"=>1,
-        "unsigned"=>1,
-        "unsigned char"=>1,
-        "long"=>1,
-        "float"=>1,
-        "double"=>1,
-    );
+subcode: _autoload
     $global %type_name, %type_prefix
     $global %fntype
     %type_name=(

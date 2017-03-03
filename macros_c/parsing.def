@@ -16,23 +16,6 @@ subcode: parsecode_func_param
     $if $func eq "dump"
         debug_dump($param2, $param1, $out);
         return
-    $elif $func eq "get_type"
-        my $type=get_var_type($param2);
-        MyDef::compileutil::set_current_macro($param1, $type)
-        return 
-    $elif $func eq "get_pointer_type"
-        my $type=pointer_type(get_var_type($param2));
-        MyDef::compileutil::set_current_macro($param1, $type)
-        return
-    $elif $func eq "get_struct_var_prefix"
-        my $type=get_var_type($param2)
-        $if $type=~/struct (\w+)\s*\*/
-            MyDef::compileutil::set_current_macro($param1, "$param2->")
-        $elif $type=~/struct (\w+)/
-            MyDef::compileutil::set_current_macro($param1, "$param2.")
-        $else
-            die "get_var_type: $param2 returns type $type\n"
-        return
     $elsif $func eq "define"
         add_define($param1, $param2)
         return
@@ -71,12 +54,6 @@ subcode: parsecode_func
         $else
             return single_block("while(1){", "break;}")
     #---------------------------------------- 
-    $elif $func eq "pack"
-        data_pack($param)
-        return
-    $elif $func eq "unpack"
-        data_unpack($param)
-        return
     $elsif $func eq "include"
         add_include($param)
         return
@@ -102,10 +79,6 @@ subcode: parsecode_func
                     add_include($lib_include{$f})
             $else
                 add_object($f)
-        return
-    $elsif $func eq "debug_mem"
-        push @$out, "debug_mem=1;";
-        $misc_vars{"debug_mem"}=1;
         return
     $elsif $func eq "typedef"
         add_typedef($param)
@@ -134,16 +107,16 @@ subcode: parsecode_other
         $else
             $l.=";"
 
-#---------------------------------------- 
-subcode: check_functioncall
-    $case $l=~/^(\w+)\s+(.*)$/
-        # print "check_functioncall: $1\n"
-        $if $functions{$1} or $stock_functions{$1}
-            my $fn=$1;
-            my $t=$2;
-            $t=~s/;\s*$//;
-            $t=~s/\s+$//;
-            $l="$fn($t)";
+    # ---------------------- 
+    subcode: check_functioncall
+        $case $l=~/^(\w+)\s+(.*)$/
+            # print "check_functioncall: $1\n"
+            $if $functions{$1} or $stock_functions{$1}
+                my $fn=$1;
+                my $t=$2;
+                $t=~s/;\s*$//;
+                $t=~s/\s+$//;
+                $l="$fn($t)";
 
 #---------------------------------------- 
 #--- called from output.def ------------
@@ -160,87 +133,6 @@ fncode: parse_condition($param)
         my $plist = MyDef::utils::for_list_expand($pat, $t)
         return join($sep, @$plist)
     return check_expression($param, "condition")
-
-# ---------------------------------------------------
-subcode:: support_subs
-    $sub data_pack($param)
-        $call datapack, pack
-
-    $sub data_unpack($param)
-        $call datapack, unpack
-
-subcode: datapack(dir)
-    my @t=split /,\s*/, $param
-    my $buf=shift @t
-    my $fmt=shift @t
-    $if !$buf
-        warn " datapack ($(dir)): buf empty: $param\n"
-    my @vlist=@t
-    $if $fmt=~/"(.*)"/
-        $fmt=$1
-    my $fmt_pos=0
-    my $buf_pos=0
-    my $fmt_len=length($fmt)
-    my $last_var
-    $while $fmt_pos<$fmt_len
-        my $var=shift @vlist
-        my $vartype=get_var_type($var)
-        my $c=substr($fmt, $fmt_pos, 1)
-        $if $c eq "s"
-            $(if:dir=pack)
-                $call datapack_pointer
-            $(else)
-                $call dataunpack_pointer
-        $elif $c=~/\d/
-            $(if:dir=pack)
-                $call datapack_var
-            $(else)
-                $call dataunpack_var
-            $buf_pos+=$c
-        $fmt_pos++
-        $last_var=$var
-
-subcode: datapack_pointer
-    push @$out, "memcpy($buf+$buf_pos, (const void *)$var, $last_var);"
-
-subcode: dataunpack_pointer
-    push @$out, "$var=($vartype)($buf+$buf_pos);"
-
-subcode: datapack_var
-    $if $vartype=~/int/
-        $if $c==1
-            push @$out, "*((char *)($buf+$buf_pos))=$var;"
-        $elif $c==2
-            push @$out, "*((short *)($buf+$buf_pos))=$var;"
-        $elif $c==4
-            push @$out, "*((int *)($buf+$buf_pos))=$var;"
-    $elif $vartype=~/unsigned/
-        $if $c==1
-            push @$out, "*((unsigned char *)($buf+$buf_pos))=$var;"
-        $elif $c==2
-            push @$out, "*((unsigned short *)($buf+$buf_pos))=$var;"
-        $elif $c==4
-            push @$out, "*((unsigned int *)($buf+$buf_pos))=$var;"
-    $else
-        print "pack: unhandled type $var - $vartype\n"
-
-subcode: dataunpack_var
-    $if $vartype=~/int/
-        $if $c==1
-            push @$out, "$var=*((char *)($buf+$buf_pos));"
-        $elif $c==2
-            push @$out, "$var=*((short *)($buf+$buf_pos));"
-        $elif $c==4
-            push @$out, "$var=*((int *)($buf+$buf_pos));"
-    $elif $vartype=~/unsigned/
-        $if $c==1
-            push @$out, "$var=*((unsigned char *)($buf+$buf_pos));"
-        $elif $c==2
-            push @$out, "$var=*((unsigned short *)($buf+$buf_pos));"
-        $elif $c==4
-            push @$out, "$var=*((unsigned int *)($buf+$buf_pos));"
-    $else
-        print "unpack: unhandled type $var - $vartype\n"
 
 
 #---------------------------------------- 

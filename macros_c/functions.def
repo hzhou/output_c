@@ -84,10 +84,6 @@ fncode: open_function($fname, $param)
     return $func
 
     # ------
-    subcode: if_main
-        $if fname eq $fname
-            BLOCK
-
     subcode: open_function_api
         my $api_name
         $if $1

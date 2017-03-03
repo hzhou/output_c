@@ -291,3 +291,15 @@ fncode: get_struct_constructor($name)
     $else
         return (undef, undef)
 
+#---------------------------------------- 
+subcode: _autoload
+    $global %basic_types
+    %basic_types=(
+        "int"=>1,
+        "char"=>1,
+        "unsigned"=>1,
+        "unsigned char"=>1,
+        "long"=>1,
+        "float"=>1,
+        "double"=>1,
+    );

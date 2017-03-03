@@ -1,4 +1,13 @@
-# subcode:: parsecode_func_param_other
+subcode:: parsecode_func_param_other
+    $elif $func eq "get_type"
+        my $type=get_var_type($param2);
+        MyDef::compileutil::set_current_macro($param1, $type)
+        return 
+    $elif $func eq "get_pointer_type"
+        my $type=pointer_type(get_var_type($param2));
+        MyDef::compileutil::set_current_macro($param1, $type)
+        return
+
 subcode:: parsecode_func_other
     $elif $func eq "auto" or $func eq "Auto"
         # hacks for C++
