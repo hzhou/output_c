@@ -10,15 +10,10 @@ subcode:: _autoload
 
     $list f_resize_strpool_n, f_addto_strpool, f_free_strpool
 
-#-- * always check & $call resize_str_pool_n
 #---------------------------------------- 
 fncode: f_resize_strpool_n(p_strpool, n_size)
     $(set:this=p_strpool->)
-
-    tn_avg_str_size=6
-    $if $.i_str>0
-        tn_avg_str_size = $.i_pool/$.i_str + 1
-
+    $call @get_tn_avg_str_size
     $.n_str = n_size
     $.n_pool = tn_avg_str_size * $.n_str
     $.pn_str = realloc($.pn_str, $.n_str * sizeof(int))
@@ -32,8 +27,11 @@ fncode: f_resize_strpool_n(p_strpool, n_size)
 #---------------------------------------- 
 fncode: f_addto_strpool(p_strpool, s, n)
     $(set:this=p_strpool->)
-
     # assert $.i_str + 2 <$.n_str
+    $if $.i_str + 2 >=$.n_str
+        n_size = $.i_str*3/2 + 10
+        f_resize_strpool_n(p_strpool, n_size)
+
     $if $.i_pool+n >= $.n_pool
         $call resize_str_pool_c, n
     memcpy($.pc_pool+$.i_pool, s, n)
@@ -47,9 +45,15 @@ fncode: f_addto_strpool(p_strpool, s, n)
     return $.i_str-1
     
     subcode: resize_str_pool_c(len)
-        tn_avg_str_size = $.i_pool/$.i_str + 1
+        $call @get_tn_avg_str_size
         $.n_pool = tn_avg_str_size*$.n_str + $(len)
         $.pc_pool = realloc($.pc_pool, $.n_pool)
+
+# -----
+subcode: get_tn_avg_str_size
+    tn_avg_str_size=6
+    $if $.i_str>0
+        tn_avg_str_size = $.i_pool/$.i_str + 1
 
 #---------------------------------------- 
 fncode: f_free_strpool(p_strpool)
@@ -59,7 +63,14 @@ fncode: f_free_strpool(p_strpool)
     free($.pc_pool)
     memset(p_strpool, 0, sizeof(struct strpool))
 
-#---------------------------------------- 
+#----------------------------------------
+subcode: empty_str_pool(var)
+    $(if:var!=p_strpool)
+        p_strpool=$(var)
+    $(for:i_str,i_pool)
+        p_strpool->$1 = 0
+
+#-------
 subcode: get_str_pool(var, i)
     $(if:var!=p_strpool)
         p_strpool=$(var)
@@ -68,7 +79,7 @@ subcode: get_str_pool(var, i)
     $(export:s=($.pc_pool+$.pn_str[$(i)]))
     $(export:strlen=($.pn_str[$(i)+1]-$.pn_str[$(i)]-1))
 
-#---------------------------------------- 
+#-------
 subcode: each_str_pool(pool)
     $(if:pool!=p_strpool)
         p_strpool=$(pool)

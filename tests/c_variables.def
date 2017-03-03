@@ -1,0 +1,7 @@
+page: test, basic_frame
+    module: c
+
+    DEBUG type
+    $temp int p=1
+    $print $(p) = $$(p)
+

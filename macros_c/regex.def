@@ -13,7 +13,7 @@ fncode: regex_char_condition($c, $pat)
         $elif $pat=~/\G\\(.)/gc
             push @tlist, "$c=='$1'"
         $elif $pat=~/\G(.)-(.)/gc
-            push @tlist, "$c>='$1'&&$c<='$2'"
+            push @tlist, "($c>='$1'&&$c<='$2')"
         $elif $pat=~/\G(.)/gc
             $if $1 eq "'"
                 push @tlist, "$c=='\\''"
