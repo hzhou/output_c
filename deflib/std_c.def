@@ -94,20 +94,6 @@ subcode: free(v)
     free($(v))
 
 ## FILE IO
-subcode: mmap(filename, strname, strsize)
-    $include sys/mman
-    $include sys/stat
-    $include fcntl
-    $include unistd
-    tn_fd=open($(filename), O_RDONLY)
-    struct stat st
-    fstat(tn_fd, &st)
-    $(strsize)=st.st_size
-    $(strname)=mmap(0, $(strsize), PROT_READ, MAP_SHARED, tn_fd, 0)
-    BLOCK
-    munmap($(strname), $(strsize))
-    close(tn_fd)
-
 fncode: get_file_s(s_file, pn_size)
     &call2 try_open_r, s_file
         $my n, s
@@ -126,7 +112,7 @@ subcode: open_w(file)
     $include stdio
     file_out=fopen($(file), "wb")
     $if file_out==NULL
-        fprintf(stderr, "Can't write %s\n", $(file))
+        $call die, "Can't write %s", $(file)
     $else
         BLOCK
         fclose(file_out)
@@ -146,7 +132,7 @@ subcode: open_r(file)
     $include stdio
     file_in=fopen($(file), "rb")
     $if file_in==NULL
-        fprintf(stderr, "Can't open %s\n", $(file))
+        $call die, "Can't open %s", $(file)
     $else
         &call fread_frame
             BLOCK
