@@ -1,0 +1,196 @@
+#- define_op_precedence, f_scan_operator, f_match_keyword
+
+#----------------------------------------------- 
+#- parser uses an operator-precedence based stack of struct {type, value}
+#-     types are integers defined as T_{name}, e.g. T_ATOM, T_BOC, T_Plus, etc.
+#-     values are user defined, typically a union
+
+#- to use: supply subcode:: define_op_precedence
+#-     in which, use $map op, {pre,left,right,post} to setup precedence
+#---------------------------------------------------- 
+subcode: _autoload
+    $define(T_ATOM) 1
+    $call setup_parser
+    # always nice to have debug facility
+    $global char* T_op_names[]={DUMP_STUB T_op_names}
+    $(block:T_op_names)
+        $: NULL
+
+fncode: get_T_name(n_type)
+    $return_type char *
+
+    tn_op = n_type >> 8
+    $if tn_op
+        return T_op_names[tn_op-1]
+    $else
+        return "T_ATOM"
+
+# ---------------------
+subcode: setup_parser
+    $(setmacro:_op=0x0)
+    # begin/end of file/context/statement
+    $map op, pre, BOC, BOS
+    $map op, post, EOF, EOC, EOS
+    $map op, pre, BOS_HEAD
+    $map op, left, BOS_TEMP
+    $call @define_op_precedence
+
+    subcode: op(NAME)
+        $(if:NAME in left,right,pre,post)
+            $call set_precedence, $(NAME)
+        $(else)
+            $(setmacro:_op+=0x100)
+            $(if:NAME~[A-Za-z])
+                # NOOP
+            $(else)
+                $(set:NAME=$(sym:$(NAME)))
+
+            $define(T_$(NAME)) $(_op)
+            $(block:T_op_names)
+                "T_$(NAME)",
+
+perlcode: set_precedence
+    my $assoc=0
+    $if $param=~/^right/
+        $assoc=1
+    $elif $param=~/^pre/
+        $assoc=2
+    $elif $param=~/^post/
+        $assoc=3
+
+    my $macro = $MyDef::def->{macros}
+    my $_op= hex($macro->{_op})
+    $_op = ($_op & 0xfffffc)+4+$assoc
+    $macro->{_op} = "0x".sprintf("%x", $_op)
+
+macros:
+    # seq##prec##assoc
+    #      64 max level of precedence
+    #      16-bit max seq
+    is_atom: $1==T_ATOM
+    is_op: ($1 & 0xffff00)
+    op_prec: ($1 & 0xff)
+    op_left: ($1 & 3)==0
+    op_right: ($1 & 3)==1
+    op_prefix: ($1 & 3)==2
+    op_postfix: ($1 & 3)==3
+
+    # BOC: begin of context
+    # (, [, {: use char value, bof: use 0
+
+#----------------------------------------------- 
+#- scans s for symbolic operators, set *p_id to T_$(sym:op)
+#- to use: define macro $(operator_list)
+fncode: f_scan_operator(s, int* p_id)
+    $call perl_my_operator
+    *p_id = 0
+    return s
+
+perlcode: perl_my_operator
+    my @op_list=(
+        # ',' and '\'' are dealt separately
+        $(for:a in $(operator_list))
+            '$(a)',
+        );
+
+    my %h
+    $foreach $a in @op_list
+        $h{substr($a, 0, 1)} .= ",$a"
+
+    push @$out, "switch(s[0]){"
+    push @$out, "  case ',': *p_id = T_Comma; return s+1;"
+    $foreach $c in sort keys %h
+        my @tlist=split /,/, $h{$c}
+        shift @tlist # first item is empty
+        $if 1==@tlist and $tlist[0] eq $c
+            $call get_ret, $tlist[0]
+            push @$out, "  case '$c': $line"
+        $else
+            push @$out, "  case '$c':"
+            my @sorted = sort {length($b)<=>length($a)} @tlist
+            my $n = @sorted
+            $for $_i=0:$n
+                my $t=$sorted[$_i]
+                $call get_ret, $t
+                $call get_cond, $t
+                $if $cond
+                    $if $_i==0
+                        push @$out, "    if($cond){$line}"
+                    $else
+                        push @$out, "    else if($cond){$line}"
+                $else
+                    push @$out, "    else{$line}"
+            push @$out, "    break;"
+    push @$out, "}"
+
+    subcode: get_cond(sym)
+        my $len = length($(sym))
+        my @parts
+        $for $i=1:$len
+            my $c = substr($(sym), $i, 1)
+            push @parts, "s[$i]=='$c'"
+        my $cond = join(" && ", @parts)
+
+    subcode: get_ret(sym)
+        my $len = length($(sym))
+        my $name = MyDef::utils::string_symbol_name($(sym))
+        my $line = "*p_id = T_$name;return s+$len;"
+
+#----------------------------------------------- 
+subcode: _autoload
+    $global char* WORD_names[]={DUMP_STUB WORD_names}
+
+fncode: get_WORD_name(int id)
+    $return_type char *
+    $if id<1
+        return NULL
+    $elif id <= sizeof(WORD_names)/sizeof(char*)
+        return WORD_names[id-1]
+    return NULL
+
+#- to use, define $(keyword_list) [and $(keyword_markers)]
+fncode: f_match_keyword(s, n)
+    $call perl_my_word
+    return 0
+
+perlcode: perl_my_word
+    my @word_list = (
+        $(for:a in $(keyword_list))
+            '$(a)',
+        );
+    my %marker_hash = (
+        $(for:a in $(keyword_markers))
+            $(a) => 1,
+        );
+    # populate WORD_names
+    my $block=MyDef::compileutil::get_named_block("WORD_names")
+    $foreach $w in @word_list
+        push @$block, "\"$w\","
+    push @$block, "NULL"
+
+    # setup enum
+    my @t=("WORD_") # start idx at 1
+    $foreach $a in @word_list
+        push @t, "WORD_$a"
+    $enums{WORD}=join(",", @t)
+    push @enum_list, "WORD"
+
+    # match
+    my %h
+    $foreach $a in @word_list
+        $if !$marker_hash{$a}
+            $h{substr($a, 0, 1)} .= ",$a"
+
+    push @$out, "switch(s[0]){"
+    $foreach $c in sort keys %h
+        push @$out, "  case '$c':"
+        my @tlist=split /,/, $h{$c}
+        shift @tlist
+        my $_if="if"
+        $foreach $t in @tlist
+            my $n = length($t)
+            push @$out, "    $_if(n==$n && strncmp(s, \"$t\", $n)==0) return WORD_$t;"
+            $_if = "else if"
+        push @$out, "    break;"
+    push @$out, "}"
+
