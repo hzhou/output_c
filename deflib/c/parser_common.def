@@ -78,6 +78,13 @@ macros:
     # BOC: begin of context
     # (, [, {: use char value, bof: use 0
 
+subcode: if_less_precedence
+    $(set:p0=$(op_prec:cur.type))
+    $(set:p1=$(op_prec:$(type:2)))
+    $if $(p0)<$(p1) || ($(p0)==$(p1) && $(op_left:cur.type))
+        BLOCK
+
+
 #----------------------------------------------- 
 #- scans s for symbolic operators, set *p_id to T_$(sym:op)
 #- to use: define macro $(operator_list)
