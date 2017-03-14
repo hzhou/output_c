@@ -40,16 +40,19 @@ subcode: darray_free(var)
 subcode: darray_resize(var, n)
     # note: len doesn't change unless > size
     $if $(var)_size<$(n)
+        tn_old_size = $(var)_size
         $(var)_size=$(n)
         $realloc($(var)_size) $(var)
+        memset($(var)+tn_old_size, 0, ($(var)_size-tn_old_size)*sizeof(*$(var)))
     $elif $(var)_len>$(n)
         $(var)_len=$(n)
 
 subcode: darray_grow(var, n)
     $if $(var)_len+$(n)>$(var)_size
+        tn_old_size = $(var)_size
         $(var)_size = ($(var)_len+$(n))*5/3 + 10
         $realloc($(var)_size) $(var)
-    memset($(var)+$(var)_len, 0, ($(n))*sizeof(*$(var)))
+        memset($(var)+tn_old_size, 0, ($(var)_size-tn_old_size)*sizeof(*$(var)))
 
 subcode: darray_clear(var)
     $(var)_len=0
