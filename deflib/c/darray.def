@@ -49,7 +49,7 @@ subcode: darray_grow(var, n)
     $if $(var)_len+$(n)>$(var)_size
         $(var)_size = ($(var)_len+$(n))*5/3 + 10
         $realloc($(var)_size) $(var)
-    memset($(var)+$(var)_len, 0, ($(n))*sizeof(*$(var)))
+    memset($(var)+$(var)_len, 0, ($(var)_size-$(var)_len)*sizeof(*$(var)))
 
 subcode: darray_clear(var)
     $(var)_len=0
