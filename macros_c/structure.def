@@ -210,7 +210,7 @@ fncode: get_struct_element($stype, $name)
         $else
             $foreach $k in keys(%$h)
                 $if $k=~/^$name\[/
-                    return "$h->{$k}"
+                    return $h->{$k}
         $call @debug
     subcode: debug
         $if $debug eq "type"
