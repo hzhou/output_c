@@ -207,7 +207,33 @@ subcode:: c_init
     %structs=()
     @struct_list=()
 
+subcode: sort_structs
+    my @sorted
+    $foreach $name in @struct_list
+        my $st = $structs{$name}
+        $if $st->{sort}==1
+            die "circular structure dependency\n"
+        $elif $st->{sort}==2
+            NOOP
+        $else
+            $st->{sort}=1
+            f_check_struct_depend($name, $st, \@sorted)
+    @struct_list = @sorted
+
+fncode: f_check_struct_depend($name, $st, $sorted)
+    my $s_list=$st->{list}
+    my $s_hash=$st->{hash}
+    $foreach $p in @$s_list
+        my $type = $s_hash->{$p}->{type}
+        $if $type=~/struct\s+(\w+)/
+            my $st2 = $structs{$1}
+            $if $st2 and !$st2->{sort}
+                f_check_struct_depend($1, $st2, $sorted)
+    $st->{sort}=2
+    push @$sorted, $name
+
 subcode: dump_structs
+    $call sort_structs
     $foreach $name in @struct_list
         my $s_list=$structs{$name}->{list}
         my $s_hash=$structs{$name}->{hash}

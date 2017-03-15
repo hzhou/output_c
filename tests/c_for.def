@@ -1,0 +1,19 @@
+page: test, basic_frame
+    module: c
+
+    $call test_for, i=1:9
+    $call test_for, i=9:1
+    $call test_for, i=0:10
+    $call test_for, i=10:0
+    $call test_for, i=0:10:1
+    $call test_for, i=10:0:-1
+    $call test_for, i=0:10:2
+    $call test_for, i=10:0:-2
+    $call test_for, i=1:10:2
+    $call test_for, i=10:1:-2
+
+subcode: test_for(p)
+    $print "for $(p): \t-"
+    $for $(p)
+        $print "$i -"
+    $print
