@@ -40,10 +40,7 @@ subcode: setup_parser
             $call set_precedence, $(NAME)
         $(else)
             $(setmacro:_op+=0x100)
-            $(if:NAME~[A-Za-z])
-                # NOOP
-            $(else)
-                $(set:NAME=$(sym:$(NAME)))
+            $(set:NAME=$(sym:$(NAME)))
 
             $define(T_$(NAME)) $(_op)
             $(block:T_op_names)
@@ -51,12 +48,9 @@ subcode: setup_parser
 
 perlcode: set_precedence
     my $assoc=0
-    $if $param=~/^right/
-        $assoc=1
-    $elif $param=~/^pre/
-        $assoc=2
-    $elif $param=~/^post/
-        $assoc=3
+    $(for:right,pre,post and 1,2,3)
+        $case $param=~/^$1/
+            $assoc=$2
 
     my $macro = $MyDef::def->{macros}
     my $_op= hex($macro->{_op})
@@ -77,13 +71,36 @@ macros:
 
     # BOC: begin of context
     # (, [, {: use char value, bof: use 0
-
+#----------------------------------------------- 
 subcode: if_less_precedence
     $(set:p0=$(op_prec:cur.type))
     $(set:p1=$(op_prec:$(type:2)))
     $if $(p0)<$(p1) || ($(p0)==$(p1) && $(op_left:cur.type))
         BLOCK
 
+subcode: check_atom_context
+    $if $(is_atom:$(type:1))
+        # break if resolved
+        #   turn last one into op
+        $call @resolve_atom_atom
+        $call error, "unresolved atom-atom"
+
+subcode: check_op_context
+    $if $(is_op:$(type:1))
+        $if $(op_prefix:cur.type)
+            goto do_shift
+        $else
+            # break if resolved
+            #   turn cur into uniop
+            $(set:T=cur.type==T_$1)
+            $(set:T1=$(type:1)==T_$1)
+            $call @resolve_op_op
+            $call error, "unresolved operator-operator!"
+    $else # $(is_atom:$(type:1))
+        $if $(op_prefix:cur.type)
+            $call @resolve_atom_prefix
+            $call error, "unexpected unary operator"
+    $call @resolve_op_other
 
 #----------------------------------------------- 
 #- scans s for symbolic operators, set *p_id to T_$(sym:op)
@@ -201,3 +218,47 @@ perlcode: perl_my_word
         push @$out, "    break;"
     push @$out, "}"
 
+#---- symbol table ----------------------------------- 
+include: c/hash.def
+subcode: _autoload
+    $class stash
+    $struct(stash) $(strhash_member), int* p_val
+    $register_prefix(stash) struct stash *
+    $call libhash, str
+    $list f_stash_get
+
+fncode: f_stash_get(stash, s, n)
+    $return_type int
+    $if stash->n_size==0
+        return 0
+    k=f_strhash_lookup(stash, (unsigned char*)s, n)
+    $if stash->p_exist[k]
+        return stash->p_val[k]
+    $else
+        return 0
+
+#----
+subcode: stash_init(var, scope, @type)
+    $$(scope) struct stash* $(var)
+    $allocate(1, 0) $(var)
+    $(var)->n_val_size = sizeof(int)
+    $set_var_attr $(var), class=stash
+
+subcode: stash_set(var, s, len, val)
+    k=f_strhash_lookup_left($(var), (unsigned char*)$(s), $(len))
+    $(var)->p_val[k]=$(val)
+
+subcode: stash_get(var, s, len)
+    $yield f_stash_get($(var), $(s), $(len))
+
+
+#----- convenience ---------------------------- 
+subcode: skip_spaces(s)
+    $while isspace(*$(s))
+        $(s)++
+
+subcode: skip_word(s)
+    s_word = $(s)
+    $while isword(*$(s))
+        $(s)++
+    n = (int)($(s)-s_word)

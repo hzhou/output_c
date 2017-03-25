@@ -6,8 +6,10 @@ macros:
     float: float
 
 page: test, basic_frame
-    # $call test_a
-    $call test_matrix_mult
+    module: c
+
+    $call test_a
+    # $call test_matrix_mult
     # $call test_static
     # $call test_cholesky
 
@@ -27,15 +29,17 @@ subcode: test_matrix_mult
     $local $(float) B[4]={1, 2, 5, -1}
     $call set_matrix, A, 2, 2
     $call set_matrix, B, 2, 2
+    A.$print
+    B.$print
 
-    $sumcode sum=A[i]*B[i]
-    $print "product: $sum"
+    $sumcode(4) sum=A[i]*B[i]
+    $print "A .* B = $sum\n\n"
 
     $local $(float) C[4]
     $call set_matrix, C, 2, 2
 
     $sumcode C[i,j]=A[i,k]*B[k,j]
-    $call matrix_print, C
+    C.$print
 
 macros: 
     skip_pivot: 1

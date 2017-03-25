@@ -99,11 +99,12 @@ fncode: do_assignment($left, $right)
             my $s_list=$structs{$(name)}->{list}
             my $i=0
             $foreach $p in @$s_list
-                $if $right_list[$i] ne "-"
+                $(set:r=$right_list[$i])
+                $if $(r) ne "-"
                     $(if:is_ref=1)
-                        do_assignment("$left->$p", $right_list[$i])
+                        do_assignment("$left->$p", $(r))
                     $(else)
-                        do_assignment("$left.$p", $right_list[$i])
+                        do_assignment("$left.$p", $(r))
                 $i++
                 # so it is ok to assign to part of the struct
                 $if !defined $right_list[$i]
@@ -116,10 +117,12 @@ fncode: do_assignment($left, $right)
                 my $s_list=$structs{$(name)}->{list}
                 my $i=0
                 $foreach $p in @$s_list
-                    $(if:is_ref=1)
-                        do_assignment($left_list[$i], "$right->$p")
-                    $(else)
-                        do_assignment($left_list[$i], "$right.$p")
+                    $(set:l=$left_list[$i])
+                    $if $(l) ne "-"
+                        $(if:is_ref=1)
+                            do_assignment($(l), "$right->$p")
+                        $(else)
+                            do_assignment($(l), "$right.$p")
                     $i++
 
         subcode: assign_from_function_tuple(fname, param)

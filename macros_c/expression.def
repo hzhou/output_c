@@ -12,62 +12,55 @@ subcode:: parsecode_func_other
         return
 
 #----------------------------------------------- 
+# todo: rewrite with proper precedence, so it can deal with chaining comparisons
 fncode: check_expression($l, $context)
     #-- Note: if $l is already terminated with ';'
     #--   it is bypassed: parsing.def:parsecode_other
-    $(if:0)
-        $if $debug eq "expression"
-            $print "check_expression: $l [$context]"
-
-    $call check_statement
-    $else
-        $call parse_frame
-
-    # ---------------------------
-    subcode: check_statement
-        $if $l=~/^return\b\s*(.*)/
-            $if length($1)<=0
-                return func_return()
-            $else
-                my $t=check_expression($1, $context)
-                return func_return($t)
-        $elif $l=~/^\s*(if|for|while|switch)/
-            # -- vanila C statement ---
-            return $l
-
-    # --------------------------
-    subcode: parse_frame
-        my ($assign, $left, $right)
-        $call @check_expression_init
-        my @stack
-        my @types
-        $while 1
-            $call check_expression_parse
-            $call check_expression_push
-        $if @stack==1 and $types[0] eq "atom-("
-            $right=substr($stack[0], 1, -1)
+    $if $l=~/^return\b\s*(.*)/
+        $if length($1)<=0
+            return func_return()
         $else
-            $right=join("", @stack)
+            my $t=check_expression($1)
+            return func_return($t)
+    $elif $l=~/^\s*(if|for|while|switch)\b/
+        # -- vanila C statement ---
+        return $l
 
-        $call process_expression_cache, $right
-        $if $assign
-            $if $assign eq "="
-                $if $context && $context eq "condition"
-                    $if $right!~/^\w+\(.*\)$/
-                        $call warn,  Assignment in [$left = $right], possible bug?
-                    return "$left = $right"
-                $else
-                    do_assignment($left, $right)
-                    return
-            $elif $assign eq ":="
-                # a hack to bypass checking
-                $if $context eq "condition"
-                    return "($left = $right)"
-                $else
-                    return "$left = $right"
+    # ---- parse frame --------
+    my ($assign, $left, $right)
+    $call @check_expression_init
+    my (@stack, @types)
+    $while 1
+        $call check_expression_parse
+        $call check_expression_push
+    $if @stack==1 and $types[0] eq "atom-("
+        $right=substr($stack[0], 1, -1)
+    $else
+        $call join_stack, $right
+
+    $call process_expression_cache, $right
+    $if $assign
+        $if $assign eq "="
+            $if $context && $context eq "condition"
+                $if $right!~/^\w+\(.*\)$/
+                    $call warn,  Assignment in [$left = $right], possible bug?
+                return "$left = $right"
             $else
-                $right= "$left $assign $right"
-        return $right
+                do_assignment($left, $right)
+                return
+        $elif $assign eq ":="
+            # a hack to bypass checking
+            $if $context eq "condition"
+                return "($left = $right)"
+            $else
+                return "$left = $right"
+        $else
+            $call @check_opeq_special
+            $right= "$left $assign $right"
+    return $right
+    # -------------------------------
+    subcode: join_stack(t)
+        $(t) = join("", @stack)
 
     macros:
         type: 
@@ -166,25 +159,32 @@ fncode: check_expression($l, $context)
             $elif $token=~/^(.*)=$/ and $1!~/^[!><=]$/
                 $call is_assignment
             $else
+                #- we need full precedence to do apl operators
                 #---- other op ----------------
                 $call exp_push, $token, $type
             # ---------------
             subcode: is_assignment
-                $assign=$token
-                $(set:equal=$assign eq '=')
+                $if $left and $assign ne '='
+                    die, "only simple chained assignment is supported"
                 $if $left
-                    # assume previous $assign to be '='
-                    $left .= ' = '.join("", @stack)
-                $elif $(equal) and @stack==1 and $types[0] eq "atom-("
+                    $call chained_assignment
+                $elif $token eq '=' and @stack==1 and $types[0] eq "atom-("
                     $left=substr($stack[0], 1, -1)
                 $else
-                    $left=join("", @stack)
+                    $call join_stack, $left
 
                 @stack=()
                 @types=()
+                $assign=$token
+                $(set:equal=$assign eq '=')
 
                 $if $(equal)
                     $call process_expression_cache, $left
+                subcode: chained_assignment
+                    $if $assign ne "=" || $token ne "="
+                    my $t
+                    $call join_stack, $t
+                    $left .= ' = $t'
         # -----------------
         subcode: is_atom
             $if $(type1) =~/^op/
@@ -197,11 +197,12 @@ fncode: check_expression($l, $context)
                 $else
                     #---- binary -------------
                     $if $stack[-1] eq ","
+                        # space after ,
                         $stack[-1]="$stack[-1] "
-                    $elif $stack[-1]=~/^(eq|ne|lt|le|gt|ge)$/i
-                        $call check_exp_string_op
+                    $call @check_bin_op_special
                     $elif $stack[-1]=~/^\S+$/ && $stack[-1] ne "::"
                         $if @stack>1 and $stack[-2]!~/^[\(\[\{]$/
+                            # space on both side of bin_op
                             $stack[-1]=" $stack[-1] "
                     $call exp_push, $token, $type
             $elif $(type1) =~/^atom/
@@ -418,6 +419,21 @@ subcode: process_expression_cache(t)
                         substr($(t), $pos, $len)=$yield
 
 #---------------------------------------- 
+subcode:: check_bin_op_special
+    $elif $stack[-1]=~/^([<>])\.$/
+        $call exp_pop, $op
+        $call exp_pop, $exp
+        $token = "$exp $1 $token? $exp : $token"
+
+subcode:: check_opeq_special
+    $case $assign =~/^([<>])\.=$/
+        return "if($right $1 $left){$left = $right;}"
+
+#---------------------------------------- 
+subcode:: check_bin_op_special
+    $elif $stack[-1]=~/^(eq|ne|lt|le|gt|ge)$/i
+        $call check_exp_string_op
+
 subcode: check_exp_string_op
     add_include("<string.h>")
     $call exp_pop, $op
