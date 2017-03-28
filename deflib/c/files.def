@@ -7,10 +7,10 @@ subcode: open_r_line(file)
     $if file_in==NULL
         fprintf(stderr, "Can't open %s\n", $(f))
     $else
-        $my string line
-        line.$resize(1000)
-        $while fgets(line, 1000, file_in)
-            $(set:l=line)
+        $my s_line
+        $local_allocate(1000) s_line
+        $while fgets(s_line, 1000, file_in)
+            $(set:l=s_line)
             BLOCK
         fclose(file_in)
 
@@ -24,16 +24,22 @@ subcode: stat_file(file)
         $(set:f=$(file))
     $(else)
         $call fmt_filename, $(file)
-    $local struct stat fstat
-    tn_ret=stat($(f), &fstat)
-    $(export:exist=tn_ret==0)
-    $(export:fsize=fstat.st_size)
-    $(export:ftime=fstat.st_mtime)
+    $temp struct stat st
+    tn_ret=stat($(f), &$(st))
+    $(set:exist=tn_ret==0)
+    $(set:fsize=$(st).st_size)
+    $(set:ftime=$(st).st_mtime)
+    BLOCK
 
 subcode: if_exist(file)
-    $call stat_file, $(file)
-    $if $(exist)
-        BLOCK
+    &call stat_file, $(file)
+        $if $(exist)
+            BLOCK
+
+subcode: if_dir(file)
+    &call stat_file, $(file)
+        $if $(exist) && S_ISDIR(sb.st_mode)
+            BLOCK
 
 #---------------------------------------- 
 subcode: fmt_filename(file)
