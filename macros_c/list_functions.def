@@ -44,7 +44,6 @@ subcode: parsecode_post
     #- NOTE: it won't work for functions added in exit calls, which are processed at the begining of dumpout at process_function
 
     $(set:lambda=$MyDef::compileutil::named_blocks{"lambda-$1"})
-    my $named_blocks = MyDef::compileutil::named_blocks
     $while my $f=shift @list_function_list
         # $print parse_function_list_item $f ...
         $call parse_function_list_item, $f

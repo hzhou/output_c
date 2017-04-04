@@ -156,27 +156,10 @@ fncode: type_default($type)
     $else
         return undef
 
-
-fncode: get_type_word($name)
-    $if $debug eq "type"
-        $print "    get_type_word: $name"
-    $if $name
-        $if $type_prefix{$name}
-            return $type_prefix{$name}
-        $elif $name=~/^([a-z0-9]+)/
-            my $prefix=$1;
-            $if $type_prefix{$prefix}
-                return $type_prefix{$prefix};
-            $elif $prefix=~/^(.*?)\d+$/ and $type_prefix{$1}
-                return $type_prefix{$1};
-            $elif $structs{$1}
-                return "struct $1"
-
-        $if substr($name, 0, 1) eq "t"
-            return get_type_word(substr($name,1));
-        $elif substr($name, 0, 1) eq "p"
-            return get_type_word(substr($name,1)).'*';
-    return undef
+# ref: macros_output/types.def -- get_type_word
+subcode: type_word_prefix
+    $elif $c eq "p"
+        return "$type*"
 
 fncode: get_c_type($name)
     $if $name=~/t?(p+)_(.*)/
@@ -205,10 +188,6 @@ fncode: get_c_type($name)
 fncode: pointer_type($t)
     $t=~s/\s*\*\s*$//;
     return $t;
-
-subcode: type_word_prefix
-    $case $c eq "p"
-        return "$type*"
 
 # --------------------------------------------
 fncode: get_var_fmt($v, $warn)
