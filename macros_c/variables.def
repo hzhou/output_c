@@ -1,8 +1,4 @@
 subcode:: parsecode_func_param_other
-    $elif $func eq "get_type"
-        my $type=get_var_type($param2);
-        MyDef::compileutil::set_current_macro($param1, $type)
-        return 
     $elif $func eq "get_pointer_type"
         my $type=pointer_type(get_var_type($param2));
         MyDef::compileutil::set_current_macro($param1, $type)
@@ -33,67 +29,19 @@ subcode:: parsecode_func_other
         return
 
 subcode:: parsecode_func_other
-    $elif $func=~/^(global|static|symbol|extern)$/
+    $elif $func=~/^(static|extern)$/
         $call check_var_special, $func
         &call each_param_v
-            $if $func eq "global"
-                my $name=global_add_var($v)
-            $elif $func eq "static"
+            $if $func eq "static"
                 my $name=global_add_var($v)
                 $global_hash->{$name}->{attr}="static"
-            $elif $func eq "symbol"
-                global_add_symbol($v)
             $elif $func eq "extern"
                 my $name=global_add_symbol($v)
                 my $decl=var_declare($global_hash->{$name})
                 $call do_declare, "extern $decl"
         return
-    $elif $func eq "local" or $func eq "my"
-        $call check_var_special, $func
-        &call each_param_v
-            $if $func eq "my" and !$page->{disable_scope}
-                my_add_var($v)
-            $else
-                func_add_var($v);
-        return
-    $elif $func eq "temp"
-        &call each_param_v
-            temp_add_var($v)
-        return
-    $elif $func eq "set_var_attr"
-        # $set_var_attr var, class=darray, ...
-        my @plist=split /,\s*/, $param
-        my $name=shift @plist
-        my $var=find_var_x($name)
-        $if $var
-            $foreach $a in @plist
-                $if $a=~/(\w+)=(.*)/
-                    $if $2 eq "--"
-                        delete $var->{$1}
-                    $else
-                        $var->{$1}=$2
-        return
-    $elif $func eq "get_var_attr"
-        # $get_var_attr var, dimension(N), mask, ...
-        my @plist=split /,\s*/, $param
-        my $name=shift @plist
-        my $var=find_var_x($name)
-        $if $var
-            $foreach $a in @plist
-                $if $a=~/^(\w+)\((\w+)\)/
-                    MyDef::compileutil::set_current_macro($2, $var->{$1})
-                $else
-                    MyDef::compileutil::set_current_macro($a, $var->{$a})
-        return
 
-    # --------------------
-    subcode: each_param_v
-        $param=~s/\s*;\s*$//
-        my @vlist=MyDef::utils::proper_split($param)
-        $foreach $v in @vlist
-            BLOCK
-
-#---------------------------------------- 
+#---- pseudo class support ---
 subcode:: parsecode_func_other
     $elif $func eq "class"
         $global %class_names
@@ -126,33 +74,6 @@ subcode: check_var_special(scope)
 #-     _list: list of, names
 #-     _hash: hash to hash
 #-----------------------------------------------------------------
-fncode: global_add_symbol($name, $type, $value)
-    $call add_var, $global_hash, none
-
-fncode: global_add_var($name, $type, $value)
-    $call add_var, $global_hash, $global_list
-
-fncode: func_add_var($name, $type, $value)
-    my ($var_list, $var_hash)
-    $if !$cur_function
-        $var_list=$main_func->{var_list}
-        $var_hash=$main_func->{var_hash}
-    $else
-        $var_list=$cur_function->{var_list}
-        $var_hash=$cur_function->{var_hash}
-    $call add_var, $var_hash, $var_list
-
-fncode: my_add_var($name, $type, $value)
-    my $var_list=$cur_scope->{var_list}
-    my $var_hash=$cur_scope->{var_hash}
-    $if $var_hash != $global_hash
-        $call add_var, $var_hash, $var_list
-    $else
-        # There must be a reason my_add_var was called in a global context
-        #     e.g. in a hack or global template
-        #     silently drop declarations
-        return $name
-
 fncode: auto_add_var($name, $type, $value)
     my $var
     $if $name=~/^(\w+)$/
@@ -164,56 +85,6 @@ fncode: auto_add_var($name, $type, $value)
     $else
         # do not add array variables, let C compiler complain
         return
-
-fncode: temp_add_var($name, $type, $value)
-    my $var=parse_var($name, $type, $value)
-    $name=$var->{name}
-
-    my $macro_name=$name
-    $name=MyDef::utils::uniq_name($name, \%protected_var)
-
-    $if $debug eq "type"
-        print "temp_var $macro_name -> $name of $var->{type}\n"
-
-    my $hash=$cur_scope->{var_hash}
-    $type=$var->{type}
-    $if $hash->{$name} and $hash->{$name}->{temptype} ne $type
-        my $i=2
-        $if $name=~/[0-9_]/
-            $name.="_"
-        $while $hash->{"$name$i"} and $hash->{"$name$i"}->{temptype} ne $type
-            $i++
-        $name="$name$i"
-    $if !$hash->{$name}
-        $var->{name}=$name
-        $var->{temptype}=$type
-        $hash->{$name}=$var
-        my $var_list=$cur_scope->{var_list}
-        push @$var_list, $name
-
-    MyDef::compileutil::set_current_macro($macro_name, $name)
-    return $name
-
-#------------------
-subcode: check_var_collision(exist)
-    my $exist=$(exist)
-    $if $var->{type} eq $exist->{type}
-        $if $var->{array} > $exist->{array}
-            $exist->{array}=$var->{array}
-            $exist->{dimension}=$var->{array}
-
-subcode: add_var(hash, list)
-    my $var=parse_var($name, $type, $value)
-    $name=$var->{name}
-    $if $(hash)->{$name}
-        $call check_var_collision, $(hash)->{$name}
-        return $name
-    $else
-        $(if:list!=none)
-            push @$(list), $name
-        $(hash)->{$name}=$var
-        # $call warn, add_var $(hash) $name
-        return $name
 
 #---------------------------------------- 
 #---- array, let's restrict to one dimensional arrays
@@ -290,7 +161,7 @@ fncode: parse_var($name, $type, $value)
             $if $type and $type eq "void"
                 undef $type
         $if defined $value
-            my $val_type=infer_c_type($value)
+            my $val_type=infer_value_type($value)
             $if $val_type
                 $if !$type
                     $type= $val_type
@@ -363,20 +234,6 @@ fncode: var_declare($var)
         $else
             return  $t
 
-#-----------------------------------------------------------------
-fncode: get_var_type_direct($name)
-    my $var=find_var($name)
-    $if $debug eq "type"
-        print "get_var_type_direct: $name - [$var] - $var->{type}\n"
-
-    $if $var
-        return $var->{type}
-    $elif $type_name{$name}
-        # register_name may be used as a hack
-        return $type_name{$name}
-    $else
-        return undef
-
 #---------------------------------------- 
 fncode: get_var_type($name, $nowarn)
     $if $name=~/^(\w+)(.*)/
@@ -408,7 +265,8 @@ fncode: get_sub_type($type0, $tail, $nowarn)
         return $type0
 
 #-----------------------
-fncode: find_var_x($name)
+# ref: macros_output/variables.def -- find_var_x
+subcode: find_var_element
     $if $name=~/(.*)(\.|->)(\w+)$/
         my ($vdot, $mem)=("$1$2", $3)
         my $t = get_var_type($1)
@@ -423,12 +281,6 @@ fncode: find_var_x($name)
             return find_var($name)
 
 #-###############################################
-subcode:: package_globals
-    use File::stat
-    $sub get_mtime($fname)
-        my $st=stat($fname)
-        return $st->[9]
-
 subcode:: c_init
     $global @extern_binary
     @extern_binary=()
@@ -442,7 +294,7 @@ subcode: value_from_file
 
 subcode: process_extern_binary
     my $ofile=$page->{outdir}."/extern.o"
-    my $otime=get_mtime($ofile)
+    my $otime=-M $ofile
     my $need_update=0
     my @externS;
     push @externS, "    .section .rodata"
@@ -454,7 +306,7 @@ subcode: process_extern_binary
             push @externS, "    .align  4"
             push @externS, "_$name:"
             push @externS, "    .incbin \"$fname\""
-            $if get_mtime($fname)>$otime
+            $if -M $fname > $otime
                 $need_update=1
     $if $need_update
         print "  ---> $ofile\n"
@@ -468,29 +320,4 @@ subcode: process_extern_binary
         close PIPE
     $if -f $ofile
         add_object("extern.o")
-
-#---------------------------------------- 
-subcode:: parsecode_func_other
-    $elif $func eq "protect_var"
-        my @tlist=MyDef::utils::proper_split($param)
-        $foreach $t in @tlist
-            protect_var($t)
-        return
-    $elif $func eq "unprotect_var"
-        my @tlist=MyDef::utils::proper_split($param)
-        $foreach $t in @tlist
-            # $call warn, unprotect_var $t: $protected_var{$t}
-            $if $protected_var{$t}>0
-                $protected_var{$t}--
-        return
-
-fncode: protect_var($v)
-    $global %protected_var
-    # $call warn,  protect_var $v
-    $if $protected_var{$v}
-        $call warn, Variable $v protected: [$protected_var{$v}]
-        $protected_var{$v}++
-    $else
-        $protected_var{$v}=1
-
 

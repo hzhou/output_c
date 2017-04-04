@@ -33,7 +33,7 @@ fncode: layout_append_char(struct box * box, int code)
         box->string=malloc(100)
         box->strsize=100
     $local s_utf[6]
-    $fcall tn_ret=to_utf8(s_utf, code)
+    tn_ret=to_utf8(s_utf, code)
     $if box->strlen+4>box->strsize
         tn_new_size=box->strsize*5/3
         box->string=realloc(box->string, tn_new_size)

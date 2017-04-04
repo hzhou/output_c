@@ -1,12 +1,6 @@
 include: macros_output/functions.def
 subcode:: c_init
-    $global @function_stack
-    @function_stack=()
-
-    $global %list_function_hash
-    $global @list_function_list
-    %list_function_hash=()
-    @list_function_list=()
+    $call function_init
 
 #---- auto_declare -----------------------------
 # relying on utils to export external functions
@@ -40,84 +34,17 @@ subcode: load_autodecl(inc)
         $elif $struct_lines
             push @$struct_lines, $l
 
-#---- autolist ------------------------------------ 
-subcode: autolist_functions
-    $global %function_autolist
-    &call each_subcode, fn
-        my ($return_type)
-        my $source=$code->{source}
-        $foreach $l in @$source
-            $if $l=~/^SOURCE/
-                #skip
-            $elif $l=~/^(lexical|parameter|return):\s*(.+?)\s*$/
-                $if $1 eq "lexical"
-                    $call parse_lexical
-                $elif $1 eq "parameter"
-                    $l="\$parameter $2"
-                $elif $1 eq "return"
-                    $l="\$return_type $2"
-                    $return_type=$2
-            $elif $l=~/^\$return_type\s+(.+)/
-                $return_type = $1
-            $else
-                last
-        # $print function_autolist: $name
-        $function_autolist{$name}="static"
-        $if $return_type
-            $functions{$name}={ret_type=>$return_type}
-
-#---- lexical parameter ------------------------------------ 
-subcode: parse_lexical
-    my @tlist=split /,\s*/, $2
-    my @params
-    my @segs
-    $foreach $t in @tlist
-        $if $t=~/(.*)\((\w+)\)$/
-            push @params, $1
-            push @segs, $2
-        $else
-            push @params, $t
-            $if $t=~/^(.+)\s+(\S+)$/
-                push @segs, $2
-            $else
-                push @segs, $t
-    $function_defaults{$name}="append:".join(', ', @segs)
-    $l="\$parameter ". join(", ", @params)
-
 #------------------------------------
-subcode:: parsecode_func_other
-    $elsif $func eq "function"
-        $call parse_function
-        return
-    $elsif $func eq "list"
-        my @tlist=split /,\s*/, $param
-        $foreach $f in @tlist
-            $call add_list_function, $f
-            $function_autolist{$f}="global"
-        return
-    $elsif $func eq "fcall"
-        $if $param=~/(\w+)\s*\(/
-            $call add_list_function, $1
-            $l=$param
-        $elif $param=~/^(\w+)\s*$/
-            $call add_list_function, $1
-            $l="$1()"
-
-#------------------------------------
-subcode: add_list_function(f)
-    $if !$list_function_hash{$(f)}
-        $list_function_hash{$(f)}=1
-        push @list_function_list, $(f)
-    $else
-        $list_function_hash{$(f)}++
-
 # ##############################
+# ref: macros_output/functions.def -- function_list_all
 subcode: parsecode_post
     #---- NOOP POST_MAIN: called at end of parse or 
     #-      end of each parse group as in output_xs.def
 
     #- NOTE: it won't work for functions added in exit calls, which are processed at the begining of dumpout at process_function
 
+    $(set:lambda=$MyDef::compileutil::named_blocks{"lambda-$1"})
+    my $named_blocks = MyDef::compileutil::named_blocks
     $while my $f=shift @list_function_list
         # $print parse_function_list_item $f ...
         $call parse_function_list_item, $f
@@ -125,69 +52,14 @@ subcode: parsecode_post
     # ------------------------------------
     subcode: parse_function_list_item(f)
         my $funcname=$(f)
-        $if $lambda_functions{$funcname}
-            my $block=$lambda_functions{$funcname}
-            push @$out, @$block
+        $if $(lambda:$funcname)
+            push @$out, "DUMP_STUB lambda-$funcname"
             $function_autolist{$funcname}="static"
         $elif $functions{$funcname} && $functions{$funcname}->{autodecl}
         $elif $function_autolist{$funcname} eq "declare"
             push @function_declare_list, $funcname
         $else
-            MyDef::compileutil::set_current_macro("funcname", $funcname)
             $call list_function, $(f)
-
-# ---- Direct $function ------------------
-subcode: parse_function
-    $global %lambda_functions
-    $if $param=~/(\w+)(.*)/
-        my ($fname, $paramline)=($1, $2)
-        $if $paramline=~/\((.*)\)/
-            $paramline=$1
-        $elif $paramline=~/^\s*,\s*(.*)/
-            $paramline=$1
-
-        my $funcname=MyDef::utils::uniq_name($fname, \%list_function_hash)
-        my ($func, $block)=function_block($funcname, $paramline)
-        func_push($func)
-        push @$block, "PARSE:\$function_pop"
-
-        $lambda_functions{$funcname}=$block
-        $call add_list_function, $funcname
-        MyDef::compileutil::set_current_macro("lambda", $funcname)
-
-        return $block
-    $else
-        return "SKIPBLOCK"
-
-#---------------------------------------- 
-#---- interface to macros_output/functions.def ----
-#--     list_function
-subcode: function_push(func)
-    func_push($(func))
-
-subcode: function_pop
-    func_pop()
-
-#----
-fncode: func_push($func)
-    push @function_stack, $cur_function
-    $cur_function = $func
-
-    push @scope_stack, $cur_scope
-    $cur_scope=$cur_function
-
-fncode: func_pop
-    $cur_function=pop @function_stack
-    $cur_scope=pop @scope_stack
-    my $level=@function_stack
-    $if $level==0
-        my $l = "\$function_pop" # for debug_case_unwrap
-        $call case_reset
-
-subcode:: parsecode_func_other
-    $elsif $func eq "function_pop"
-        func_pop()
-        return
 
 #---------------------------------------- 
 fncode: inject_function($name, $params, $source)

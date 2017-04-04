@@ -76,7 +76,7 @@ subcode: darray_check(var)
 
     $if $(len)+1>$(size)
         $get_pointer_type(type) $(var)
-        $fcall $(var)=f_darray_expand($(var), sizeof($(type)), &$(var)_size)
+        $(var)=f_darray_expand($(var), sizeof($(type)), &$(var)_size)
 
 
 fncode: f_darray_expand(void * P, n_rec_size, pn_size)

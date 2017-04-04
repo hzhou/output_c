@@ -35,7 +35,7 @@ fncode: f_matrix_print(pf_A, m, n)
 subcode: vector_print(v)
     $print "\nVector $(v): -"
     $get_var_attr $(v), dimension
-    $fcall f_vector_print($(v), $(dimension))
+    f_vector_print($(v), $(dimension))
 
 fncode: f_vector_print(pf_V, m)
     $(set:V=pf_V[$1])
@@ -94,7 +94,7 @@ subcode: matrix_LU(var)
         $allocate($(dim1)) $(work)
         $set_var_attr $(work), exit=free
 
-        $fcall f_matrix_LU($(var), $(P), $(work), $(dim1), $(dim2))
+        f_matrix_LU($(var), $(P), $(work), $(dim1), $(dim2))
 
 fncode: f_matrix_LU(pf_A, int * P, pf_work, m, n)
     $for i=0:m
@@ -190,7 +190,7 @@ subcode: matrix_solve(var, b)
     $get_var_attr $(var), dim1, dim2
 
     $call matrix_LU, $(var)
-    $fcall f_pivot_vector(b, $(P), $(work), $(dim1))
+    f_pivot_vector(b, $(P), $(work), $(dim1))
 
     $(set:M=$(var)[$1*$(dim2)+$2])
     $(set:V=$(b)[$1])
@@ -211,9 +211,9 @@ subcode: matrix_inv(var)
     $call matrix_LU, $(var)
 
     $get_var_attr $(var), dim1, dim2
-    $fcall f_matrix_LU_invert($(var), $(dim1))
+    f_matrix_LU_invert($(var), $(dim1))
     $for i=0:$(dim1)
-        $fcall f_pivot_vector($(var)+i*$(dim1), $(P), $(work), $(dim1))
+        f_pivot_vector($(var)+i*$(dim1), $(P), $(work), $(dim1))
 
 
 fncode: f_matrix_LU_invert(pf_A, n)

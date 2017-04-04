@@ -123,8 +123,8 @@ subcode:: lma_init
     $allocate($(ny)) pf_sim
 
     $(if:lma_correlation)
-        $fcall f_matrix_cholesky($(lma_correlation), $(ny))
-        $fcall f_matrix_cholesky_inverse($(lma_correlation), $(ny))
+        f_matrix_cholesky($(lma_correlation), $(ny))
+        f_matrix_cholesky_inverse($(lma_correlation), $(ny))
 
 subcode: get_lma_Y(param, exp, py)
     $call $(F), pf_sim, $(param)
@@ -133,7 +133,7 @@ subcode: get_lma_Y(param, exp, py)
     $(if:lma_sigma)
         $sumcode $(py)[i]/=$(lma_sigma)[i]
     $(if:lma_correlation)
-        $fcall f_matrix_cholesky_inverse_transform($(lma_correlation), $(ny), $(py))
+        f_matrix_cholesky_inverse_transform($(lma_correlation), $(ny), $(py))
 
 #-----------------------------------------
 subcode: debug_start

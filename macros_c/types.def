@@ -1,14 +1,4 @@
 subcode:: parsecode_func_param_other
-    $elif $func eq "register_prefix"
-        my @tlist=split /,\s*/, $param1
-        $foreach $t in @tlist
-            $type_prefix{$t}=$param2
-        return
-    $elif $func eq "register_name"
-        my @tlist=split /,\s*/, $param1
-        $foreach $t in @tlist
-            $type_name{$t}=$param2
-        return
     $elif $func eq "fntype"
         my ($ret, $param)
         $if $param2=~/^(.*?),\s*(.*)/
@@ -115,12 +105,14 @@ subcode: _autoload
         "assert"=>"assert",
     );
 
-fncode: infer_c_type($val)
+fncode: infer_value_type($val)
     $val=~s/^[+-]//
     $if $val=~/^\((float|int|char|unsigned .*|.+\*)\)/
         return $1
+    $elif $val=~/^\((\w+)\)\w/
+        return $1
     $elif $val=~/^\((.*)/
-        return infer_c_type($1)
+        return infer_value_type($1)
     $elif $val=~/^\d+\./
         return "float"
     $elif $val=~/^\d+[eE]/
@@ -131,15 +123,13 @@ fncode: infer_c_type($val)
         return "char*";
     $elif $val=~/^'/
         return "char";
-    $elif $val=~/^\((\w+)\)\w/
-        return $1
     $elif $val=~/^(true|false)/
         $page->{use_bool}=1
         return "bool"
     $elif $val=~/(\w+)\(.*\)/
         my $func=$functions{$1}
         $if $debug
-            $print infer_c_type: function $1 [$func]
+            $print infer_value_type: function $1 [$func]
         $if $func and $func->{ret_type}
             return $func->{ret_type}
     $elif $val=~/NULL/
@@ -151,7 +141,7 @@ fncode: infer_c_type($val)
         my @vlist=split /,\s*/, $1
         my @plist
         $foreach $v in @vlist
-            push @plist, infer_c_type($v)
+            push @plist, infer_value_type($v)
         my $tuple_name=declare_tuple(join(", ", @plist))
         return "struct $tuple_name"
     return undef
@@ -167,9 +157,9 @@ fncode: type_default($type)
         return undef
 
 
-fncode: get_c_type_word($name)
+fncode: get_type_word($name)
     $if $debug eq "type"
-        $print "    get_c_type_word: $name"
+        $print "    get_type_word: $name"
     $if $name
         $if $type_prefix{$name}
             return $type_prefix{$name}
@@ -183,47 +173,21 @@ fncode: get_c_type_word($name)
                 return "struct $1"
 
         $if substr($name, 0, 1) eq "t"
-            return get_c_type_word(substr($name,1));
+            return get_type_word(substr($name,1));
         $elif substr($name, 0, 1) eq "p"
-            return get_c_type_word(substr($name,1)).'*';
+            return get_type_word(substr($name,1)).'*';
     return undef
 
 fncode: get_c_type($name)
-    $if $debug eq "type"
-        $print "    get_c_type: $name"
-    my $check;
-    my $type="void";
-    $if $name=~/.*\.([a-zA-Z].+)/
-        #print "ctype: $name->$1\n";
-        $name=$1;
-    $if $type_name{$name}
-        $type= $type_name{$name};
-    $else
-        my @parts=split /_/, $name
-        my $n_parts=@parts
-        $if $n_parts<=1
-            $type=get_c_type_word($name)
-        $elif $type_name{$parts[-1]}
-            $type = $type_name{$parts[-1]}
-            $if $parts[0] =~/^t?(p+)$/
-                $type.='*' x length($1)
-            $else
-                $call @check_name_prefix_ambiguity
-        $else
-            my $t1=shift @parts
-            my $t2=join('_', @parts)
-            $if $t1 eq "t" or $t1 eq "temp"
-                $type=get_c_type_word($t2)
-            $elif $t1 eq "p" or $t1 eq "tp"
-                $type=get_c_type_word($t2).'*'
-            $else
-                $type=get_c_type_word($t1)
+    $if $name=~/t?(p+)_(.*)/
+        my $count = length($1)
+        my $type = get_type_name($1)
+        $if !$type
+            return "void".('*'x$count)
 
-    $if !$type
-        $type="void";
-    $elif $type =~/^\*/
-        $type="void";
-    $elif $type eq "bool"
+    my $type = get_type_name($name)
+
+    $if $type eq "bool"
         $page->{use_bool}=1
     # --------------------------
     $type=~s/\s+(\*+)$/\1/
@@ -237,37 +201,14 @@ fncode: get_c_type($name)
     $if $debug eq "type"
         print "    get_c_type:   $name: $type\n";
     return $type;
-    #----------------------------------------------- 
-    subcode: check_name_prefix_ambiguity
-        $if $parts[0] =~/^t?(p*)(.+)$/ and $type_prefix{$2}
-            my $t1=$type
-            my $t2=$type_prefix{$2}
-            $if $1
-                $t2.='*' x length($1)
-
-            $if $t1 ne $t2
-                my $use_prefix
-                $if $2 eq 'n' || $2 eq 'f' || $2 eq 's'
-                    # conventional preferred prefix
-                    $use_prefix = 1
-                $else
-                    $use_prefix = MyDef::compileutil::get_macro_word("use_prefix", 1)
-
-                $if $use_prefix
-                    $type = $t2
-                $else
-                    $call warn, type of $name set to $t1 (prefix type: $t2)
 
 fncode: pointer_type($t)
     $t=~s/\s*\*\s*$//;
     return $t;
 
-fncode: get_name_type
-    my $t=shift
-    $if $t=~/(\S.*\S)\s+(\S+)/
-        return ($1, $2)
-    $else
-        return (get_c_type($t), $t)
+subcode: type_word_prefix
+    $case $c eq "p"
+        return "$type*"
 
 # --------------------------------------------
 fncode: get_var_fmt($v, $warn)

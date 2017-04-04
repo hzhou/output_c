@@ -9,8 +9,6 @@ subcode:: parsecode_special
     $case $l=~/^NOOP POST_MAIN/
         $call parsecode_post
         return
-    $case $l=~/^print\b(.*)$/i
-        $call warn, print deprecated, use \$print
 
 subcode: parsecode_func_param
     $if $func eq "dump"

@@ -143,6 +143,7 @@ perlcode: perl_my_operator
                     $else
                         push @$out, "    else if($cond){$line}"
                 $else
+                    # single char operator e.g. +, -, *, /
                     push @$out, "    else{$line}"
             push @$out, "    break;"
     push @$out, "}"
