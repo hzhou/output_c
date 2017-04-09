@@ -184,7 +184,7 @@ fncode: check_expression($l, $context)
                     $if $assign ne "=" || $token ne "="
                     my $t
                     $call join_stack, $t
-                    $left .= ' = $t'
+                    $left .= " = $t"
         # -----------------
         subcode: is_atom
             $if $(type1) =~/^op/
