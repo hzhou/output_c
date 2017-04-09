@@ -15,6 +15,7 @@ subcode: image_declare(type)
         $struct(image_double) int w, int h, double * image
 
 #---- init ------------------------------------ 
+# $local image A: rgba
 subcode: image_init(var, scope, @type)
     $(if:type=default)
         $(set:type=float)
@@ -35,7 +36,7 @@ subcode: image_set_size(var, w, h)
     $get_var_attr $(var), image_type(type1)
     $(if:type1=rgb)
         $allocate($(w)*$(h)*3) $(var)
-    $(elif:type1=rgb)
+    $(elif:type1=rgba)
         $allocate($(w)*$(h)*4) $(var)
     $(else)
         $allocate($(w)*$(h)) $(var)
