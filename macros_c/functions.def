@@ -65,6 +65,8 @@ subcode: function_param_c_style
             next
         $else
             $type= get_c_type($p);
+            $if !$type
+                $call warn, Failed get_c_type: $p
             $name=$p
     $if $name
         $if $name=~/&(\w+)/

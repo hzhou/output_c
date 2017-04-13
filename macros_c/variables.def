@@ -214,25 +214,29 @@ subcode: check_pointer_type_name
         $name=$2
 
 #---------------------------------------- 
-fncode: var_declare($var)
+fncode: var_declare($var, $need_terminate)
+    my $t
     $if $var->{type} eq "function"
-        return $fntype{$var->{name}};
+        $t =  $fntype{$var->{name}};
     $else
         my $name=$var->{name}
         my $type=$var->{type}
-        my $t
         $if defined $var->{array}
             $t=pointer_type($type)." $name"."[$var->{array}]"
         $elif defined $var->{constructor}
             $t=pointer_type($type)." $name"."($var->{constructor})"
         $else
             $t="$type $name"
+
         $if defined $var->{init}
             $t.=" = $var->{init}"
         $if defined $var->{attr}
-            return  $var->{attr}." $t"
-        $else
-            return  $t
+            $t = $var->{attr}." $t"
+
+    $if $need_terminate
+        return "$t;"
+    $else
+        return $t
 
 #---------------------------------------- 
 fncode: get_var_type($name, $nowarn)

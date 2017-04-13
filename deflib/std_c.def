@@ -16,21 +16,28 @@ macros:
 
 ###############################################################
 ## Utility
-subcode: assert(check)
+subcode:@ assert(check)
     $if !($(check))
-        $call assert_action
+        $print "Assert Error: ($(check)) at line %d \n", __LINE__
+        exit(-1)
 
-subcode: assert_action
-    printf("Assert Error: ($(check)) at line %d \n", __LINE__)
-    exit(1)
-
-subcode: die(@msg)
+subcode:@ die(@msg)
     $call warn, $(msg)
     exit(-1)
 
-subcode: warn(@msg)
+subcode:@ warn(@msg)
     $(set:print_to=stderr)
     $print $(msg)
+
+subcode: atexit
+    $function atexit_handler
+        BLOCK
+    atexit($(lambda))
+
+subcode: on_signal(name)
+    $function signal_$(name)
+        BLOCK
+    signal($(name), $(lambda))
 
 #----
 subcode: try
