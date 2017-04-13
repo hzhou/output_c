@@ -1,7 +1,50 @@
 page: test, basic_frame
     module: c
 
+    $call type_from_names
+
+subcode: temp_var
     DEBUG type
     $temp int p=1
     $print $(p) = $$(p)
 
+subcode: type_from_names
+    $my s, n, f, i, file
+    $my ts, t_s, ts_block[10], ts_ip_block[10]
+    $my tn, t_n, tpn_block[10], p_n_list
+    $my buf, t_buf, test_buf
+    $my count, tp_count, row_count, col_count
+    $my size, p_buf_size, pbuf_size
+        
+/* expect test.c:
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv){
+    char* s;
+    int n;
+    float f;
+    int i;
+    FILE* file;
+    char* ts;
+    char* t_s;
+    char ts_block[10];
+    char ts_ip_block[10];
+    int tn;
+    int t_n;
+    int tpn_block[10];
+    int* p_n_list;
+    unsigned char* buf;
+    unsigned char* t_buf;
+    unsigned char* test_buf;
+    int count;
+    int* tp_count;
+    int row_count;
+    int col_count;
+    int size;
+    int* p_buf_size;
+    int pbuf_size;
+    return 0;
+}
+
+*/

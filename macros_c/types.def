@@ -156,18 +156,18 @@ fncode: type_default($type)
     $else
         return undef
 
-# ref: macros_output/types.def -- get_type_word
+# ref: macros_output/types.def 
+macros:
+    type_prefix_char: tp
+
 subcode: type_word_prefix
     $elif $c eq "p"
-        return "$type*"
+        $if !$type
+            $type = "void*"
+        $else
+            $type = "$type*"
 
 fncode: get_c_type($name)
-    $if $name=~/t?(p+)_(.*)/
-        my $type = get_type_name($1)
-        $if !$type
-            my $count = length($1)
-            return "void".('*'x$count)
-
     my $type = get_type_name($name)
 
     $if $type eq "bool"

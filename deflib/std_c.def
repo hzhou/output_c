@@ -56,17 +56,6 @@ subcode: throw(exception)
     longjmp(tryenv, $(exception))
 
 #----
-subcode: retry_block
-    tn_retry_index=0
-    $while 1
-        tn_retry_index++
-        BLOCK
-        break
-
-subcode: retry
-    continue
-
-#----
 subcode: seq_block
     $dowhile 0
         BLOCK
