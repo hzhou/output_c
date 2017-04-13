@@ -1,0 +1,112 @@
+#----------------------------------------------- 
+subcode: _autoload
+    $class integer
+
+subcode: integer_init(var, scope, @init)
+    $uselib gmp
+    $include gmp.h
+
+    $$(scope) mpz_t $(var)
+    mpz_init($(var))
+    $(if:init!=default)
+        mpz_set_si($(var), $(init))
+
+    $set_var_attr $(var), class=integer
+    $set_var_attr $(var), exit=integer_free
+
+subcode: integer_free(var)
+    mpz_clear($(var))
+
+subcode: mpz_op(op) # assume $(var), $(i)
+    $get_type(T) $(i)
+    $(if:T=mpz_t)
+        mpz_$(op)($(var), $(var), $(i))
+    $(else)
+        mpz_$(op)_si($(var), $(var), $(i))
+
+subcode: integer_add(var, i)
+    $call mpz_op, add
+subcode: integer_mul(var, i)
+    $call mpz_op, mul
+subcode: integer_div(var, i)
+    $call mpz_op, div
+subcode: integer_mod(var, i)
+    $call mpz_op, mod
+subcode: integer_pow(var, i)
+    $call mpz_op, pow
+
+subcode: integer_cmp(var, f)
+    $get_type(T) $(f)
+    $(if:T=mpz_t)
+        $yield mpz_cmp($(var),$(f))
+    $(else)
+        $yield mpz_cmp_si($(var),$(f))
+
+subcode: integer_print(var)
+    mpz_out_str(stdout, 10, $(var))
+#----------------------------------------------- 
+subcode: _autoload
+    $class mpfr
+
+subcode: mpfr_init(var, scope, @init)
+    $uselib mpfr, gmp
+    $include mpfr.h
+    $(if:!mpfr_prec)
+        $(set:mpfr_prec=20)
+    $(eval:prec=int($(mpfr_prec)*3.321928))
+
+    $(if:init=default)
+        $(set:init=0.0)
+    $$(scope) mpfr_t $(var)
+    mpfr_init2($(var), $(prec))
+    mpfr_set_d($(var), $(init), MPFR_RNDN)
+
+    $set_var_attr $(var), class=mpfr
+    $set_var_attr $(var), exit=mpfr_free
+
+subcode: mpfr_free(var)
+    mpfr_clear($(var))
+
+subcode: mpfr_op(op) # assume $(var), $(f)
+    $get_type(T) $(f)
+    $(if:T=mpfr_t)
+        mpfr_$(op)($(var),$(var),$(f),MPFR_RNDN)
+    $(else)
+        mpfr_$(op)_d($(var),$(var),$(f),MPFR_RNDN)
+
+subcode: mpfr_add(var, f)
+    $call mpfr_op, add
+subcode: mpfr_mul(var, f)
+    $call mpfr_op, mul
+subcode: mpfr_div(var, f)
+    $call mpfr_op, div
+
+subcode: mpfr_log2(var)
+    mpfr_log2($(var), $(var), MPFR_RNDN)
+subcode: mpfr_log10(var)
+    mpfr_log10($(var), $(var), MPFR_RNDN)
+subcode: mpfr_exp2(var)
+    mpfr_exp2($(var), $(var), MPFR_RNDN)
+subcode: mpfr_exp10(var)
+    mpfr_exp10($(var), $(var), MPFR_RNDN)
+
+subcode: mpfr_sin(var)
+    mpfr_sin($(var), $(var), MPFR_RNDN)
+subcode: mpfr_cos(var)
+    mpfr_cos($(var), $(var), MPFR_RNDN)
+subcode: mpfr_tan(var)
+    mpfr_tan($(var), $(var), MPFR_RNDN)
+
+subcode: mpfr_cmp(var, f)
+    $get_type(T) $(f)
+    $(if:T=mpfr_t)
+        $yield mpfr_cmp($(var),$(f))
+    $(else)
+        $yield mpfr_cmp_d($(var),$(f))
+
+subcode: mpfr_digits(var)
+    mpfr_log10($(var), $(var), MPFR_RNDN)
+    $yield (int)(mpfr_get_d($(var), MPFR_RNDN))
+
+subcode: mpfr_print(var, n)
+    mpfr_out_str(stdout,10,$(n),$(var),MPFR_RNDN)
