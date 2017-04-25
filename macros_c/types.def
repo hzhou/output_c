@@ -157,6 +157,9 @@ fncode: type_default($type)
         return undef
 
 # ref: macros_output/types.def -- get_type_word
+macros:
+    type_prefix_char: p
+
 subcode: type_word_prefix
     $elif $c eq "p"
         return "$type*"
