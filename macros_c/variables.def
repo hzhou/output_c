@@ -37,7 +37,7 @@ subcode:: parsecode_func_other
                 $global_hash->{$name}->{attr}="static"
             $elif $func eq "extern"
                 my $name=global_add_symbol($v)
-                my $decl=var_declare($global_hash->{$name})
+                my $decl=var_declare($global_hash->{$name}, 1)
                 $call do_declare, "extern $decl"
         return
 
@@ -187,6 +187,8 @@ fncode: parse_var($name, $type, $value)
                 NOOP
             $elif $val_type eq "void*" and $type=~/\*$/
                 NOOP
+            $elif $val_type =~/\*$/ and $type eq "void*"
+                NOOP
             $else
                 $call warn, var $name set to type $type, different from value type $val_type
     # --
@@ -220,7 +222,7 @@ subcode: check_pointer_type_name
         $name=$2
 
 #---------------------------------------- 
-fncode: var_declare($var, $need_terminate)
+fncode: var_declare($var, $need_semi)
     my $t
     $if $var->{type} eq "function"
         $t =  $fntype{$var->{name}};
@@ -237,12 +239,11 @@ fncode: var_declare($var, $need_terminate)
         $if defined $var->{init}
             $t.=" = $var->{init}"
         $if defined $var->{attr}
-            $t = $var->{attr}." $t"
+            $t = $var->{attr} . " $t"
 
-    $if $need_terminate
-        return "$t;"
-    $else
-        return $t
+    $if $need_semi
+        $t .= ';'
+    return  $t
 
 #---------------------------------------- 
 fncode: get_var_type($name, $nowarn)
