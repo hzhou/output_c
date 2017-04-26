@@ -3,22 +3,6 @@ macros:
     scope_return_pattern: ^(return|break|continue)
     function_need_declare: 1
 
-#-----------------------------------------------------------------
-subcode: function_param_api
-    my $api_name
-    $if $1
-        $api_name=$2
-    $elif $fname=~/^([a-zA-Z0-9]+)_(\w+)/
-        $api_name=$2
-
-    $if $fntype{$api_name}
-        my $t=$fntype{$api_name}
-        $if $t=~/^(.*?)\s*\(\s*\*\s*(\w+)\s*\)\s*\(\s*(.*)\)/
-            $func->{ret_type}=$1
-            $param=$3
-    $else
-        die "function $fname($param): api not found\n"
-
 #------------------------------------------------------
 macros:
     function_style: c_style
@@ -72,6 +56,15 @@ subcode: function_param_c_style
             $type.=" *"
             $call set_macro, $1, "(*p_$1)"
         push @$param_list, "$type $name"
+
+subcode: function_param_api
+    $if $fntype{$api_name}
+        my $t=$fntype{$api_name}
+        $if $t=~/^(.*?)\s*\(\s*\*\s*(\w+)\s*\)\s*\(\s*(.*)\)/
+            $func->{ret_type}=$1
+            $param=$3
+    $else
+        die "function $fname($param): api not found\n"
 
 # -----------------------
 subcode: infer_return_c_style

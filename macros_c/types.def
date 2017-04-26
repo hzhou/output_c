@@ -54,6 +54,9 @@ subcode: _autoload
         u2=>"uint16_t",
         u4=>"uint32_t",
         u8=>"uint64_t",
+        $(for:8,16,32,64)
+            i$1=>"int$1_t",
+            u$1=>"uint$1_t",
         c=>"unsigned char",
         uc=>"unsigned char",
         b=>"bool",
@@ -162,16 +165,13 @@ macros:
 
 subcode: type_word_prefix
     $elif $c eq "p"
-        return "$type*"
+        $type.= "*"
 
 fncode: get_c_type($name)
-    $if $name=~/t?(p+)_(.*)/
-        my $count = length($1)
-        my $type = get_type_name($1)
-        $if !$type
-            return "void".('*'x$count)
-
     my $type = get_type_name($name)
+    $if !$type and $name=~/t?(p+)_(.*)/
+        my $count = length($1)
+        return "void".('*'x$count)
 
     $if $type eq "bool"
         $page->{use_bool}=1

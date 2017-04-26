@@ -5,3 +5,18 @@ page: test, basic_frame
     $temp int p=1
     $print $(p) = $$(p)
 
+    $(for:f_integer, p_cell)
+        $my $1 = 4.1
+        $print $1 = $$1
+
+    $local int array[]={1,2,3}
+    pn_t = array
+    ppn_t = &pn_t
+
+    $allocate p_n4_temp
+    *p_n4_temp=100
+
+
+subcode: _autoload
+    $register_name(f_integer) int
+    $register_name(p_cell) int

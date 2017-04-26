@@ -17,16 +17,12 @@ subcode: for_i0_i1_step
     $call for_i0_i1_step_default, loop_var
 
     subcode: loop_var
-        $if $page->{_pageext} =~ /^(cpp|java)/
-            $my="int "
-            $if !$var
-                $var = "i"
-        $else
-            $if !$var
-                $var=temp_add_var("i", $type_name{i})
-            $else
-                $var=my_add_var($var, $type_name{i})
-            protect_var($var)
+        $my="int "
+        $if !$var
+            $var = "i"
+            $var=MyDef::utils::uniq_name("i", \%protected_var)
+            MyDef::compileutil::set_current_macro("i", $var)
+        protect_var($var)
 
 subcode: for_c_style_protect
     $call push_single_block, "for($param){", "}"
