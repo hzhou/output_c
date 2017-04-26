@@ -56,8 +56,10 @@ subcode: function_param_c_style
             $call check_pointer_type_name
     $elif $p eq "fmt" and $i==@plist
         push @$param_list, "const char * fmt, ..."
+        next
     $elif $p eq "..." and $i==@plist
         push @$param_list, "..."
+        next
     $else
         $if $fntype{$p}
             push @$param_list, $fntype{$p};
@@ -68,12 +70,17 @@ subcode: function_param_c_style
             $if !$type
                 $call warn, Failed get_c_type: $p
             $name=$p
+
     $if $name
         $if $name=~/&(\w+)/
             $name="p_$1"
             $type.=" *"
             $call set_macro, $1, "(*p_$1)"
         push @$param_list, "$type $name"
+        my $var={name=>$name, type=>$type}
+        $if $type_class{$type}
+            $var->{class}=$type_class{$type}
+        $var_hash->{$name}=$var
 
 # -----------------------
 subcode: infer_return_c_style

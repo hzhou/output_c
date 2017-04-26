@@ -44,10 +44,14 @@ subcode:: parsecode_func_other
 #---- pseudo class support ---
 subcode:: parsecode_func_other
     $elif $func eq "class"
-        $global %class_names
+        $global %class_names, %type_class
         my @tlist=split /,\s*/, $param
         $foreach $t in @tlist
-            $class_names{$t}=1
+            $if $t=~/^\s*(.*\S)\s*->\s*(\w+)/
+                $class_names{$2}=1
+                $type_class{$1}=$2
+            $else
+                $class_names{$t}=1
         return
 
 subcode: check_var_special(scope)
@@ -145,6 +149,8 @@ fncode: parse_var($name, $type, $value)
     $elif defined $constructor
         $var->{constructor}=$constructor
     $call @debug
+    $if $type_class{$type}
+        $var->{class}=$type_class{$type}
     return $var
 
     # --------------------

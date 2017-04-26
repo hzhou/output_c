@@ -318,7 +318,7 @@ subcode: check_exp_callsub
             $call_line="$subname, $varname"
 
         $if $call_line
-            $arg=~s/^\s+//
+            $arg=~s/^,?\s+//
             $if length($arg)>0
                 $call_line .= ", $arg"
             $call exp_callsub
