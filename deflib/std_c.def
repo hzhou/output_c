@@ -227,6 +227,16 @@ subcode: qsort(list, size, type)
         BLOCK
     qsort($(list), $(size), sizeof($(type)), $(lambda))
 
+    # -----
+    subcode: numcmp(a, b)
+        $if $(a)<$(b)
+            return -1
+        $elif $(a)>$(b)
+            return 1
+        $else
+            return 0
+        
+
 subcode: numcmp(na, nb)
     $(allow_recurse:10)
     $if $(na)<$(nb)
