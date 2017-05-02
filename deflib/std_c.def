@@ -168,6 +168,13 @@ subcode: fread_frame
         t_n=fread(&$(name), 4, 1, file_in)
     subcode: read_data(name, size)
         t_n=fread($(name), 1, $(size), file_in)
+    # --
+    subcode: gets
+        $local char _gets_line[1024]
+        $while fgets(_gets_line, 1024, file_in)
+            $my s=_gets_line
+            BLOCK
+
 # ---- time -------------------------------------------
 subcode: tick_loop
     $include time
