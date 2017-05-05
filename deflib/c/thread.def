@@ -1,23 +1,35 @@
-subcode: _autoload
+subcode: run_threads(num_threads)
     $include pthread
     $uselib pthread
+    $register_prefix(mutex) pthread_mutex_t
 
-subcode: run_threads(num_threads, param)
     $function thread_fn(void* p)
         $return_type void*
+        $local int thread_id = (intptr_t)p
         BLOCK
         return NULL
-
+    # --------------
     $global pthread_t p_threads[1000]
-    $for i=0:$(num_threads)
-        tn_ret = pthread_create(&p_threads[i], NULL, $(lambda), (void*)$(param))
+    $for 0:$(num_threads)
+        tn_ret = pthread_create(&p_threads[$(i)], NULL, $(lambda), (void*)(intptr_t)$(i))
         $if tn_ret
             $call die, "Error - pthread_create - $i"
-    $for i=0:$(num_threads)
-        pthread_join(p_threads[i], NULL)
+    $for 0:$(num_threads)
+        pthread_join(p_threads[$(i)], NULL)
 
-    subcode: get_param(v)
-        $local $(v)
-        $get_type(T) $(v)
-        $(v) = *(($(T)*)p)
+    # -----------------------------------------
+    subcode: grab_mutex(name)
+        $global mutex_$(name)
+        pthread_mutex_lock(&mutex_$(name))
+        BLOCK
+        pthread_mutex_unlock(&mutex_$(name))
 
+subcode: system(cmd)
+    $include unistd
+    $local pid_t pid
+    pid=fork()
+    $if pid==0
+        execl("/bin/sh", "sh", "-c", $(cmd), NULL)
+    $elif pid>0
+        $my int status
+        waitpid(pid, &status, 0)
