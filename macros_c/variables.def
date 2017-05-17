@@ -181,7 +181,7 @@ fncode: parse_var($name, $type, $value)
                 NOOP
             $elif $val_type eq "float" and $type=~/double/
                 NOOP
-            $elif $val_type eq "char" and $type=~/unsigned|int/
+            $elif $val_type=~/char/ and $type=~/unsigned|int/
                 NOOP
             $elif $val_type eq "int" and $type=~/(double|float|bool|int|char)/
                 NOOP
