@@ -37,17 +37,21 @@ subcode:: parsecode_func_other
                 $global_hash->{$name}->{attr}="static"
             $elif $func eq "extern"
                 my $name=global_add_symbol($v)
-                my $decl=var_declare($global_hash->{$name})
+                my $decl=var_declare($global_hash->{$name}, 1)
                 $call do_declare, "extern $decl"
         return
 
 #---- pseudo class support ---
 subcode:: parsecode_func_other
     $elif $func eq "class"
-        $global %class_names
+        $global %class_names, %type_class
         my @tlist=split /,\s*/, $param
         $foreach $t in @tlist
-            $class_names{$t}=1
+            $if $t=~/^\s*(.*\S)\s*->\s*(\w+)/
+                $class_names{$2}=1
+                $type_class{$1}=$2
+            $else
+                $class_names{$t}=1
         return
 
 subcode: check_var_special(scope)
@@ -145,6 +149,8 @@ fncode: parse_var($name, $type, $value)
     $elif defined $constructor
         $var->{constructor}=$constructor
     $call @debug
+    $if $type_class{$type}
+        $var->{class}=$type_class{$type}
     return $var
 
     # --------------------
@@ -177,9 +183,11 @@ fncode: parse_var($name, $type, $value)
                 NOOP
             $elif $val_type eq "char" and $type=~/unsigned|int/
                 NOOP
-            $elif $val_type eq "int" and $type=~/(double|float|bool|int)/
+            $elif $val_type eq "int" and $type=~/(double|float|bool|int|char)/
                 NOOP
             $elif $val_type eq "void*" and $type=~/\*$/
+                NOOP
+            $elif $val_type =~/\*$/ and $type eq "void*"
                 NOOP
             $else
                 $call warn, var $name set to type $type, different from value type $val_type
@@ -214,25 +222,28 @@ subcode: check_pointer_type_name
         $name=$2
 
 #---------------------------------------- 
-fncode: var_declare($var)
+fncode: var_declare($var, $need_semi)
+    my $t
     $if $var->{type} eq "function"
-        return $fntype{$var->{name}};
+        $t =  $fntype{$var->{name}};
     $else
         my $name=$var->{name}
         my $type=$var->{type}
-        my $t
         $if defined $var->{array}
             $t=pointer_type($type)." $name"."[$var->{array}]"
         $elif defined $var->{constructor}
             $t=pointer_type($type)." $name"."($var->{constructor})"
         $else
             $t="$type $name"
+
         $if defined $var->{init}
             $t.=" = $var->{init}"
         $if defined $var->{attr}
-            return  $var->{attr}." $t"
-        $else
-            return  $t
+            $t = $var->{attr} . " $t"
+
+    $if $need_semi
+        $t .= ';'
+    return  $t
 
 #---------------------------------------- 
 fncode: get_var_type($name, $nowarn)

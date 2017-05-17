@@ -63,6 +63,13 @@ fncode: f_string_resize(s, pn_len, pn_size, n)
     return s
 
 #---------------------------------------- 
+subcode: string_add_n(var, s, n)
+    $if $(var)_len + $(n) > $(var)_size
+        f_string_resize($(var), &$(var)_len, &$(var)_size, $(n))
+    memcpy($(var)+$(var)_len, $(s), $(n))
+    $(var)_len += $(n)
+
+#---------------------------------------- 
 subcode: string_append(var, s)
     $(set:string=$(var), &$(var)_len, &$(var)_size)
     $(if:s~")

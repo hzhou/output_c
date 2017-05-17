@@ -3,22 +3,6 @@ macros:
     scope_return_pattern: ^(return|break|continue)
     function_need_declare: 1
 
-#-----------------------------------------------------------------
-subcode: function_param_api
-    my $api_name
-    $if $1
-        $api_name=$2
-    $elif $fname=~/^([a-zA-Z0-9]+)_(\w+)/
-        $api_name=$2
-
-    $if $fntype{$api_name}
-        my $t=$fntype{$api_name}
-        $if $t=~/^(.*?)\s*\(\s*\*\s*(\w+)\s*\)\s*\(\s*(.*)\)/
-            $func->{ret_type}=$1
-            $param=$3
-    $else
-        die "function $fname($param): api not found\n"
-
 #------------------------------------------------------
 macros:
     function_style: c_style
@@ -56,8 +40,10 @@ subcode: function_param_c_style
             $call check_pointer_type_name
     $elif $p eq "fmt" and $i==@plist
         push @$param_list, "const char * fmt, ..."
+        next
     $elif $p eq "..." and $i==@plist
         push @$param_list, "..."
+        next
     $else
         $if $fntype{$p}
             push @$param_list, $fntype{$p};
@@ -65,13 +51,29 @@ subcode: function_param_c_style
             next
         $else
             $type= get_c_type($p);
+            $if !$type
+                $call warn, Failed get_c_type: $p
             $name=$p
+
     $if $name
         $if $name=~/&(\w+)/
             $name="p_$1"
             $type.=" *"
             $call set_macro, $1, "(*p_$1)"
         push @$param_list, "$type $name"
+        my $var={name=>$name, type=>$type}
+        $if $type_class{$type}
+            $var->{class}=$type_class{$type}
+        $var_hash->{$name}=$var
+
+subcode: function_param_api
+    $if $fntype{$api_name}
+        my $t=$fntype{$api_name}
+        $if $t=~/^(.*?)\s*\(\s*\*\s*(\w+)\s*\)\s*\(\s*(.*)\)/
+            $func->{ret_type}=$1
+            $param=$3
+    $else
+        die "function $fname($param): api not found\n"
 
 # -----------------------
 subcode: infer_return_c_style

@@ -31,7 +31,9 @@ fncode: allocate($dim, $param2, $alloc_type)
 
             my $size="sizeof($type)"
             my $tsize = $size
-            $if $dim ne "1"
+            $if $type =~ /\bchar$/
+                $tsize=$dim
+            $elif $dim ne "1"
                 $tsize = "$dim*$size"
 
             $if $alloc_type eq "realloc"
