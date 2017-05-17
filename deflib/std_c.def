@@ -120,7 +120,7 @@ subcode: open_w(file)
         t_n = fwrite($(a), $(size), $(n), file_out)
     # --
     subcode: write_sig(name)
-        t_n=fwrite("$(name)", 1, $(name:len), file_out)
+        t_n=fwrite("$(name)", 1, $(name:strlen), file_out)
     subcode: write_sig_n(quoted_sig, n)
         t_n=fwrite($(quoted_sig), 1, $(n), file_out)
 
