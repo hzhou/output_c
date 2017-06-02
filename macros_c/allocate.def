@@ -45,6 +45,8 @@ fncode: allocate($dim, $param2, $alloc_type)
 
             $call @auto_post_p
             $call allocate_init
+        $else
+            $call warn, allocate [empty]
 
     # ----------------------------------
     subcode: auto_init

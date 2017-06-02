@@ -1,8 +1,9 @@
-subcode: run_threads(num_threads)
+subcode: _autoload
     $include pthread
     $uselib pthread
     $register_prefix(mutex) pthread_mutex_t
 
+subcode: run_threads(num_threads)
     $function thread_fn(void* p)
         $return_type void*
         $local int thread_id = (intptr_t)p
@@ -17,13 +18,28 @@ subcode: run_threads(num_threads)
     $for 0:$(num_threads)
         pthread_join(p_threads[$(i)], NULL)
 
-    # -----------------------------------------
-    subcode: grab_mutex(name)
-        $global mutex_$(name)
-        pthread_mutex_lock(&mutex_$(name))
-        BLOCK
-        pthread_mutex_unlock(&mutex_$(name))
+# ----------------------
+subcode: spawn_thread(sub_child)
+    $function thread_fn(void* p)
+        $return_type void*
+        $call $(sub_child)
+        return NULL
+    # --------------
+    $temp pthread_t tid
+    tn_ret = pthread_create(&$(tid), NULL, $(lambda), NULL)
+    $if tn_ret
+        $call die, "Error - pthread_create"
+    BLOCK
+    pthread_join($(tid), NULL)
 
+# ----------------------
+subcode: grab_mutex(name)
+    $global mutex_$(name)
+    pthread_mutex_lock(&mutex_$(name))
+    BLOCK
+    pthread_mutex_unlock(&mutex_$(name))
+
+#----------------------------------------------- 
 subcode: system(cmd)
     $include unistd
     $local pid_t pid
@@ -33,3 +49,50 @@ subcode: system(cmd)
     $elif pid>0
         $my int status
         waitpid(pid, &status, 0)
+
+#----------------------------------------------- 
+subcode: system_2(cmd)
+    # system with duplex pipes
+    $include unistd
+    $call @set_pipes
+
+    $local pid_t pid
+    pid=fork()
+    $if pid==0
+        $call @set_pipe_child
+        execl("/bin/sh", "sh", "-c", $(cmd), NULL)
+    $elif pid>0
+        $call @set_pipe_parent
+        BLOCK
+        $my int status
+        waitpid(pid, &status, 0)
+
+    # -------------------------------------- 
+    macros:
+        in1: pn_pipe[0]
+        out1: pn_pipe[1]
+        in2: pn_pipe[2]
+        out2: pn_pipe[3]
+
+    subcode: set_pipes
+        $local pn_pipe[4]
+        tn_ret = pipe(pn_pipe)
+        tn_ret = pipe(pn_pipe+2)
+
+    subcode: set_pipe_parent
+        close($(out1))
+        close($(in2))
+        # dup2($(in1), 11)
+        # dup2($(out2), 12)
+
+    subcode: set_pipe_child
+        close($(in1))
+        dup2($(out1), 11)
+        close($(out1))
+        # write(11, "TEST\n", 5)
+
+        close($(out2))
+        dup2($(in2), 12)
+        close($(in2))
+
+        

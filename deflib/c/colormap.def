@@ -1,0 +1,49 @@
+fncode: float_to_color(pf_data, n, tf_min, tf_max)
+    $call fn_val_to_rgb, pf_data, tf_min, tf_max
+
+subcode: fn_val_to_rgb(data, min, max)
+    $call colormap_default
+    $allocate(n*3) pc_data
+
+    tf_range = (float)($(max)-$(min))
+    l=0
+    $for i=0:n
+        tf_v = (float)($(data)[i]-$(min))/tf_range
+        $if tf_v<0+1e-8
+            $call set_, 0
+        $elif tf_v>1-1e-8
+            $call set_, N-1
+        $else
+            tf_v*=(N-1)
+            i_0 = (int)tf_v
+            i_1 = i_0+1
+            f_0 = i_1-tf_v
+            f_1 = tf_v-i_0
+            $(for:r,g,b)
+                pc_data[l++] = (int)(pf_$1[i_0]*f_0 + pf_$1[i_1]*f_1)*255
+    return pc_data
+
+    subcode: set_(i)
+        $(for:r,g,b)
+            pc_data[l++] = (int)(pf_$1[$(i)]*255)
+
+perlcode: colormap_default
+    $(set:i=($i+$1)/16)
+    $(set:j=1-($i+$1)/16)
+    my (@r, @g, @b)
+    $(for:24,16,16,8 and 0,$(i:1),1,$(j:1))
+        $call add, r, $1, $2
+    $(for:8,16,16,16,8 and 0,$(i:1),1,$(j:1),0)
+        $call add, g, $1, $2
+    $(for:8,16,16,24 and $(i:9),1,$(j:1),0)
+        $call add, b, $1, $2
+
+    push @$out, "int N = 64;"
+    $(for:r,g,b)
+        push @$out, "float pf_$1[64]={". join(',', @$1) ."};"
+
+    subcode: add(rgb, n, val)
+        $for i=0:$(n)
+            push @$(rgb), $(val)
+
+

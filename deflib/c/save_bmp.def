@@ -1,0 +1,49 @@
+fncode: save_bmp(pc_data, n_w, n_h, n_bpp, s_bmp)
+    &call open_w, s_bmp
+        $local ts_buf[100], s
+        $call write_binary, C2x8I, "BM",54
+        $call write_binary, IIISSx24, 40, n_w, n_h, 1, 24
+        $call write_image
+
+    subcode: write_image
+        tn_pad = n_w*3 % 4
+        $if tn_pad>0
+            tn_pad = 4-tn_pad
+            memset(ts_buf, 0, 4)
+        $for i=0:n_h
+            fwrite(pc_data, 1, n_w*3, file_out)
+            pc_data+=n_w*3
+            $if tn_pad>0
+                fwrite(ts_buf, 1, tn_pad, file_out)
+
+perlcode: write_binary
+    my @t = split /,\s*/, $param
+    my $fmt = shift @t
+    push @$out, "s=ts_buf;"
+    my $size=0
+    $while $fmt=~/\G([a-zA-Z])(\d*)/gc
+        my ($f, $n)=($1, $2)
+        $if !$n
+            $n=1
+        $if $f =~/x/
+            push @$out, "memset(s, 0, $n);"
+            $call inc, $n
+        $else
+            my $t=shift @t
+            $if $t=~/^"/ and $f=~/[Cc]/
+                push @$out, "memcpy(s, $t, $n);"
+                $call inc, $n
+            $elif $f =~ /[I]/
+                push @$out, "*((int*)s) = $t;"
+                $call inc, 4
+            $elif $f =~ /[S]/
+                push @$out, "*((int*)s) = $t;"
+                $call inc, 2
+            $elif $f =~ /[C]/
+                push @$out, "*((int*)s) = $t;"
+                $call inc, 1
+    push @$out, "fwrite(ts_buf, 1, $size, file_out);"
+
+    subcode: inc(n)
+        push @$out, "s+=$(n);"
+        $size+=$(n)
