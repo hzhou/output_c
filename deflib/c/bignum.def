@@ -1,8 +1,8 @@
-#----------------------------------------------- 
+#---- gmp - mpz - integer ------------------------- 
 subcode: _autoload
-    $class integer
+    $class mpz
 
-subcode: integer_init(var, scope, @init)
+subcode: mpz_init(var, scope, @init)
     $uselib gmp
     $include gmp.h
 
@@ -11,10 +11,10 @@ subcode: integer_init(var, scope, @init)
     $(if:init!=default)
         mpz_set_si($(var), $(init))
 
-    $set_var_attr $(var), class=integer
-    $set_var_attr $(var), exit=integer_free
+    $set_var_attr $(var), class=mpz
+    $set_var_attr $(var), exit=mpz_free
 
-subcode: integer_free(var)
+subcode: mpz_free(var)
     mpz_clear($(var))
 
 subcode: mpz_op(op) # assume $(var), $(i)
@@ -24,42 +24,52 @@ subcode: mpz_op(op) # assume $(var), $(i)
     $(else)
         mpz_$(op)_si($(var), $(var), $(i))
 
-subcode: integer_add(var, i)
+subcode: mpz_add(var, i)
     $call mpz_op, add
-subcode: integer_mul(var, i)
+subcode: mpz_mul(var, i)
     $call mpz_op, mul
-subcode: integer_div(var, i)
+subcode: mpz_div(var, i)
     $call mpz_op, div
-subcode: integer_mod(var, i)
+subcode: mpz_mod(var, i)
     $call mpz_op, mod
-subcode: integer_pow(var, i)
+subcode: mpz_pow(var, i)
     $call mpz_op, pow
 
-subcode: integer_cmp(var, f)
+subcode: mpz_cmp(var, f)
     $get_type(T) $(f)
     $(if:T=mpz_t)
         $yield mpz_cmp($(var),$(f))
     $(else)
         $yield mpz_cmp_si($(var),$(f))
 
-subcode: integer_print(var)
+subcode: mpz_print(var)
     mpz_out_str(stdout, 10, $(var))
-#----------------------------------------------- 
+
+#---- mpfr - floating point -------------------------- 
 subcode: _autoload
     $class mpfr
 
 subcode: mpfr_init(var, scope, @init)
     $uselib mpfr, gmp
     $include mpfr.h
-    $(if:!mpfr_prec)
-        $(set:mpfr_prec=20)
-    $(eval:prec=int($(mpfr_prec)*3.321928))
+    $(if:!prec)
+        $(if:!mpfr_prec)
+            $(set:mpfr_prec=20)
+        $(eval:prec=int($(mpfr_prec)*3.321928))
 
     $(if:init=default)
-        $(set:init=0.0)
+        $(set:init=0)
     $$(scope) mpfr_t $(var)
     mpfr_init2($(var), $(prec))
-    mpfr_set_d($(var), $(init), MPFR_RNDN)
+    $get_type(T) $(init)
+    $(if:T=mpfr_t)
+        mpfr_set($(var), $(init), MPFR_RNDN)
+    $(elif:0)
+        # this is questionable: d probably is not accurate already
+        mpfr_set_d($(var), $(init), MPFR_RNDN)
+    $(else)
+        # so only init to integers!
+        mpfr_set_si($(var), $(init), MPFR_RNDN)
 
     $set_var_attr $(var), class=mpfr
     $set_var_attr $(var), exit=mpfr_free
@@ -72,10 +82,21 @@ subcode: mpfr_op(op) # assume $(var), $(f)
     $(if:T=mpfr_t)
         mpfr_$(op)($(var),$(var),$(f),MPFR_RNDN)
     $(else)
-        mpfr_$(op)_d($(var),$(var),$(f),MPFR_RNDN)
+        # integers only!
+        mpfr_$(op)_si($(var),$(var),$(f),MPFR_RNDN)
+
+subcode: mpfr_set(var, init)
+    $get_type(T) $(init)
+    $(if:T=mpfr_t)
+        mpfr_set($(var),$(init),MPFR_RNDN)
+    $(else)
+        # integers only!
+        mpfr_set_si($(var),$(init),MPFR_RNDN)
 
 subcode: mpfr_add(var, f)
     $call mpfr_op, add
+subcode: mpfr_sub(var, f)
+    $call mpfr_op, sub
 subcode: mpfr_mul(var, f)
     $call mpfr_op, mul
 subcode: mpfr_div(var, f)
@@ -110,3 +131,10 @@ subcode: mpfr_digits(var)
 
 subcode: mpfr_print(var, n)
     mpfr_out_str(stdout,10,$(n),$(var),MPFR_RNDN)
+
+#---------------------------------------- 
+perlcode: eval_expr
+    # $call eval_expr t = 16*t1/j - 4*t2/j
+    # $call eval_expr f += t
+    # $call eval_expr t1 /= -1*5^2
+    # $call eval_expr t2 /= -1*239^2
