@@ -46,6 +46,11 @@ fncode: add_object($l)
 fncode: add_include($l)
     my @flist=split /,\s*/, $l
     $foreach $f in @flist
+        # some header file requires feature test macro -- stupid!
+        $if $f=~/^define\s+(.*)/
+            push @include_list, $f
+            next
+
         my $key
         $if $f=~/\.\w+$/
             $key="\"$f\""
@@ -67,7 +72,10 @@ fncode: add_include($l)
 subcode: dump_includes
     $if @include_list
         $foreach $k in @include_list
-            push @$dump_out, "#include $k\n";
+            $if $k=~/^define\s+(.*)/
+                push @$dump_out, "#define $1\n"
+            $else
+                push @$dump_out, "#include $k\n";
         push @$dump_out, "\n";
 
 # ---- Defines ----
