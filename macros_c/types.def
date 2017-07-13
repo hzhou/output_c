@@ -197,7 +197,7 @@ fncode: get_var_fmt($v, $warn)
     my $type=get_var_type($v, 1)
     $if !$type or $type eq "void"
         $type=get_c_type($v);
-    $if $type=~/^char\*/
+    $if $type=~/^char\s*\*/
         return "\%s";
     $elsif $type=~/\*\s*$/
         return "\%p";
