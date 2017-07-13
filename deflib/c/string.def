@@ -84,7 +84,7 @@ subcode: string_append(var, s)
             $(var)=f_string_append_float($(string), $(s), 7)
         $(elif:type=double)
             $(var)=f_string_append_float($(string), $(s), 15)
-        $(elif:type=char*)
+        $(elif:type=char* or type=char *)
             $get_var_attr $(s), strlen
             $(if:!strlen)
                 $(set:strlen=strlen($(s)))
