@@ -90,6 +90,9 @@ subcode: free(v)
     free($(v))
 
 ## FILE IO
+subcode: get_file_in_s(file)
+    s = get_file_s($(file), NULL)
+
 fncode: get_file_s(s_file, pn_size)
     &call2 try_open_r, s_file
         $my n, s

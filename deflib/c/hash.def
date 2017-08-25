@@ -6,7 +6,7 @@ subcode:: _autoload
 
 macros: 
     hash_size: n_size, n_count, n_val_size
-    hash_key: char * p_exist, int * p_key
+    hash_key: char* p_exist, int* p_key
     strhash_member: $(hash_size), $(hash_key), struct strpool pool
     inthash_member: $(hash_size), $(hash_key)
 
@@ -54,7 +54,7 @@ subcode: hash_init(var, scope, @type)
             # note: only simple type works, no pointers
             $(if:type=str)
                 $(set:T=str)
-                $(set:type=char *)
+                $(set:type=char*)
             $(elif:word:type)
                 $(set:T=$(type))
             $(else)
@@ -98,7 +98,7 @@ subcode: strhash_check_key(key)
         $(export:keylen=$(key:strlen))
     $(else)
         $get_type(keytype) $(key)
-        $(if:keytype!=char *)
+        $(if:keytype!~char\s*\*)
             $(export:key="$(key)")
             $(export:keylen=$(key:length))
         $(else)
@@ -235,7 +235,7 @@ subcode: get_strhash_k
 
 subcode: get_inthash_k
     $(set:M=h->n_size)
-    pc_key=(unsigned char *)&key
+    pc_key=(unsigned char*)&key
     tu_h= $(fnv_offset)
     $for i=0:sizeof(int)
         tu_h=tu_h ^ pc_key[i]

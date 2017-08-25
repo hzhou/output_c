@@ -445,7 +445,12 @@ subcode: check_exp_string_op
     $call get_var_n, $token, $n2
 
     $if ord($op) < 91 or !($n1 || $n2)
+        # Eq, Lt, ...
         $token= "strcmp($exp, $token) $sop"
+    $elif $op=~/.[A-Z]$/ && $n2>0 && $exp=~/^\w+$/
+        $if !$n1
+            $n1 = "strlen($exp)"
+        $token = "$n1>=$n2 && strcmp($exp + $n1 - $n2, $token) $sop"
     $else
         $if $n1 and $n2 and ($op eq "eq")
             $token= "$n1==$n2 && strncmp($exp, $token, $n2)==0"
