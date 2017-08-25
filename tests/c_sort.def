@@ -1,0 +1,10 @@
+page: test, basic_frame
+    module: c
+
+    $local pn_A[]={1,2,3,4,5,6,7,8,9}
+    &call qsort, pn_A, 9, int
+        $call numcmp, $(b), $(a)
+
+    $for i=0:9
+        $print "$i: %d", pn_A[i]
+    

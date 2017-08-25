@@ -1,0 +1,14 @@
+page: test, basic_frame
+    module: c
+
+    $call test_do_while_0
+
+subcode: test_do_while_0
+    # continue doesn't work in dowhile 0
+    i=0
+    $dowhile 0
+        $print dowhile: $i
+        i++
+        $if i<5
+            continue
+

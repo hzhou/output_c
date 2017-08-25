@@ -1,0 +1,24 @@
+page: test, basic_frame
+    module: c
+
+    n= 2
+    t_n = n^2
+    $print n^2 = $t_n
+
+    $global s[100]="hello world!"
+
+    $dump s
+    $if s $eq "hello"
+        $print "eq \"hello\""
+
+    $if s $Eq "hello"
+        $print "Eq \"hello\""
+
+    # max/min, from J
+    n = n >. 100
+    $dump n
+    n = n <. 10
+    $dump n
+
+    n <.= 100
+    $dump n

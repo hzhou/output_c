@@ -1,0 +1,5 @@
+page: test, basic_frame
+    module: c
+
+    &call atexit
+        $print hello exit

@@ -1,0 +1,10 @@
+page: test, basic_frame
+    module: c
+
+    $function t
+        $print function t
+    $(lambda)()
+
+    $function t
+        $print function t second time
+    $(lambda)()

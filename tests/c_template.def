@@ -1,0 +1,13 @@
+page: t, from template/main.c
+    module: c
+    has_stub_global_init: 1
+
+subcode: custom
+    $in_function main
+        $print Hello from custom code
+        $global f_x
+        f_x = 3.14159
+        $print x = $f_x
+
+        tf_x = f_x * 2
+        $print tf_x = x * 2 = $tf_x
