@@ -1,5 +1,5 @@
 ## frame
-subcode: basic_frame
+subcode:@ basic_frame
     $include stdio
     $include stdlib
     $call @global
