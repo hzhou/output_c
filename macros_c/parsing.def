@@ -10,6 +10,7 @@ subcode:: parsecode_special
         $call parsecode_post
         return
 
+#---------------------------------------- 
 subcode: parsecode_func_param
     $if $func eq "dump"
         debug_dump($param2, $param1, $out);
@@ -45,30 +46,30 @@ subcode: parsecode_func
         $else
             $param=parse_condition($param)
             return single_block("$name($param){", "}")
-    $elsif $func =~/^do(while)?/
+    $elif $func =~/^do(while)?/
         $if $1
             $param=parse_condition($param)
             return single_block("do{", "}while($param);")
         $else
             return single_block("while(1){", "break;}")
     #---------------------------------------- 
-    $elsif $func eq "include"
+    $elif $func eq "include"
         add_include($param)
         return
-    $elsif $func eq "declare"
+    $elif $func eq "declare"
         $call @do_declare, $param
         return
-    $elsif $func eq "define"
+    $elif $func eq "define"
         push @$out, "#define $param";
         return
-    $elsif $func eq "enum"
+    $elif $func eq "enum"
         $global $anonymous_count=0
         my $name="ANONYMOUS-$anonymous_count"
         $anonymous_count++
         push @enum_list, $name;
         $enums{$name}=$param;
         return
-    $elsif $func eq "uselib"
+    $elif $func eq "uselib"
         my @flist=split /,\s*/, $param;
         $foreach $f in @flist
             $if $f=~/^\w+$/
@@ -78,10 +79,10 @@ subcode: parsecode_func
             $else
                 add_object($f)
         return
-    $elsif $func eq "typedef"
+    $elif $func eq "typedef"
         add_typedef($param)
         return
-    $elsif $func eq "dump"
+    $elif $func eq "dump"
         debug_dump($param, undef, $out);
         return
     $call @parsecode_func_other

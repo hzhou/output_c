@@ -162,7 +162,21 @@ subcode: dump_globals
             my $v=$global_hash->{$name}
             my $decl=var_declare($v)
             $if $decl
-                $if $decl=~/(.*=\s*)\{DUMP_STUB\s*(\w+)\s*\}/
+                $if $decl=~/^(char\* \w+\s*=\s*)\[(\w+)\]/
+                    my $pre=$1
+                    my $spc='    '
+                    my $t=MyDef::compileutil::eval_sub($2)
+                    my @t=split /\n/, $t
+                    $foreach $t in @t
+                        $t=~s/"/\\"/g
+                        $t.='\n'
+                    my $t0=shift @t
+                    my $tn=pop @t
+                    push @$dump_out, "$pre\"$t0\"\n"
+                    $foreach $t in @t
+                        push @$dump_out, "$spc\"$t\"\n"
+                    push @$dump_out, "$spc\"$tn\";\n"
+                $elif $decl=~/(.*=\s*)\{DUMP_STUB\s*(\w+)\s*\}/
                     push @$dump_out, "$1\{\n"
                     push @$dump_out, "INDENT"
                     push @$dump_out, "DUMP_STUB $2"
