@@ -38,6 +38,7 @@ page: output_c, output_main
                 $call load_autodecl, $f
         $call @autoload_hack
         $call function_init
+
         $call autolist_functions, static
 
         # -------------

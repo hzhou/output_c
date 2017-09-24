@@ -196,6 +196,7 @@ subcode: sscanf(s, @plist)
             $local $(p)=0.0
         $(elif:p~tn)
             $local $(p)=0
+        $(set1:vars.=,&$(p))
 
         $(if:p~t?n_)
             $(set1:fmt.= %i)
@@ -206,7 +207,6 @@ subcode: sscanf(s, @plist)
                 $(set1:fmt.= %lf)
             $(else)
                 $(set1:fmt.= %f)
-        $(set1:vars.=,&$(p))
     sscanf($(s), "$(fmt)" $(vars));
 
 # ---- time -------------------------------------------

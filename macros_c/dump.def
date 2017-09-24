@@ -162,20 +162,8 @@ subcode: dump_globals
             my $v=$global_hash->{$name}
             my $decl=var_declare($v)
             $if $decl
-                $if $decl=~/^(char\* \w+\s*=\s*)\[(\w+)\]/
-                    my $pre=$1
-                    my $spc='    '
-                    my $t=MyDef::compileutil::eval_sub($2)
-                    my @t=split /\n/, $t
-                    $foreach $t in @t
-                        $t=~s/"/\\"/g
-                        $t.='\n'
-                    my $t0=shift @t
-                    my $tn=pop @t
-                    push @$dump_out, "$pre\"$t0\"\n"
-                    $foreach $t in @t
-                        push @$dump_out, "$spc\"$t\"\n"
-                    push @$dump_out, "$spc\"$tn\";\n"
+                $if $decl=~/^(char\* \w+\s*=\s*)\[(\w.*)\]/
+                    $call global_static_string
                 $elif $decl=~/(.*=\s*)\{DUMP_STUB\s*(\w+)\s*\}/
                     push @$dump_out, "$1\{\n"
                     push @$dump_out, "INDENT"
@@ -185,6 +173,44 @@ subcode: dump_globals
                 $else
                     push @$dump_out, "$decl;\n";
         push @$dump_out, "\n";
+
+    # --------------------------
+    subcode: global_static_string
+        my ($pre, $spec)=($1, $2)
+        my @lines
+        $if $spec=~/eval:\s*(\w+)/
+            $call collect_eval_sub_str, $1
+        $elif $spec=~/file:\s*(\S+)/
+            $call collect_file_str, $1
+        $else
+            die "unhandled global_static_string: [$spec]\n"
+
+        $foreach $t in @lines
+            $t=~s/"/\\"/g
+            $t.='\n'
+
+        my $t0=shift @lines
+        my $tn=pop @lines
+        push @$dump_out, "$pre\"$t0\"\n"
+
+        my $spc='    '
+        $foreach $t in @lines
+            push @$dump_out, "$spc\"$t\"\n"
+        push @$dump_out, "$spc\"$tn\";\n"
+
+        # -----
+        subcode: collect_eval_sub_str(codename)
+            my $t=MyDef::compileutil::eval_sub($(codename))
+            @lines=split /\n/, $t
+
+        subcode: collect_file_str(filename)
+            $if open In, $(filename)
+                @lines = <In>
+                close In
+            $else
+                die "collect_file_str: Can't open $(filename)\n"
+            $foreach $t in @lines
+                $t=~s/\s*$//
 
 #---- Function Delcares ----
 subcode:: c_init

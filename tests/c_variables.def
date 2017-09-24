@@ -2,17 +2,17 @@ page: test, basic_frame
     module: c
 
     $call type_from_names
+    $(if:0)
+        $(for:f_integer, p_cell)
+            $my $1 = 4.1
+            $print $1 = $$1
 
-    $(for:f_integer, p_cell)
-        $my $1 = 4.1
-        $print $1 = $$1
+        $local int array[]={1,2,3}
+        pn_t = array
+        ppn_t = &pn_t
 
-    $local int array[]={1,2,3}
-    pn_t = array
-    ppn_t = &pn_t
-
-    $allocate p_n4_temp
-    *p_n4_temp=100
+        $allocate p_n4_temp
+        *p_n4_temp=100
 
 
 subcode: _autoload
