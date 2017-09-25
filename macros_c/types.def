@@ -193,28 +193,34 @@ fncode: pointer_type($t)
     return $t;
 
 # --------------------------------------------
+subcode: _autoload
+    $global %var_fmts=(
+        float=>'%g',
+        double=>'%g',
+        "unsigned char"=>'%d',
+        char=>'%c',
+        bool=>'%d',
+    )
+
 fncode: get_var_fmt($v, $warn)
     my $type=get_var_type($v, 1)
     $if !$type or $type eq "void"
         $type=get_c_type($v);
-    $if $type=~/^char\s*\*/
+
+    $if $var_fmts{$type}
+        return $var_fmts{$type}
+    $elif $type=~/^char\s*\*/
         return "\%s";
     $elsif $type=~/\*\s*$/
         return "\%p";
-    $elsif $type=~/^(float|double)/
-        return "\%g"
-    $elif $type =~ /^int64_t/
+    $elif $type =~ /^(u?)int64_t/
         add_include("<inttypes.h>")
-        return '%" PRId64 "'
-    $elif $type =~ /^uint64_t/
-        add_include("<inttypes.h>")
-        return '%" PRIu64 "'
-    $elsif $type=~/(int|long|bool|u?int\d+_t)\s*$/
+        $if $1
+            return '%" PRIu64 "'
+        $else
+            return '%" PRId64 "'
+    $elif $type=~/(int|long|u?int\d+_t)\s*$/
         return "\%d";
-    $elsif $type=~/^unsigned char/
-        return "\%d";
-    $elsif $type=~/char/
-        return "\%c";
     $else
         $if $warn
             $call warn, get_var_fmt: unhandled $v - $type
