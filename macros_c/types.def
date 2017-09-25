@@ -194,7 +194,8 @@ fncode: pointer_type($t)
 
 # --------------------------------------------
 subcode: _autoload
-    $global %var_fmts=(
+    $global %var_fmts
+    %var_fmts = (
         float=>'%g',
         double=>'%g',
         "unsigned char"=>'%d',
