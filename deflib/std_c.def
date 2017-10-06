@@ -192,21 +192,29 @@ subcode: fread_s_frame
 subcode: sscanf(s, @plist)
     $(unset:fmt, vars)
     $(for:p in $(plist))
+        # init var
         $(if:p~tf)
             $local $(p)=0.0
         $(elif:p~tn)
             $local $(p)=0
-        $(set1:vars.=,&$(p))
-
-        $(if:p~t?n_)
-            $(set1:fmt.= %i)
-        $(elif:p~t?s_)
-            $(set1:fmt.= %s)
-        $(elif:p~t?f_)
-            $(if:use_double=1)
+        $(elif:p~ts)
+            $local $(p)[100]
+        # $(vars)
+        $(if:p~t?s)
+            $(set1:vars.=,$(p))
+        $(else)
+            $(set1:vars.=,&$(p))
+        # $(fmt)
+        $(if:p~t?f)
+            $(if:use_double)
                 $(set1:fmt.= %lf)
             $(else)
                 $(set1:fmt.= %f)
+        $(elif:p~t?n)
+            $(set1:fmt.= %i)
+        $(elif:p~t?s)
+            $(set1:fmt.= %99s)
+
     sscanf($(s), "$(fmt)" $(vars));
 
 # ---- time -------------------------------------------
