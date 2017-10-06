@@ -1,0 +1,9 @@
+page: t, basic_frame
+    module: c
+
+    file_in = stdin
+    &call fread_s_frame
+        # auto trims space
+        $call sscanf, s, ts_name
+        $print "Hello [$ts_name]"
+        exit(0)
