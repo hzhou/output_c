@@ -40,6 +40,8 @@ page: output_c, output_main
         $call function_init
 
         $call autolist_functions, static
+        $if $page->{autolist} eq "page"
+            $call autolist_page_functions
 
         # -------------
         subcode: check_default_data_size

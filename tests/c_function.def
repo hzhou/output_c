@@ -8,3 +8,8 @@ page: test, basic_frame
     $function t
         $print function t second time
     $(lambda)()
+
+    hello()
+
+fncode: hello
+    $print Hello!
