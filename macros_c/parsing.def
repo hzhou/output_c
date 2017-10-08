@@ -96,7 +96,7 @@ subcode: parsecode_other
         # NOOP
     $elif $l=~/[:\(\{;,]\s*$/
         # NOOP
-    $elif $l=~/^\s*}\s*$/
+    $elif $l=~/^\s*[)\]}].*$/
         # NOOP
     $else
         $call check_functioncall
