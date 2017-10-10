@@ -6,16 +6,9 @@
 
 2. mydef_make
 
-3. touch output_c.def && make
+3. make
 
-4. cd MyDef-output_c
-   pmake (or "perl Makefile.PL INSTALL_BASE=$HOME")
-   make
-   make install
-   cd ..
-
-5. [update Makefile to reflect the subdirectory Makefile in MyDef-output_c/]
-   mydef_make
+4. make install
 
 ## UPDATE
 
