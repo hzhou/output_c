@@ -1,3 +1,4 @@
+# pc_data is rgb 24bit 
 fncode: save_bmp(pc_data, n_w, n_h, n_bpp, s_bmp)
     &call open_w, s_bmp
         $local ts_buf[100], s
