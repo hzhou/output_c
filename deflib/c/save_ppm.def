@@ -1,0 +1,12 @@
+# data in 24bit b-g-r format, row 0 at the bottom
+subcode: save_ppm(data, w, h, ppm)
+    &call open_w, $(ppm)
+        $(set:print_to=file_out)
+        $print P3
+        $print "%d %d", $(w), $(h)
+        $print 255
+        $for i=$(h)
+            k = $(w)*3*($(h)-i-1)
+            $for j=$(w)
+                $print "%d %d %d", $(data)[k+2], $(data)[k+1], $(data)[k]
+                k+=3

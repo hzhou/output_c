@@ -1,5 +1,5 @@
-# pc_data is rgb 24bit 
-fncode: save_bmp(pc_data, n_w, n_h, n_bpp, s_bmp)
+# pc_data is rgb 24bit; pixels are b, g, r;  row 0 at the bottom
+fncode: save_bmp(pc_data, n_w, n_h, s_bmp)
     &call open_w, s_bmp
         $local ts_buf[100], s
         $call write_binary, C2x8I, "BM",54

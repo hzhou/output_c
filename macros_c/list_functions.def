@@ -22,7 +22,7 @@ subcode: load_autodecl(inc)
             $foreach $t in @tlist
                 $structure_autolist{$t}=1
         # ------------------------
-        $elif $l=~/^struct (\w+){/
+        $elif $l=~/^struct (\w+)\{/
             # struct(name){
             #     struct_line
             #     ...
