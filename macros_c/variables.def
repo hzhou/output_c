@@ -111,8 +111,6 @@ fncode: parse_var($name, $type, $value)
         $call check_type_attributes
     $if $name=~/(\S+?)\s*=\s*(.*)/
         ($name, $init)=($1, $2)
-        $if $debug eq "type"
-            print "    parse_var: name $1, init $2\n"
         $call value_from_file
         $if !$value
             $value=$init
@@ -124,7 +122,12 @@ fncode: parse_var($name, $type, $value)
         $constructor=$2;
     $if !$type
         $call infer_type
+    $if $type=~/(.*)\[(.+)\]$/
+        $type = "$1*"
+        $array=$2
 
+    $if $debug eq "type"
+        print "    parse_var: name:$name, type:$type, init:$init\n"
     #----------------------
     $if $type=~/struct\s+(\w+)/ and !$structs{$1}
         $call @check_structure_autolist
