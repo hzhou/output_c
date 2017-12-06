@@ -107,9 +107,16 @@ fncode: get_file_s(s_file, pn_size)
         return NULL
 
 # --------------------------------
+subcode: open_a(file)
+    $(set:mode=a)
+    &call open_w, $(file)
+        BLOCK
+
 subcode: open_w(file)
     $include stdio
-    file_out=fopen($(file), "wb")
+    $(if:mode!=a)
+        $(set:mode=w)
+    file_out=fopen($(file), "$(mode)b")
     $if file_out==NULL
         $call die, "Can't write %s", $(file)
     $else
