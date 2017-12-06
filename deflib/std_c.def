@@ -197,6 +197,8 @@ subcode: sscanf(s, @plist)
             $local $(p)=0.0
         $(elif:p~tn)
             $local $(p)=0
+        $(elif:p~tb)
+            $local $(p)=0
         $(elif:p~ts)
             $local $(p)[100]
         # $(vars)
@@ -210,7 +212,7 @@ subcode: sscanf(s, @plist)
                 $(set1:fmt.= %lf)
             $(else)
                 $(set1:fmt.= %f)
-        $(elif:p~t?n)
+        $(elif:p~t?[inb])
             $(set1:fmt.= %i)
         $(elif:p~t?s)
             $(set1:fmt.= %99s)
