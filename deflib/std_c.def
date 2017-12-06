@@ -8,12 +8,6 @@ subcode:@ basic_frame
 fncode: _basic_main(main)
     $call main2
 
-#---------------------------------------- 
-macros:
-    pi: 3.14159265359
-    to_rad: 0.0174532925199
-    to_deg: 57.2957795131  
-
 ###############################################################
 ## Utility
 subcode:@ assert(check)
@@ -83,6 +77,12 @@ subcode: update_min(min, a)
     $if $(min)>$(a)
         $(min)=$(a)
 
+subcode: clamp(v, min, max)
+    $if $(v)<$(min)
+        $(v)=$(min)
+    $elif $(v)>$(max)
+        $(v)=$(max)
+#----
 subcode: get_2d_l(i, j, ldi)
     $(export:l=$(i)*$(ldi)+$(j))
 
