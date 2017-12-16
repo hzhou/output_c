@@ -7,8 +7,10 @@ macros:
 
 page: test, basic_frame
     module: c
+    CC: gcc -O2
 
-    $call test_a
+    # $call test_a
+    $call test_b
     # $call test_matrix_mult
     # $call test_static
     # $call test_cholesky
@@ -23,6 +25,14 @@ subcode: test_a
 
     $call set_matrix, a, 10, 10
     $call matrix_print, a
+
+subcode: test_b
+    $(set:N=1000)
+    $(for:A,B,C)
+        $global $(float) $1[$(N)*$(N)]
+        $call set_matrix, $1, $(N), $(N)
+    $sumcode C[i,j]=A[i,k]*B[k,j]
+    
 
 subcode: test_matrix_mult
     $local $(float) A[4]={2, 3, 4, 0}

@@ -136,8 +136,9 @@ fncode: parse_condition($param)
 
 
 #---------------------------------------- 
-#- include: macros_c/sumcode.def
 include: macros_output/sumcode.def
+macros:
+    sumcode_idx: $1
 
 subcode:: parsecode_func_other
     $case $func eq "sumcode" or $func eq "loop" or $func eq "sum"
