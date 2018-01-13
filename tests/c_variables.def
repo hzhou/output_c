@@ -1,8 +1,12 @@
 page: test, basic_frame
     module: c
 
-    $call type_from_names
     $(if:0)
+        n=10
+        $dump n
+    $(elif:1)
+        $call type_from_names
+    $(elif:1)
         $(for:f_integer, p_cell)
             $my $1 = 4.1
             $print $1 = $$1

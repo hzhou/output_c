@@ -85,6 +85,24 @@ subcode: parsecode_func
     $elif $func eq "dump"
         debug_dump($param, undef, $out);
         return
+    $elif $func eq "var"
+        # C native variables
+        my @plist = MyDef::utils::proper_split($param)
+        my $type
+        $if $plist[0]=~/([^=]+)\s+(\*?\w+.*)/
+            # certainly not robust
+            $type = $1
+            $plist[0]=$2
+        $if $type
+            $foreach $p in @plist
+                $if $p=~/^(\w+)/
+                    scope_add_symbol($1, $type)
+                $elif $p=~/^\*?(\w+)/
+                    scope_add_symbol($1, "$type *")
+            $if $param!~/;\s*$/
+                $param.=';'
+            push @$out, $param
+            return
     $call @parsecode_func_other
 
 subcode: parsecode_other
