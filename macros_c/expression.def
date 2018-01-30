@@ -81,10 +81,10 @@ fncode: check_expression($l, $context)
         $if $l=~/\G$/gc
             last
         #----  atom ------
-        $elif $l=~/\G("([^"\\]|\\.)*")/gc
+        $elif $l=~/\G(L?"([^"\\]|\\.)*")/gc
             $token=$1
             $type="atom-string"
-        $elif $l=~/\G('([^'\\]|\\.)*')/gc
+        $elif $l=~/\G(L?'([^'\\]|\\.)*')/gc
             $token=$1
             $type="atom-char"
         $elif $l=~/\G($(float)f?)/gc
