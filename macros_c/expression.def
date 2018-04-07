@@ -247,7 +247,7 @@ subcode: check_exp_bracket
         $for $i=$n:0
             $if $stack[$i] eq $open
                 $i_open=$i
-                break
+                last
         $if defined $i_open and $stack[$i_open] eq $open
             my $exp=join("", splice(@stack, $i_open+1))
             pop @stack
