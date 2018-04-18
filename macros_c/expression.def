@@ -81,10 +81,10 @@ fncode: check_expression($l, $context)
         $if $l=~/\G$/gc
             last
         #----  atom ------
-        $elif $l=~/\G("([^"\\]|\\.)*")/gc
+        $elif $l=~/\G(L?"([^"\\]|\\.)*")/gc
             $token=$1
             $type="atom-string"
-        $elif $l=~/\G('([^'\\]|\\.)*')/gc
+        $elif $l=~/\G(L?'([^'\\]|\\.)*')/gc
             $token=$1
             $type="atom-char"
         $elif $l=~/\G($(float)f?)/gc
@@ -247,7 +247,7 @@ subcode: check_exp_bracket
         $for $i=$n:0
             $if $stack[$i] eq $open
                 $i_open=$i
-                break
+                last
         $if defined $i_open and $stack[$i_open] eq $open
             my $exp=join("", splice(@stack, $i_open+1))
             pop @stack

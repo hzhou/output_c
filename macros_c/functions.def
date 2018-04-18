@@ -67,6 +67,7 @@ subcode: function_param_c_style
         $var_hash->{$name}=$var
 
 subcode: function_param_api
+    # C style api: $fntype ... defines interface
     $if $fntype{$api_name}
         my $t=$fntype{$api_name}
         $if $t=~/^(.*?)\s*\(\s*\*\s*(\w+)\s*\)\s*\(\s*(.*)\)/
@@ -74,6 +75,14 @@ subcode: function_param_api
             $param=$3
     $else
         die "function $fname($param): api not found\n"
+
+subcode: function_override
+    # C++, Java style class override interface
+    $if $fntype{$fname}=~/^override\s+(.*)/
+        my $t=$1
+        $if $t=~/^(.*?)\s*(\w+)\s*\(\s*(.*)\)/
+            $func->{ret_type}=$1
+            $param=$3
 
 # -----------------------
 subcode: infer_return_c_style
