@@ -224,6 +224,7 @@ subcode: sscanf(s, @plist)
         $(elif:p~t?s)
             $(set-1:fmt.= %99s)
 
+    $(assert:vars and fmt)
     sscanf($(s), "$(fmt)" $(vars));
 
 # ---- time -------------------------------------------
