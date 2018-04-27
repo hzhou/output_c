@@ -4,6 +4,24 @@ subcode:: parsecode_func_param_other
         MyDef::compileutil::set_current_macro($param1, $type)
         return
 
+subcode: _autoload
+    $(setmacro:add_vars=global|symbol|local|my|temp|static|extern)
+
+subcode: parse_add_var_cases
+    $elif $func eq "symbol"
+        global_add_symbol($(v))
+    $elif $func eq "my"
+        my_add_var($(v))
+    $elif $func eq "temp"
+        temp_add_var($(v))
+    $elif $func eq "static"
+        my $name=global_add_var($(v))
+        $global_hash->{$name}->{attr}="static"
+    $elif $func eq "extern"
+        my $name=global_add_symbol($(v))
+        my $decl=var_declare($global_hash->{$name}, 1)
+        $call do_declare, "extern $decl"
+
 subcode:: parsecode_func_other
     $elif $func eq "auto" or $func eq "Auto"
         # hacks for C++
@@ -26,19 +44,6 @@ subcode:: parsecode_func_other
             my $name=$1
             my $type=get_c_type($name)
             push @$out, "$type $name;"
-        return
-
-subcode:: parsecode_func_other
-    $elif $func=~/^(static|extern)$/
-        $call check_var_special, $func
-        &call each_param_v
-            $if $func eq "static"
-                my $name=global_add_var($v)
-                $global_hash->{$name}->{attr}="static"
-            $elif $func eq "extern"
-                my $name=global_add_symbol($v)
-                my $decl=var_declare($global_hash->{$name}, 1)
-                $call do_declare, "extern $decl"
         return
 
 #---- pseudo class support ---

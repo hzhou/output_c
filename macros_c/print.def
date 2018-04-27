@@ -46,14 +46,16 @@ subcode:: parsecode_func_other
 # -------------------------------------
 fncode: debug_dump($param, $prefix, $out)
     my %colors=(red=>31,green=>32,yellow=>33,blue=>34,magenta=>35,cyan=>36)
-    my @vlist=split /,\s+/, $param;
+    my @vlist=split /,\s*/, $param;
     my @a1;
     my @a2;
     $foreach my $v in @vlist
         $if $v=~/^(%.*):(.*)/
+            # %8.2e:f_val
             push @a2, $2
             push @a1, "$2=$1"
         $elif $v=~/^(\w+):(.*)/
+            # green:f_val
             my ($color,$v)=($1,$2)
             push @a2, $v;
             push @a1, "\\x1b[$colors{$color}m" . "$v=".get_var_fmt($v, 1) . "\\x1b[0m"
@@ -64,14 +66,13 @@ fncode: debug_dump($param, $prefix, $out)
             $else
                 push @a2, $v;
                 push @a1, "$v=".get_var_fmt($v, 1)
+    my $s_a1 = join(", ", @a1)
+    my $s_a2 = join(", ", @a2)
     $if $prefix
         $if $prefix=~/(red|green|yellow|blue|magenta|cyan)/
-            push @$out, "printf(\"\x1b[$colors{$prefix}m\");"
-            push @$out, "printf(\"    :".join(", ", @a1)."\\n\", ".join(", ", @a2).");";
-            push @$out, "printf(\"\x1b[0m\");"
+            $s_a1 = "\\x1b[$colors{$1}m$s_a1\\x1b[0m"
         $else
-            push @$out, "fprintf(stdout, \"    :[$prefix] ".join(", ", @a1)."\\n\", ".join(", ", @a2).");";
-    $else
-        push @$out, "fprintf(stdout, \"    :".join(", ", @a1)."\\n\", ".join(", ", @a2).");";
+            $s_a1 = "[$prefix] $s_a1"
+    push @$out, "fprintf(stdout, \"    :$s_a1\\n\", $s_a2);";
     add_include("stdio")
 
