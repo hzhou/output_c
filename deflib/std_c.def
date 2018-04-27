@@ -210,20 +210,21 @@ subcode: sscanf(s, @plist)
             $local $(p)[100]
         # $(vars)
         $(if:p~t?s)
-            $(set1:vars.=,$(p))
+            $(set-1:vars.=,$(p))
         $(else)
-            $(set1:vars.=,&$(p))
+            $(set-1:vars.=,&$(p))
         # $(fmt)
         $(if:p~[tp]?f)
             $(if:use_double)
-                $(set1:fmt.= %lf)
+                $(set-1:fmt.= %lf)
             $(else)
-                $(set1:fmt.= %f)
+                $(set-1:fmt.= %f)
         $(elif:p~[tp]?[inb])
-            $(set1:fmt.= %i)
+            $(set-1:fmt.= %i)
         $(elif:p~t?s)
-            $(set1:fmt.= %99s)
+            $(set-1:fmt.= %99s)
 
+    $(assert:vars and fmt)
     sscanf($(s), "$(fmt)" $(vars));
 
 # ---- time -------------------------------------------

@@ -7,7 +7,7 @@ fncode: regex_char_condition($c, $pat)
 
     $while 1
         $if $pat=~/\G$/gc
-            break
+            last
         $elif $pat=~/\G(\\[abtfnr])/gc
             push @tlist, "$c=='$1'"
         $elif $pat=~/\G\\(.)/gc
@@ -20,7 +20,7 @@ fncode: regex_char_condition($c, $pat)
             $else
                 push @tlist, "$c=='$1'"
         $else
-            break
+            last
 
     $if !@tlist
         die "empty char regex $pat\n"
@@ -37,7 +37,7 @@ fncode: regex_s_condition($s, $pat, $option)
     my $i=0
     $while 1
         $if $pat=~/\G$/gc
-            break
+            last
         $elif $pat=~/\G(\[.*?\])/gc
             $call parse_char
         $elif $pat=~/\G(\\.)/gc

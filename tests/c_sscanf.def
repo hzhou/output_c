@@ -1,0 +1,6 @@
+page: test, basic_frame
+    module: c
+
+    s="pi: 3.14"
+    $call sscanf, s+3, tf_pi
+    $dump tf_pi
