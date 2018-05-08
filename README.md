@@ -43,10 +43,10 @@
 
         $call test_for, 10
         $call test_for, i=0:9
-        $call test_for: i=0:9:2
-        $call test_for: i=9:0:-1
+        $call test_for, i=0:9:2
+        $call test_for, i=9:0:-1
         $local i
-        $call test_for: i=9;i>=0;i--
+        $call test_for, i=9;i>=0;i--
 
     subcode: test_for(p)
         $print "for $(p): -"
