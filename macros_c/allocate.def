@@ -23,7 +23,7 @@ fncode: allocate($dim, $param2, $alloc_type)
     $if defined $init_value and $init_value eq '0'
         $alloc_type = "calloc"
         undef $init_value
-    my @plist=split /,\s+/, $param2;
+    my @plist=split /,\s*/, $param2
     $foreach $p in @plist
         $if $p
             $call @get_var
