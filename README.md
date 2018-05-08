@@ -26,6 +26,7 @@
         module: c
 
         $print Hello World!
+        printf("%s? Just use straight C syntax.\n", "In doubt");
 ```
 
 ```
@@ -34,7 +35,10 @@
         --> [./test.c]
     gcc -std=c99 -O2 -o./test ./test.c && ./test
     Hello World!
+    In doubt? Just use straight C syntax.
 ```
+
+Remember, you are writing C code. So read `test.c` for what you have wrote.
 
 * For-loops
 ```
