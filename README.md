@@ -68,5 +68,5 @@ Remember, you are writing C code. So read `test.c` for what you have wrote.
     */
 ```
 
-More examples may be found in the `tests` folder.
+More examples may be found in the `tests` folder. There are too many weird tricks possible with `MyDef`. Wisdom and discipline highly recommended.
 
