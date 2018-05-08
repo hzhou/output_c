@@ -36,5 +36,34 @@
     Hello World!
 ```
 
+* For-loops
+```
+    page: test, basic_frame
+        module: c
+
+        $call test_for, 10
+        $(set:i=i)
+        $call test_for, i=0:9
+        $call test_for: i=0:9:2
+        $call test_for: i=9:0:-1
+        $local i
+        $call test_for: i=9;i>=0;i--
+
+    subcode: test_for(p)
+        $print "for $(p): -"
+        $for $(p)
+            $print $i -
+        $print
+
+    /* expect output:
+    for 10: 0 1 2 3 4 5 6 7 8 9
+    for i=0:9: 0 1 2 3 4 5 6 7 8
+    for i=0:9:2: 0 2 4 6 8
+    for i=9:0:-1: 9 8 7 6 5 4 3 2 1 0 
+    # Note: convention can be tricky, consider explicit when convention is weak
+    for i=9;i>=0;i--: 9 8 7 6 5 4 3 2 1 0
+    */
+```
+
 More examples may be found in the `tests` folder.
 
