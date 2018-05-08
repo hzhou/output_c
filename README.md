@@ -42,7 +42,6 @@
         module: c
 
         $call test_for, 10
-        $(set:i=i)
         $call test_for, i=0:9
         $call test_for: i=0:9:2
         $call test_for: i=9:0:-1
