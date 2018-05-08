@@ -20,21 +20,21 @@
 
 ## Examples
 
-    * Hello World
-    ```
-        page: test, basic_frame
-            module: c
+* Hello World
+```
+    page: test, basic_frame
+        module: c
 
-            $print Hello World!
-    ```
+        $print Hello World!
+```
 
-    ```
-        $ mydef_run test.def
-        PAGE: test
-          --> [./test.c]
-        gcc -std=c99 -O2 -o./test ./test.c && ./test
-        Hello World!
-    ```
+```
+    $ mydef_run test.def
+    PAGE: test
+        --> [./test.c]
+    gcc -std=c99 -O2 -o./test ./test.c && ./test
+    Hello World!
+```
 
-    More examples may be found in the `tests` folder.
+More examples may be found in the `tests` folder.
 
