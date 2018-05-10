@@ -5,6 +5,8 @@ subcode:: parsecode_func_other
     $elif $func eq "tuple_name"
         get_T_name($param)
         return
+    $elif $func eq "struct"
+        return "CALLBACK struct $param"
 
 subcode:: parsecode_func_param_other
     $elif $func eq "struct"
@@ -12,6 +14,12 @@ subcode:: parsecode_func_param_other
         return
     $elif $func eq "union"
         declare_struct($param1, $param2, 1)
+        return
+
+subcode:: parsecode_callback
+    $case $func eq "struct"
+        my $t = join(', ', @$codelist)
+        declare_struct($param, $t)
         return
 
 #-----------------------------------------

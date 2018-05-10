@@ -4,6 +4,9 @@ page: test, basic_frame
     module: c
 
     $(if:1)
+        DEBUG type
+        $call test_block
+    $(elif:1)
         $call test_nest
         $call test_nest, union
         $call test_nest, u
@@ -12,6 +15,18 @@ page: test, basic_frame
     $(else)
         # $call test_1
         $call test_2
+
+subcode: test_block
+    $struct T
+        c
+        b_1,
+        b_2
+
+    $local struct T a
+    a.c='a'
+    a.b_1=1
+    a.b_2=2
+    $print a: ${a.c}, ${a.b_1}, ${a.b_2}
 
 subcode: test_1
     $struct(T) n, pf_array
