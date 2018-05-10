@@ -8,6 +8,7 @@ page: test, basic_frame
         $call test_nest, union
         $call test_nest, u
         $call test_nest, union u
+        $call test_nest2
     $(else)
         # $call test_1
         $call test_2
@@ -57,11 +58,11 @@ subcode: test_2
 subcode: test_nest(@u)
     $print --> test_nest [$(u)]
     $(setmacro:idx+=1)
-    $struct(T$(idx)) c_type, $(u){f, i}
+    $struct(T$(idx)) c, $(u){f, i}
 
     $(set:v=a$(idx))
     $local struct T$(idx) $(v)
-    $(v).c_type = 'c'
+    $(v).c= 'c'
     $(if:u~.*u$) 
         $(v).u.f = 3.14
         $(v).u.i = 7
@@ -70,3 +71,12 @@ subcode: test_nest(@u)
         $(v).f = 3.14
         $(v).i = 7
         $print "%f", $(v).f
+
+subcode: test_nest2
+    $struct(T) u2_rh, union{u2_lh, {u1_b0, u1_b1}}
+
+    $local struct T t
+    t.u2_rh=1
+    t.u1_b0=1
+    t.u1_b1=1
+    $print "0x%x", t.u2_lh
