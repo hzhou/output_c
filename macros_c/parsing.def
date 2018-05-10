@@ -79,9 +79,6 @@ subcode: parsecode_func
             $else
                 add_object($f)
         return
-    $elif $func eq "typedef"
-        add_typedef($param)
-        return
     $elif $func eq "dump"
         debug_dump($param, undef, $out);
         return
@@ -105,6 +102,15 @@ subcode: parsecode_func
             return
     $call @parsecode_func_other
 
+subcode:: parsecode_func_other
+    $elif $func eq "typedef"
+        add_typedef($param)
+        return
+subcode:: parsecode_func_param_other
+    $elif $func eq "typedef"
+        $typedef_hash{$param1}=$param2
+        return
+#---------------------------
 subcode: parsecode_other
     $if !$l or $l=~/^\s*$/
         # NOOP

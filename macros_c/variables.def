@@ -59,23 +59,6 @@ subcode:: parsecode_func_other
                 $class_names{$t}=1
         return
 
-subcode: check_var_special(scope)
-    $if $param=~/^(\w+)\s+(.*)$/
-        $if $class_names{$1}
-            my $scope=$(scope)
-            my ($class, $param)=($1, $2)
-            my $initname=$class."_init"
-            $if $debug eq "type"
-                $print "$red{$class} - $param"
-            $if $param=~/^(\w+)\s*$/
-                $if $(hascode:$initname)
-                    MyDef::compileutil::call_sub("$initname, $1, $scope, default")
-                    return
-            $elif $param=~/^(\w+)\s*:\s*(.*)/
-                $if $(hascode:$initname)
-                    MyDef::compileutil::call_sub("$initname, $1, $scope, $2")
-                    return
-
 #---------------------------------------- 
 #- Scopes:   
 #-     global/external, function, block

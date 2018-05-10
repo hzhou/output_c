@@ -3,8 +3,14 @@ include: c/darray.def
 page: test, basic_frame
     module: c
 
-    # $call test_1
-    $call test_2
+    $(if:1)
+        $call test_nest
+        $call test_nest, union
+        $call test_nest, u
+        $call test_nest, union u
+    $(else)
+        # $call test_1
+        $call test_2
 
 subcode: test_1
     $struct(T) n, pf_array
@@ -48,6 +54,19 @@ subcode: test_2
     $for i=0:T.list_len
         $print "$i: %.2f", T.list[i]
 
+subcode: test_nest(@u)
+    $print --> test_nest [$(u)]
+    $(setmacro:idx+=1)
+    $struct(T$(idx)) c_type, $(u){f, i}
 
-
-
+    $(set:v=a$(idx))
+    $local struct T$(idx) $(v)
+    $(v).c_type = 'c'
+    $(if:u~.*u$) 
+        $(v).u.f = 3.14
+        $(v).u.i = 7
+        $print "%f", $(v).u.f
+    $(else)
+        $(v).f = 3.14
+        $(v).i = 7
+        $print "%f", $(v).f
