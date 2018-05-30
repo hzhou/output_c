@@ -5,6 +5,8 @@ page: test, basic_frame
         n=10
         $dump n
     $(elif:1)
+        $call test_var_style
+    $(elif:1)
         $call type_from_names
     $(elif:1)
         $(for:f_integer, p_cell)
@@ -28,6 +30,21 @@ subcode: temp_var
     $temp int p=1
     $print $(p) = $$(p)
 
+#----------------------------------------------- 
+subcode: test_var_style
+    $my a: char[10]
+    strcpy(a, "Hello")
+    $print $a
+
+    $(set:T=int)
+    $call set_macro
+    $global A:$(T)=$(val);
+
+    perlcode: set_macro
+        my $m = $MyDef::def->{macros}
+        $m->{val}=2
+
+#----------------------------------------------- 
 subcode: type_from_names
     $my s, n, f, i, file
     $my ts, t_s, ts_block[10], ts_ip_block[10]

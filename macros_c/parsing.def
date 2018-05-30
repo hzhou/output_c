@@ -46,7 +46,18 @@ subcode: parsecode_func
         $else
             $param=parse_condition($param)
             return single_block("$name($param){", "}")
-    $elif $func =~/^do(while)?/
+    $elif $func =~ /^of$/
+        &call return_newblock, while
+            $if $param eq "others"
+                push @src, "default:"
+            $else
+                $foreach $c in split /,\s*/, $param
+                    push @src, "case $c:"
+            push @src, "INDENT"
+            push @src, "BLOCK"
+            push @src, "break;"
+            push @src, "DEDENT"
+    $elif $func =~/^do(_?while)?$/
         $if $1
             $param=parse_condition($param)
             return single_block("do{", "}while($param);")
@@ -108,7 +119,8 @@ subcode:: parsecode_func_other
         return
 subcode:: parsecode_func_param_other
     $elif $func eq "typedef"
-        $typedef_hash{$param1}=$param2
+        $foreach $t in split /,\s*/, $param1
+            add_typedef("$param2 $t")
         return
 #---------------------------
 subcode: parsecode_other
@@ -146,18 +158,18 @@ subcode: parsecode_other
 include: macros_c/translate_regex.def
 
 fncode: parse_condition($param)
+    $param=~s/;\s*$//
     $if $param=~/^\$(\w+)\s+(.*)/
         my ($func, $param)=($1, $2)
         $call parse_condition_check_plugin
     $elif $param=~/^\/(.*)\/(i?)\s*$/
         return translate_regex($1, $2)
-    $elif $param=~/^(.*)\s*:([^'"]+):\s*(.*)/
-        # c=='*' :||: a,b,c
-        my ($pat, $sep, $t)=($1, $2, $3)
-        my $plist = MyDef::utils::for_list_expand($pat, $t)
-        return join($sep, @$plist)
+    $elif $param=~/^(\S+)\s+in\s+(.+)/ -> $v, $t
+        my @tlist = split /,\s*/, $t
+        $foreach $t in @tlist
+            $t="$v==$t"
+        return join(" || ", @tlist)
     return check_expression($param, "condition")
-
 
 #---------------------------------------- 
 include: macros_output/sumcode.def

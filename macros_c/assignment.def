@@ -22,6 +22,8 @@ fncode: do_assignment($left, $right)
     $if $left=~/^(\w+)/
         $if $protected_var{$1}
             $call warn, Variable $1 protected (unmutable)
+        # add local if not exist
+        #   caveat: $global added later
         auto_add_var($left, $type, $right)
     $else
         # ToDo, complex left value
@@ -132,5 +134,17 @@ fncode: do_assignment($left, $right)
                 $p.=", \&$t"
             push @$out, "$f($p);"
 
+#----------------------------------------
+fncode: auto_add_var($name, $type, $value)
+    my $var
+    $if $name=~/^(\w+)$/
+        $var=find_var($1)
+        $if !$var
+            $if $debug eq "type"
+                $call warn, auto_add_var: $name - $type - $value
+            func_add_var($name, $type, $value)
+    $else
+        # do not add array variables, let C compiler complain
+        return
 
 

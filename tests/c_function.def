@@ -1,6 +1,14 @@
 page: test, basic_frame
     module: c
 
+    $(if:1)
+        $call test_param
+    $(elif:1)
+        $call test_anonymous
+    $(else)
+        hello()
+
+subcode: test_anonymous
     $function t
         $print function t
     $(lambda)()
@@ -9,7 +17,17 @@ page: test, basic_frame
         $print function t second time
     $(lambda)()
 
-    hello()
 
 fncode: hello
     $print Hello!
+
+#----------------------------------------------- 
+subcode: test_param
+    A('a', 0.1, 2, 3, 0.4, 0.5)
+    B(1, 2)
+
+fncode: A(c, f; int a1, a2; b1, b2: float)
+    $dump c, f, a1, a2, b1, b2
+
+fncode: B( a,b:int;)
+    $dump a, b

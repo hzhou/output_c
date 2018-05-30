@@ -12,7 +12,7 @@ subcode:: parsecode_func_param_other
             $type_include{$param1}.="$param2";
         return
 
-subcode: parsecode_func_other
+subcode:: parsecode_func_other
     $elsif $func eq "fntype"
         # Similar to type_name, but for funtion pointer types
         $if $param=~/^(.*?)\((\s*\*\s*)?(\w+)\s*\)(.*)/
@@ -193,11 +193,18 @@ fncode: pointer_type($t)
     return $t;
 
 # --------------------------------------------
+subcode:: parsecode_func_param_other
+    $elif $func eq "register_fmt"
+        $foreach $t in split /,\s*/, $param1
+            $var_fmts{$t}=$param2
+        return 
+
 subcode: _autoload
     $global %var_fmts
     %var_fmts = (
         float=>'%g',
         double=>'%g',
+        "unsigned"=>'%d',
         "unsigned char"=>'%d',
         char=>'%c',
         bool=>'%d',
@@ -224,6 +231,6 @@ fncode: get_var_fmt($v, $warn)
         return "\%d";
     $else
         $if $warn
-            $call warn, get_var_fmt: unhandled $v - $type
-        return undef
+            $call warn, get_var_fmt: unhandled $v - $type, default to \%d
+        return '%d'
 
