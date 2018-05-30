@@ -18,6 +18,11 @@ subcode:: parsecode_func_param_other
 
 subcode:: parsecode_callback
     $case $func eq "struct"
+        $foreach $l in @$codelist
+            $if $l=~/^NOOP/
+                $l=''
+            $elif $l=~/;/
+                $l = join ', ', split_var_line($l)
         my $t = join(', ', @$codelist)
         declare_struct($param, $t)
         return
@@ -87,6 +92,7 @@ fncode: declare_struct($name, $param, $is_union)
     # -----------------------------
     subcode: declare_struct_elements
         my @plist=MyDef::utils::proper_split($param)
+        # my @plist=split_var_line($param)
         my $i=0
         my $anon_union
         $foreach $p in @plist
@@ -143,18 +149,11 @@ fncode: declare_struct($name, $param, $is_union)
                 $else
                     $m_name = $i
                 $st->{"nest-$m_name"}=declare_struct(undef, $t2, $is_union)
-            $elif $p=~/(.*\S)\s+(\S+)\s*$/
-                # explicit type
-                $type=$1;
-                $m_name=$2;
-                $if $m_name=~/^(\*+)(.*)/
-                    $type.=" $1"
-                    $m_name=$2
             $elif $basic_types{$p} or $p=~/\*$/
                 # anonymous type
                 $m_name="a$i"
                 $type=$p
-            $else
+            $elif $p=~/^\w+$/
                 # simple word
                 $m_name=$p;
                 $if $p=~/^(next|prev|left|right)$/
@@ -163,6 +162,10 @@ fncode: declare_struct($name, $param, $is_union)
                     $type="function";
                 $else
                     $type=get_c_type($p);
+            $else
+                my $v = parse_var($p)
+                $m_name=$v->{name}
+                $type=$v->{type}
     # ------------------------------
     subcode: check_var_special(scope)
         $if $param=~/^(\w+)\s+(.*)$/

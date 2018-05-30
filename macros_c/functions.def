@@ -28,7 +28,12 @@ subcode: function_close_c_style
 #----
 subcode: function_param_c_style
     my ($type, $name)
-    $if $p=~/(\S.*)\s+(\S+)\s*$/
+    $p=~s/\s+$//
+    $if $p=~/^\s*(\w+)\s*:\s*(.+)$/
+        # pascal style
+        ($type, $name)=($2, $1)
+    $elif $p=~/(\S.*)\s+(\S+)$/
+        # c style
         ($type, $name)=($1, $2)
         $if $fntype{$type}
             my $t = $fntype{$type}
@@ -52,7 +57,7 @@ subcode: function_param_c_style
         $else
             $type= get_c_type($p);
             $if !$type
-                $call warn, Failed get_c_type: $p
+                $call warn, Failed get_c_type: $p [$param]
             $name=$p
 
     $if $name

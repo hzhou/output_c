@@ -3,7 +3,12 @@ include: c/darray.def
 page: test, basic_frame
     module: c
 
-    $(if:1)
+    $(if:0)
+        $(for:a-c)
+            $register_name($1) int
+        $struct(W) union{a,b,c}
+        $union(U) a,b,c
+    $(elif:1)
         DEBUG type
         $call test_block
     $(elif:1)
@@ -18,7 +23,7 @@ page: test, basic_frame
 
 subcode: test_block
     $struct T
-        c
+        c, i, j, k: uint8_t;
         b_1,
         b_2
 
