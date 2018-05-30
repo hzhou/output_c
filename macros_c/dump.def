@@ -13,6 +13,7 @@ subcode: c_dump_init
     $if %objects
         push @$dump_out, "/* link: $lib_list $obj_list */\n"
 
+    $call @check_type_includes
     $call dump_includes
     $call dump_defines
     $call dump_enums
@@ -66,10 +67,18 @@ fncode: add_include($l)
             $key="<$f.h>"
         $else
             $key=$f
-        $if !$includes{$key}
-            $includes{$key}=1
-            push @include_list, $key
+        add_include_direct($key)
 
+fncode: add_include_direct($key)
+    $if !$includes{$key}
+        $includes{$key}=1
+        push @include_list, $key
+
+subcode: check_type_includes
+    $foreach $type in keys %all_types
+        $if $type=~/^(\w.*?)\s*\**$/
+            $if $type_include{$1}
+                add_include($type_include{$1})
 subcode: dump_includes
     $if @include_list
         $foreach $k in @include_list

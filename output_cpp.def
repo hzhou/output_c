@@ -6,12 +6,19 @@ page: output_cpp, inherit, c
     ext: cpp
     init_mode: sub
     package: MyDef::output_cpp
-
-#---- includes -------------------------------------------------------
+#---- 
+subcode:: on_parsecode
+    $if $l=~/^(?:std::)?c(out|in|err|log)\b/
+        $(super:add_include_direct)("<iostream>")
+#---- includes -----
 subcode:: on_dumpout
+    # ---- type include ----
+    $foreach $type in keys %$(super:all_types)
+        $if $type=~/(?:std::)?(string|bitset|deque|list|map|queue|set|stack|vector)\b/
+            $(super:add_include_direct)("<$1>")
+    # ---- include ----
     my $cnt=0
     my $cnt_std=0
-    # $while my ($k, $t)=each %$(super:includes)
     $foreach $k in sort {$b cmp $a} (@$(super:include_list))
         $if $k=~/<(iostream|string|bitset|deque|list|map|queue|set|stack|vector)(\.h)?>/
             push @$f, "#include <$1>\n"
@@ -22,8 +29,9 @@ subcode:: on_dumpout
             push @$f, "#include $k\n"
         $cnt++
     $if $cnt>0
-        $if $cnt_std>0
-            push @$f, "using namespace std;\n"
+        $(if:0)
+            $if $cnt_std>0
+                push @$f, "using namespace std;\n"
         push @$f, "\n"
 
     @$(super:include_list)=()

@@ -1,57 +1,53 @@
 include: std_c.def
 ## frame
 subcode: basic_frame
-    $include <cstdio>
-
     $call @global
-    $(if:hascode:main2)
-        $list main2
+    $list _basic_main
 
 #---- stl containers ---------------
 subcode:: _autoload
-    $register_prefix(vn) vector<int>
-    $register_prefix(rvn) vector<int> &
+    $register_prefix(vn) std::vector<int>
+    $register_prefix(rvn) std::vector<int> &
 
-    $register_prefix(vs) vector<string>
-    $register_prefix(rvs) vector<string> &
+    $register_prefix(vs) std::vector<std::string>
+    $register_prefix(rvs) std::vector<std::string> &
 
 subcode: vector_push(v, @list)
     $include <vector>
     $(for:t in $(list))
         $(v).push_back($(t))
 
-subcode: stl_iterator(m)
-    $get_type(type) $(m)
-    $local $(type)::const_iterator got
-
 #---- stl query ----
 subcode: map_has(m, key)
     $(allow_recurse:10)
-    $call stl_iterator, $(m)
-    got=$(m).find($(key))
-    $if got!=$(m).end()
-        $(set:value=got->second)
+    auto it=$(m).find($(key))
+    $if it!=$(m).end()
+        $(set:value=it->second)
         BLOCK
 
 subcode: set_has(m, key)
     $(allow_recurse:10)
-    $call stl_iterator, $(m)
-    got=$(m).find($(key))
-    $if got!=$(m).end()
+    auto it=$(m).find($(key))
+    $if it!=$(m).end()
         BLOCK
 
 #---- stl iteration ----
-subcode: map_iter(m)
-    $call stl_iterator, $(m)
-    $for got=$(m).begin();got!=$(m).end();++got
-        $(set:key=got->first)
-        $(set:value=got->second)
+subcode: stl_iter(v)
+    $for auto it=$(v).begin();it!=$(v).end();++it
         BLOCK
 
+subcode: vec_iter(v)
+    &call stl_iter, $(v)
+        $(set:it=*it)
+        BLOCK
+subcode: map_iter(m)
+    &call stl_iter, $(m)
+        $(set:key=it->first)
+        $(set:value=it->second)
+        BLOCK
 subcode: set_iter(m)
-    $call stl_iterator, $(m)
-    $for got=$(m).begin();got!=$(m).end();++got
-        $(set:item=(*got))
+    &call stl_iter, $(m)
+        $(set:item=(*it))
         BLOCK
 
 #---- stl initilization ----

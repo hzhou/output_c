@@ -10,6 +10,7 @@ subcode:: parsecode_func_other
         return
     $elif $func eq "print"
         $global $print_type=1
+        add_include_direct("<stdio.h>")
         $if !$param
             push @$out, "puts(\"\");"
         $else
