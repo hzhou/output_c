@@ -59,23 +59,6 @@ subcode:: parsecode_func_other
                 $class_names{$t}=1
         return
 
-subcode: check_var_special(scope)
-    $if $param=~/^(\w+)\s+(.*)$/
-        $if $class_names{$1}
-            my $scope=$(scope)
-            my ($class, $param)=($1, $2)
-            my $initname=$class."_init"
-            $if $debug eq "type"
-                $print "$red{$class} - $param"
-            $if $param=~/^(\w+)\s*$/
-                $if $(hascode:$initname)
-                    MyDef::compileutil::call_sub("$initname, $1, $scope, default")
-                    return
-            $elif $param=~/^(\w+)\s*:\s*(.*)/
-                $if $(hascode:$initname)
-                    MyDef::compileutil::call_sub("$initname, $1, $scope, $2")
-                    return
-
 #---------------------------------------- 
 #- Scopes:   
 #-     global/external, function, block
@@ -105,20 +88,26 @@ fncode: parse_var($name, $type, $value)
     my @attrs
     my $explicit_type;
     # omit ;
-    $name=~s/;\s*$//
-    # NOTE: space sensitive!
-    $if !$type
-        $if $name=~/^\s*(\S[^=]*)\s+([^= \t].*)/
-            ($type, $name)=($1, $2)
-            $explicit_type=1
-            $call check_pointer_type_name
-    $if $type
-        $call check_type_attributes
+    $name=~s/\s*;?\s*$//
+    # filter init
     $if $name=~/(\S+?)\s*=\s*(.*)/
         ($name, $init)=($1, $2)
         $call value_from_file
         $if !$value
             $value=$init
+    # NOTE: space sensitive!
+    $if !$type
+        $if $name=~/^\s*(\w+)\s*:\s*(.+)/
+            # support pascal style: (name:type)
+            ($type, $name)=($2, $1)
+            $explicit_type=1
+        $elif $name=~/^\s*(.*\S)\s+(\S+)$/
+            ($type, $name)=($1, $2)
+            $explicit_type=1
+        $if $explicit_type
+            $call check_pointer_type_name
+    $if $type
+        $call check_type_attributes
     $if $name=~/(\w+)\[(.*)\]/
         $name=$1;
         $array=$2;
@@ -258,8 +247,11 @@ fncode: var_declare($var, $need_semi)
 #---------------------------------------- 
 fncode: get_var_type($name, $nowarn)
     $if $name=~/^(\w+)(.*)/
-        my $tail=$2
-        my $base_type=get_var_type_direct($1)
+        my ($name,$tail)=($1,$2)
+        my $base_type=get_var_type_direct($name)
+        $print get_var_type [$name] - $base_type - $tail
+        my $var = find_var($name)
+        $print find_var: $name : $var
         $base_type=~s/\s*&$//
         #---- undef if not found -----
         return get_sub_type($base_type, $tail, $nowarn)

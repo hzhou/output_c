@@ -3,8 +3,30 @@ include: c/darray.def
 page: test, basic_frame
     module: c
 
-    # $call test_1
-    $call test_2
+    $(if:1)
+        DEBUG type
+        $call test_block
+    $(elif:1)
+        $call test_nest
+        $call test_nest, union
+        $call test_nest, u
+        $call test_nest, union u
+        $call test_nest2
+    $(else)
+        # $call test_1
+        $call test_2
+
+subcode: test_block
+    $struct T
+        c
+        b_1,
+        b_2
+
+    $local struct T a
+    a.c='a'
+    a.b_1=1
+    a.b_2=2
+    $print a: ${a.c}, ${a.b_1}, ${a.b_2}
 
 subcode: test_1
     $struct(T) n, pf_array
@@ -48,6 +70,28 @@ subcode: test_2
     $for i=0:T.list_len
         $print "$i: %.2f", T.list[i]
 
+subcode: test_nest(@u)
+    $print --> test_nest [$(u)]
+    $(setmacro:idx+=1)
+    $struct(T$(idx)) c, $(u){f, i}
 
+    $(set:v=a$(idx))
+    $local struct T$(idx) $(v)
+    $(v).c= 'c'
+    $(if:u~.*u$) 
+        $(v).u.f = 3.14
+        $(v).u.i = 7
+        $print "%f", $(v).u.f
+    $(else)
+        $(v).f = 3.14
+        $(v).i = 7
+        $print "%f", $(v).f
 
+subcode: test_nest2
+    $struct(T) u2_rh, union{u2_lh, {u1_b0, u1_b1}}
 
+    $local struct T t
+    t.u2_rh=1
+    t.u1_b0=1
+    t.u1_b1=1
+    $print "0x%x", t.u2_lh
