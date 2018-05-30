@@ -119,7 +119,7 @@ fncode: parse_var($name, $type, $value)
         $(block:parse_var_init)
             my $explicit_type
         $if !$type
-            $if $name=~/^\s*(\w+)\s*:\s*(.+)/
+            $if $name=~/^\s*(\w+)\s*:(?!:)\s*(.+)/
                 # pascal style: (name:type)
                 ($type, $name)=($2, $1)
                 $explicit_type=1

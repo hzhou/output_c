@@ -12,8 +12,8 @@ subcode:: on_dumpout
     my $cnt=0
     my $cnt_std=0
     # $while my ($k, $t)=each %$(super:includes)
-    $foreach $k in sort {$b cmp $a} keys(%$(super:includes))
-        $if $k=~/<(iostream|string|bitset|deque|list|map|queue|set|stack|vector)>/
+    $foreach $k in sort {$b cmp $a} (@$(super:include_list))
+        $if $k=~/<(iostream|string|bitset|deque|list|map|queue|set|stack|vector)(\.h)?>/
             push @$f, "#include <$1>\n"
             $cnt_std++
         $elif $k=~/<(stdio|stdlib|string|math|time|errno)\.h>/
@@ -26,7 +26,7 @@ subcode:: on_dumpout
             push @$f, "using namespace std;\n"
         push @$f, "\n"
 
-    %$(super:includes)=()
+    @$(super:include_list)=()
 
 #---- structs/classes -------------------------------------------------------
 subcode:: on_dumpout
