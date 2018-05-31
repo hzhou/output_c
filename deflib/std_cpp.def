@@ -7,10 +7,14 @@ subcode: basic_frame
 #---- stl containers ---------------
 subcode:: _autoload
     $register_prefix(vn) std::vector<int>
-    $register_prefix(rvn) std::vector<int> &
-
     $register_prefix(vs) std::vector<std::string>
+    $register_prefix(mnn) std::map<int,int>
+    $register_prefix(msn) std::map<std::string,int>
+
+    $register_prefix(rvn) std::vector<int> &
     $register_prefix(rvs) std::vector<std::string> &
+    $register_prefix(rmnn) std::map<int,int> &
+    $register_prefix(rmsn) std::map<std::string,int> &
 
 subcode: vector_push(v, @list)
     $include <vector>
@@ -20,14 +24,14 @@ subcode: vector_push(v, @list)
 #---- stl query ----
 subcode: map_has(m, key)
     $(allow_recurse:10)
-    auto it=$(m).find($(key))
+    auto it=$(m).find($(key));
     $if it!=$(m).end()
         $(set:value=it->second)
         BLOCK
 
 subcode: set_has(m, key)
     $(allow_recurse:10)
-    auto it=$(m).find($(key))
+    auto it=$(m).find($(key));
     $if it!=$(m).end()
         BLOCK
 
@@ -56,3 +60,8 @@ subcode: vector_append(vec, val)
 
 subcode: set_insert(set, val)
     $(set).insert($(val))
+
+#---- std algorithm ----
+subcode: std_sort(v)
+    $include <algorithm>
+    std::sort($(v).begin(), $(v).end())
