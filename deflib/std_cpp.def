@@ -1,4 +1,8 @@
 include: std_c.def
+
+macros:
+    style: c++11
+
 ## frame
 subcode: basic_frame
     $call @global
@@ -37,9 +41,15 @@ subcode: set_has(m, key)
 
 #---- stl iteration ----
 subcode: stl_iter(v)
-    $for auto it=$(v).begin();it!=$(v).end();++it
-        BLOCK
-
+    $(if:style=c++11)
+        for(auto it: $(v)){
+            $(set:it=it)
+            BLOCK
+        }
+    $(else)
+        $for auto it=$(v).begin();it!=$(v).end();++it
+            $(set:it=*it)
+            BLOCK
 subcode: vec_iter(v)
     &call stl_iter, $(v)
         $(set:it=*it)
@@ -64,4 +74,9 @@ subcode: set_insert(set, val)
 #---- std algorithm ----
 subcode: std_sort(v)
     $include <algorithm>
-    std::sort($(v).begin(), $(v).end())
+    $(if:style=c++11)
+        std::sort(begin($(v)), end($(v)))
+    $(else)
+        std::sort($(v).begin(), $(v).end())
+
+#---- C++ 11 styles -----
