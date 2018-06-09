@@ -1,10 +1,4 @@
 subcode:: parsecode_func_param_other
-    $elif $func eq "fntype"
-        my ($ret, $param)
-        $if $param2=~/^(.*?),\s*(.*)/
-            ($ret, $param)=$1
-        $fntype{$param1}="$ret (*$param1)($param)"
-        return
     $elif $func eq "register_include"
         $if $type_include{$param1}
             $type_include{$param1}.=",$param2";
@@ -230,6 +224,8 @@ fncode: get_var_fmt($v, $warn)
     $elif $type=~/(int|long|u?int\d+_t)\s*$/
         return "\%d";
     $else
+        $if $var_fmts{default}
+            return $var_fmts{default}
         $if $warn
             $call warn, get_var_fmt: unhandled $v - $type, default to \%d
         return '%d'

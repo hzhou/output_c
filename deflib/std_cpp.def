@@ -12,13 +12,9 @@ subcode: basic_frame
 subcode:: _autoload
     $register_prefix(vn) std::vector<int>
     $register_prefix(vs) std::vector<std::string>
-    $register_prefix(mnn) std::map<int,int>
-    $register_prefix(msn) std::map<std::string,int>
 
     $register_prefix(rvn) std::vector<int> &
     $register_prefix(rvs) std::vector<std::string> &
-    $register_prefix(rmnn) std::map<int,int> &
-    $register_prefix(rmsn) std::map<std::string,int> &
 
 subcode: vector_push(v, @list)
     $include <vector>
@@ -41,17 +37,7 @@ subcode: set_has(m, key)
 
 #---- stl iteration ----
 subcode: stl_iter(v)
-    $(if:style=c++11)
-        for(auto it: $(v)){
-            $(set:it=it)
-            BLOCK
-        }
-    $(else)
-        $for auto it=$(v).begin();it!=$(v).end();++it
-            $(set:it=*it)
-            BLOCK
-subcode: vec_iter(v)
-    &call stl_iter, $(v)
+    $for auto it=$(v).begin();it!=$(v).end();++it
         $(set:it=*it)
         BLOCK
 subcode: map_iter(m)

@@ -8,30 +8,43 @@ page: output_cpp, inherit, c
     package: MyDef::output_cpp
 #---- 
 subcode:: on_parsecode
-    $if $l=~/^(?:std::)?c(out|in|err|log)\b/
+    $if $l=~/^(\/\/.*)/
+        push @$out, $1
+        return
+    $elif $l=~/^\$foreach\s+(.+?)\s+in\s+(.+)/ -> $v, $list
+        $if $v=~/^\w+$/
+            $v = "auto $v"
+        return $(super:single_block)("for($v : $list){", "}", "foreach")
+    # call other
+    $elif $l=~/^(?:std::)?c(out|in|err|log)\b/
         $(super:add_include_direct)("<iostream>")
+
+subcode: _old_parse_other
+    $elif $l=~/^(\w+)\s*=\s*(\w+_)?new\s+(\w+)(.*)/ -> $v, $attr, $T, $spec
+        $(super:func_add_symbol)($v, $T)
+        $if $attr=~/unique|shared|weak/
+            $(super:add_include_direct)("<memory>")
+            push @$out, "std::${attr}ptr<$T> $v {new $T$spec};"
+        $else
+            push @$out, "auto $v = new $T$spec;"
+        return 
 #---- includes -----
 subcode:: on_dumpout
     # ---- type include ----
     $foreach $type in keys %$(super:all_types)
-        $if $type=~/(?:std::)?(string|bitset|deque|list|map|queue|set|stack|vector)\b/
+        $if $type=~/(?:std::)?(string|bitset|deque|list|unordered_map|map|queue|set|stack|vector)\b/
             $(super:add_include_direct)("<$1>")
     # ---- include ----
     my $cnt=0
-    my $cnt_std=0
     $foreach $k in sort {$b cmp $a} (@$(super:include_list))
-        $if $k=~/<(iostream|string|bitset|deque|list|map|queue|set|stack|vector)(\.h)?>/
-            push @$f, "#include <$1>\n"
-            $cnt_std++
-        $elif $k=~/<(stdio|stdlib|string|math|time|errno)\.h>/
+        $if $k=~/<(stdio|stdlib|string|math|time|errno)\.h>/
             push @$f, "#include <c$1>\n"
         $else
             push @$f, "#include $k\n"
         $cnt++
+    $if $MyDef::page->{namespace}
+        push @$f, "using namespace $MyDef::page->{namespace};\n"
     $if $cnt>0
-        $(if:0)
-            $if $cnt_std>0
-                push @$f, "using namespace std;\n"
         push @$f, "\n"
 
     @$(super:include_list)=()
@@ -61,20 +74,21 @@ subcode: dump_struct
     push @class_dump, "};\n\n";
 
 subcode: dump_struct_constructor
-    my ($param, $init)=$(super:get_struct_constructor)($name)
-    $if defined $init
-        my $param_line=join(", ", @$param)
-        my @init_list
-        $foreach $a in @$init
-            $if $a=~/(\w+)=(.*)/
-                push @init_list, "$1($2)"
-        my $init_line=join(", ", @init_list)
-        push @class_dump, "\t$name($param_line) : $init_line {}\n";
+    $(if:0)
+        my ($param, $init)=$(super:get_struct_constructor)($name)
+        $if defined $init
+            my $param_line=join(", ", @$param)
+            my @init_list
+            $foreach $a in @$init
+                $if $a=~/(\w+)=(.*)/
+                    push @init_list, "$1($2)"
+            my $init_line=join(", ", @init_list)
+            push @class_dump, "\t$name($param_line) : $init_line {}\n";
 
-    my $s_exit=$s_hash->{"-exit"}
-    $if $s_exit and @$s_exit
-        push @class_dump, "\t~$name(){\n";
-        $foreach $l in @$s_exit
-            push @class_dump, "\t    $l\n";
-        push @class_dump, "\t}\n";
+        my $s_exit=$s_hash->{"-exit"}
+        $if $s_exit and @$s_exit
+            push @class_dump, "\t~$name(){\n";
+            $foreach $l in @$s_exit
+                push @class_dump, "\t    $l\n";
+            push @class_dump, "\t}\n";
 

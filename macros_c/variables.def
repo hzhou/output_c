@@ -75,6 +75,7 @@ fncode: parse_var($name, $type, $value)
     $name=~s/\s*;?\s*$// # omit ;
     $call filter_init
     $call check_explicit_type
+    $call check_explicit_value_type
     $if $type
         $call check_type_attributes
     $call check_name_postfix
@@ -131,6 +132,12 @@ fncode: parse_var($name, $type, $value)
                     $name=$2
             $if $explicit_type
                 $call check_pointer_type_name
+    subcode: check_explicit_value_type
+        $if !$type and $value
+            $if $value =~/^\(([)]+)\)(\w+.*)/ # (cast)
+                $type = $1
+            $elif $value =~/^new\s+([^({]+)/  # new classtype
+                $type = $1
     subcode: check_name_postfix
         $(block:parse_var_init)
             my ($array, $constructor)
