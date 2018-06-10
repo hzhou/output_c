@@ -12,13 +12,10 @@ subcode:: parsecode_special
 
 #---------------------------------------- 
 subcode: parsecode_func_param
-    $if $func eq "dump"
-        debug_dump($param2, $param1, $out);
-        return
-    $elsif $func eq "define"
+    $case $func eq "define"
         add_define($param1, $param2)
         return
-    $elsif $func eq "enum"
+    $case $func eq "enum"
         $if !$enums{$param1}
             push @enum_list, $param1
             $enums{$param1}=$param2
@@ -89,9 +86,6 @@ subcode: parsecode_func
                     add_include($lib_include{$f})
             $else
                 add_object($f)
-        return
-    $elif $func eq "dump"
-        debug_dump($param, undef, $out);
         return
     $elif $func eq "var"
         # C native variables

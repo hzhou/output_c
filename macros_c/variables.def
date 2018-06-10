@@ -86,6 +86,9 @@ fncode: parse_var($name, $type, $value)
     $if $type=~/struct\s+(\w+)/ and !$structs{$1}
         $call @check_structure_autolist
 
+    # ---- for later type includes ----
+    $global %all_types
+    $all_types{$type}=1
     $if $debug eq "type"
         print "    parse_var: name:$name, type:$type, init:$init\n"
 
@@ -138,6 +141,11 @@ fncode: parse_var($name, $type, $value)
                 $type = $1
             $elif $value =~/^new\s+([^({]+)/  # new classtype
                 $type = $1
+                $if $type=~/\[.*\]$/
+                    $if $page->{_pageext} eq "java"
+                        $type=~s/\[(.*?)\]/[]/g
+                    $else
+                        $type=~s/\[(.*?)\]/\*/g
     subcode: check_name_postfix
         $(block:parse_var_init)
             my ($array, $constructor)

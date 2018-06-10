@@ -171,9 +171,6 @@ fncode: get_c_type($name)
         $page->{use_bool}=1
     # ----
     $type=~s/\s+(\*+)$/\1/
-    # ---- for later type includes ----
-    $global %all_types
-    $all_types{$type}=1
     # --------------------------
     $while $name=~/\[.*?\]/g
         $type=pointer_type($type);

@@ -45,6 +45,15 @@ subcode:: parsecode_func_other
             push @$out, "fprintf($print_to, $fmt);"
 
 # -------------------------------------
+subcode:: parsecode_func_other
+    $elif $func eq "dump"
+        debug_dump($param, undef, $out);
+        return
+subcode:: parsecode_func_param_other
+    $elif $func eq "dump"
+        debug_dump($param2, $param1, $out);
+        return
+
 fncode: debug_dump($param, $prefix, $out)
     my %colors=(red=>31,green=>32,yellow=>33,blue=>34,magenta=>35,cyan=>36)
     my @vlist=split /,\s*/, $param;
