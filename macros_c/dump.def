@@ -103,7 +103,7 @@ fncode: add_define($name, $definition)
     $defines{$name}=$definition
 
 subcode: dump_defines
-    $if $page->{use_bool} and !$page->{skip_bool}
+    $if $page->{use_bool} and !$page->{has_bool}
         push @$dump_out, "typedef int bool;\n"
         push @$dump_out, "#define true 1\n"
         push @$dump_out, "#define false 0\n"

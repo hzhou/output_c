@@ -46,11 +46,9 @@ page: output_c, output_main
         # -------------
         subcode: check_default_data_size
             my $macros=$MyDef::def->{macros}
-            $(for:v in use_double,skip_bool,use_int64,use_prefix)
+            $(for:v in use_double,has_bool,use_int64,use_prefix)
                 $if $macros->{$(v)} and !defined $page->{$(v)}
                     $page->{$(v)}=$macros->{$(v)}
-            $if $page->{_pageext} eq "cpp"
-                $page->{skip_bool}=1
 
             $if $page->{"use_double"}
                 $type_name{f}="double";

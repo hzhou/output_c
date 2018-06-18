@@ -258,7 +258,11 @@ fncode: var_declare($var, $need_semi)
             $t="$type $name"
 
         $if defined $var->{init}
-            $t.=" = $var->{init}"
+            $if $var->{init} =~/^[({].*[)}]\s*$/
+                # c++ constructors
+                $t.="$var->{init}"
+            $else
+                $t.=" = $var->{init}"
         $if defined $var->{attr}
             $t = $var->{attr} . " $t"
 

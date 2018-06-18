@@ -6,6 +6,9 @@ page: output_cpp, inherit, c
     ext: cpp
     init_mode: sub
     package: MyDef::output_cpp
+
+subcode:: on_init
+    $$(super:page)->{has_bool} = "bool"
 #---- 
 subcode:: on_parsecode
     $if $l=~/^(\/\/.*)/
@@ -19,15 +22,16 @@ subcode:: on_parsecode
     $elif $l=~/^(?:std::)?c(out|in|err|log)\b/
         $(super:add_include_direct)("<iostream>")
 
-subcode: _old_parse_other
-    $elif $l=~/^(\w+)\s*=\s*(\w+_)?new\s+(\w+)(.*)/ -> $v, $attr, $T, $spec
-        $(super:func_add_symbol)($v, $T)
-        $if $attr=~/unique|shared|weak/
-            $(super:add_include_direct)("<memory>")
-            push @$out, "std::${attr}ptr<$T> $v {new $T$spec};"
-        $else
-            push @$out, "auto $v = new $T$spec;"
-        return 
+    $elif $l=~/^\$my\s+(.*)/ -> $t
+        $call @parse_my
+    $elif $l=~/^\$dump\s+(.*)/ ->$t
+        $(super:add_include_direct)("<iostream>")
+        my @tlist
+        $foreach $v in split /,\s*/, $t
+            push @tlist, "<<\"$v=\"<<$v"
+        push @$out, "std::cout".join('<<", "', @tlist)."<<'\\n';"
+        return
+
 #---- includes -----
 subcode:: on_dumpout
     # ---- type include ----
@@ -91,4 +95,54 @@ subcode: dump_struct_constructor
             $foreach $l in @$s_exit
                 push @class_dump, "\t    $l\n";
             push @class_dump, "\t}\n";
+
+subcode: parse_my
+    $if $t=~/\w+\s*=\s*(\w+)\(.*\)/
+        $if $$(super:function_autolist){$1}
+            $if !$$(super:list_function_hash){$1}
+                $$(super:list_function_hash){$1}=1
+                push @$(super:list_function_list), $1
+    # ------------------------------------
+    $t=~s/\s+$//
+    $if $t=~/^(\w+)\s*=\s*new\s+(\w+)(.*)/ -> $v, $T, $t
+        # note: deprecated in mondern C++
+        $(super:func_add_symbol)($v, "$T*")
+        push @$out, "auto $v = new $T$t;"
+        return
+    $elif $t=~/^(\w+)\s*=\s*make_(unique|shared)(.*)/ -> $v, $attr, $t
+        $(super:add_include_direct)("<memory>")
+        my ($type, $T, $new)
+        $if $t=~/^<(.*)>(.*)/
+            ($type, $T, $new)=("$1*", $1, $2)
+            $if $T=~/(.*?)\[.*\]/
+                $type = "$1*"
+            $if $new=~/^\((.*)\)/
+                $new = $1
+        $else
+            $t=~s/^\s+//
+            $if $t=~/(.*?)\[(.*)\]/
+                ($type, $T, $new) = ("$1*", $1."[]", $2)
+            $else
+                ($type, $T, $new) = ("$t*", $t, undef)
+        $(super:func_add_symbol)($v, $type)
+        $(if:0) # c++14
+            push @$out, "auto $v = make_$attr<$T>($new);"
+        $(else) # c++11
+            $if $T=~/^(.*)\[\]$/
+                push @$out, "std::${attr}_ptr<$T> $v {new $1\[$new]};"
+            $else
+                push @$out, "std::${attr}_ptr<$T> $v {new $T($new)};"
+        return 
+    $else
+        my @vlist
+        $if $t=~/[({<'"]/
+            $if $t=~/^(.*\w+)\s*([({].*[)}])$/
+                push @vlist, "$1 = $2"
+            $else
+                push @vlist, $t
+        $else
+            @vlist = $(super:split_var_line)($t)
+        $foreach $v in @vlist
+            $(super:my_add_var)($v)
+        return 
 

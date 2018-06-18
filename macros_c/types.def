@@ -121,8 +121,11 @@ fncode: infer_value_type($val)
     $elif $val=~/^'/
         return "char";
     $elif $val=~/^(true|false)/
-        $page->{use_bool}=1
-        return "bool"
+        $if $page->{has_bool}
+            return $page->{has_bool}
+        $else
+            $page->{use_bool}=1
+            return "bool"
     $elif $val=~/(\w+)\(.*\)/
         my $func=$functions{$1}
         $if $debug
