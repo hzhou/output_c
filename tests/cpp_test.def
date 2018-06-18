@@ -1,0 +1,8 @@
+page: t, basic_frame
+    module: cpp
+
+    $print Hello World!
+
+    $local vn_A = {1, 2, 3}
+    &call stl_iter, vn_A
+        std::cout<<$(it)<<' ';

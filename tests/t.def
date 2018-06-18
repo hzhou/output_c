@@ -1,0 +1,6 @@
+page: t, basic_frame
+    module: c
+
+    do{
+        $print Hello
+    }while(0);

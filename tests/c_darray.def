@@ -1,0 +1,28 @@
+include: c/darray.def
+page: test, basic_frame
+    $(if:0)
+        $call test_basic
+    $(else)
+        $call test_tuple
+
+subcode: test_basic
+    $my darray P: int
+    P.$resize 10
+    $foreach P
+        P.$push $(i)+1
+    $foreach P
+        $print "    %d", $(t)
+
+subcode: test_tuple
+    $my darray P: int, char
+    P.$resize 10
+    $foreach P
+        $(t)=$(i), $(i)+'A'
+        $print "    %d: %c", $(i), $(t).2
+    P.$resize 0
+    P.$push 108, 108
+    # ref: macros_c/expression.def check_exp_subscript
+    $print "last item: %d", P[-1].1
+
+    (n, c)=P.$pop()
+    $print n = $n, c = $c

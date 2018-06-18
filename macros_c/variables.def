@@ -7,6 +7,25 @@ subcode:: parsecode_func_param_other
 subcode: _autoload
     $(setmacro:add_vars=global|symbol|local|my|temp|static|extern)
 
+# ref: macros_output/variables.def parse_add_vars
+subcode:: check_var_special(scope)
+    $if $param=~/(\w+)\s+(.*)$/ and $class_names{$1}
+        my $scope=$(scope)
+        my ($class, $param)=($1, $2)
+        my $initname=$class."_init"
+        $if $debug eq "type"
+            $print "$red{$class} - $param"
+        $if $param=~/^(\w+)\s*$/
+            $if $(hascode:$initname)
+                MyDef::compileutil::call_sub("$initname, $1, $scope, default")
+                return
+        $elif $param=~/^(\w+)\s*:\s*(.*)/
+            $if $(hascode:$initname)
+                MyDef::compileutil::call_sub("$initname, $1, $scope, $2")
+                return
+        $else
+            $call warn, "class syntax invalid [$param]"
+
 subcode: parse_add_var_cases
     $elif $func eq "symbol"
         global_add_symbol($(v))
@@ -59,6 +78,9 @@ subcode:: parsecode_func_other
                 $class_names{$t}=1
         return
 
+subcode:: parse_var_attrs
+    $if $type_class{$type}
+        $var->{class}=$type_class{$type}
 #---------------------------------------- 
 #- Scopes:   
 #-     global/external, function, block
@@ -103,11 +125,9 @@ fncode: parse_var($name, $type, $value)
         $var->{array}=$array
         $var->{dimension}=$array
         $call @fix_var_array_type
-    $elif defined $constructor
-        $var->{constructor}=$constructor
+
     $call @debug
-    $if $type_class{$type}
-        $var->{class}=$type_class{$type}
+    $call @parse_var_attrs
     return $var
 
     # --------------------
@@ -148,13 +168,10 @@ fncode: parse_var($name, $type, $value)
                         $type=~s/\[(.*?)\]/\*/g
     subcode: check_name_postfix
         $(block:parse_var_init)
-            my ($array, $constructor)
+            my $array
         $if $name=~/(\w+)\[(.*)\]/
             $name=$1;
             $array=$2;
-        $elif $name=~/(\w+)\((.*)\)/
-            $name=$1;
-            $constructor=$2;
     subcode: filter_array_type
         $if $type=~/(.*)\[(.+)\]$/
             $type =$1
@@ -252,14 +269,12 @@ fncode: var_declare($var, $need_semi)
         my $type=$var->{type}
         $if defined $var->{array}
             $t=pointer_type($type)." $name"."[$var->{array}]"
-        $elif defined $var->{constructor}
-            $t=pointer_type($type)." $name"."($var->{constructor})"
         $else
             $t="$type $name"
 
         $if defined $var->{init}
             $if $var->{init} =~/^[({].*[)}]\s*$/
-                # c++ constructors
+                # ref: output_cpp.def
                 $t.="$var->{init}"
             $else
                 $t.=" = $var->{init}"

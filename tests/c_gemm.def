@@ -1,0 +1,25 @@
+include: c/matrix.def
+page: test, basic_frame
+    module: c
+    use_double: 1
+    N: 1000
+    CC: gcc -O2
+
+    $(for:A,B,C)
+        $global double $1[$(N)*$(N)]
+        $call set_matrix, $1, $(N), $(N)
+
+    $call start_clock
+    $(if:0)
+        $sumcode C[i,j]=A[i,k]*B[k,j]
+    $(elif:1)
+        $call matrix_mult, A, B, C
+    $(else)
+        $call gemm
+
+    $call report_clock, GEMM $(N)
+
+subcode: gemm
+    $uselib blas
+    $call m_mult, A, B, C, $(N)
+

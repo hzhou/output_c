@@ -1,0 +1,8 @@
+page: test, basic_frame
+    $register_name(a) int
+    DEBUG type
+    $global  a
+    a = 10
+    $print $a
+
+

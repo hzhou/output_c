@@ -64,6 +64,7 @@ subcode:: on_dumpout
     @$(super:struct_list)=()
 
 subcode: dump_struct
+    # TODO: class interface
     push @class_dump, "struct $name {\n";
     my $s_list=$$(super:structs){$name}->{list}
     my $s_hash=$$(super:structs){$name}->{hash}
@@ -74,27 +75,8 @@ subcode: dump_struct
             push @class_dump, "\t".$$(super:fntype){$p}.";\n";
         $else
             push @class_dump, "\t$s_hash->{$p} $p;\n";
-    $call dump_struct_constructor
+    # $call dump_struct_constructor
     push @class_dump, "};\n\n";
-
-subcode: dump_struct_constructor
-    $(if:0)
-        my ($param, $init)=$(super:get_struct_constructor)($name)
-        $if defined $init
-            my $param_line=join(", ", @$param)
-            my @init_list
-            $foreach $a in @$init
-                $if $a=~/(\w+)=(.*)/
-                    push @init_list, "$1($2)"
-            my $init_line=join(", ", @init_list)
-            push @class_dump, "\t$name($param_line) : $init_line {}\n";
-
-        my $s_exit=$s_hash->{"-exit"}
-        $if $s_exit and @$s_exit
-            push @class_dump, "\t~$name(){\n";
-            $foreach $l in @$s_exit
-                push @class_dump, "\t    $l\n";
-            push @class_dump, "\t}\n";
 
 subcode: parse_my
     $if $t=~/\w+\s*=\s*(\w+)\(.*\)/

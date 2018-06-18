@@ -48,7 +48,7 @@ fncode: declare_tuple($param)
 
     my $s_list=[]
     my $s_hash={}
-    $structs{$name}={list=>$s_list, hash=>$s_hash}
+    $structs{$name}={list=>$s_list, hash=>$s_hash, type=>"struct"}
     push @struct_list, $name
     my @plist=split /,\s*/, $param;
     my $i=0
@@ -85,8 +85,8 @@ fncode: declare_struct($name, $param, $is_union)
     $st->{type}=$T
     $if $name
         $type_prefix{"st$name"}="struct $name"
-
-    $call check_var_special, "struct($name)"
+    # struct(name) darray P: type(s)
+    $call @check_var_special, "struct($name)"
     $call declare_struct_elements
     return $st
     # -----------------------------
@@ -167,23 +167,6 @@ fncode: declare_struct($name, $param, $is_union)
                 $m_name=$v->{name}
                 $type=$v->{type}
     # ------------------------------
-    subcode: check_var_special(scope)
-        $if $param=~/^(\w+)\s+(.*)$/
-            $if $class_names{$1}
-                my $scope=$(scope)
-                my ($class, $param)=($1, $2)
-                my $initname=$class."_init"
-                $if $debug eq "type"
-                    $print "$red{$class} - $param"
-                $if $param=~/^(\w+)\s*$/
-                    $if $(hascode:$initname)
-                        MyDef::compileutil::call_sub("$initname, $1, $scope, default")
-                        return
-                $elif $param=~/^(\w+)\s*:\s*(.*)/
-                    $if $(hascode:$initname)
-                        MyDef::compileutil::call_sub("$initname, $1, $scope, $2")
-                        return
-
 
 #- structure_autolist: 
 #-     ref list_functions.def, variables.def

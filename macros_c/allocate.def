@@ -75,7 +75,8 @@ fncode: allocate($dim, $param2, $alloc_type)
             $if !$var
                 func_add_var($p)
                 $var=find_var($p)
-            $var->{dimension}=$dim
+            $if !$var->{class}
+                $var->{dimension}=$dim
             $if $dim=~/\*/
                 my @parts=split /\s*\*\s*/, $dim
                 my $i=0
