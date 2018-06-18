@@ -273,7 +273,7 @@ fncode: var_declare($var, $need_semi)
             $t="$type $name"
 
         $if defined $var->{init}
-            $if $var->{init} =~/^[({].*[)}]\s*$/
+            $if $var->{init} =~/^[(].*[)]\s*$/
                 # ref: output_cpp.def
                 $t.="$var->{init}"
             $else
