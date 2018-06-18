@@ -37,14 +37,17 @@ subcode: darray_free(var)
         $(var)_len=0
         $(var)_size=0
 
+#---- $(var)_size is more opaque than $(var)_len
 subcode: darray_resize(var, n)
     # note: len doesn't change unless > size
-    $if $(var)_size<$(n)
-        tn_old_size = $(var)_size
-        $(var)_size=$(n)
-        $realloc($(var)_size) $(var)
-        memset($(var)+tn_old_size, 0, ($(var)_size-tn_old_size)*sizeof(*$(var)))
-    $elif $(var)_len>$(n)
+    $(if:n=0)
+        $call darray_clear, $(var)
+    $(else)
+        $if $(var)_size<$(n)
+            tn_old_size = $(var)_size
+            $(var)_size=$(n)
+            $realloc($(var)_size) $(var)
+            memset($(var)+tn_old_size, 0, ($(var)_size-tn_old_size)*sizeof(*$(var)))
         $(var)_len=$(n)
 
 subcode: darray_grow(var, n)
@@ -53,6 +56,7 @@ subcode: darray_grow(var, n)
         $(var)_size = ($(var)_len+$(n))*5/3 + 10
         $realloc($(var)_size) $(var)
         memset($(var)+$(var)_len, 0, ($(var)_size-$(var)_len)*sizeof(*$(var)))
+    $(var)_len+=$(n)
 
 subcode: darray_clear(var)
     $(var)_len=0
