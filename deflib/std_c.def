@@ -277,6 +277,11 @@ subcode: report_clocks(@namelist)
     $(for:i in $(namelist))
         $print "    clock_$(i): %f sec", (double)clock_$(i)/CLOCKS_PER_SEC
 
+subcode: clock_it(name)
+    $call start_clock
+    BLOCK
+    $print "  $(name): %f sec", (double)(clock()-clock_start)/CLOCKS_PER_SEC
+
 # ---- sort -------------------------------------
 subcode: qsort(list, size, type)
     $function qsort_cmp(const void * a, const void * b)
