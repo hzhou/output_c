@@ -1,6 +1,5 @@
 page: t, from template/main.c
     module: c
-    has_stub_global_init: 1
 
 subcode: custom
     $in_function main
@@ -11,3 +10,14 @@ subcode: custom
 
         tf_x = f_x * 2
         $print tf_x = x * 2 = $tf_x
+
+subcode: _autoload
+    $list F
+fncode: F(n)
+    return n*n
+
+subcode: fn_A
+    n_scale = 2
+    x=3
+    return x*n_scale
+

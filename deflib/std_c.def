@@ -317,3 +317,11 @@ fncode: get_s_int(s, int * p_n)
     $while *s==' '
         s++
     return s
+
+#---- template -----
+subcode: fn_(@line)
+    $(set:name=$(line:0:word))
+    DUMP_STUB $(name)_pre
+    $in_function $(line)
+        $call fn_$(name)
+        

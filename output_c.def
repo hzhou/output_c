@@ -76,24 +76,6 @@ page: output_c, output_main
 
         $call parsecode_common
 
-    subcode: parsecode_template
-        $if $a=~/(.*)\$call\s*(.*)\s*$/
-            my ($spaces, $call_line)=($1, $2)
-            my $len=length($spaces)
-            my $n=int($len/4)
-            $if $len % 4
-                $n++
-            $for $i=0:$n
-                push @$out, "INDENT"
-            MyDef::compileutil::call_sub($call_line)
-            $for $i=0:$n
-                push @$out, "DEDENT"
-            next
-        $elif $a=~/DUMP_STUB\s+(\w+)/
-            push @$out, "DUMP_STUB $1"
-            $page->{"has_stub_$1"}=1
-            next
-
     subcode: dumpout
         $call process_main_function
         $call process_functions
@@ -101,10 +83,9 @@ page: output_c, output_main
         $call process_link_objects
 
         # ---- Header stuff --------------------------
-        $if !$page->{has_stub_global_init}
-            unshift @$out, "DUMP_STUB global_init"
-        unshift @$out, "DUMP_STUB meta_init"
-
+        $(for:global_init,meta_init)
+            $if !$page->{has_stub_$1}
+                unshift @$out, "DUMP_STUB $1"
         $call c_dump_init
 
         # -------------------------------

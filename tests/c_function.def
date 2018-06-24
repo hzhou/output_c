@@ -27,7 +27,7 @@ subcode: test_param
     B(1, 2)
 
 fncode: A(c, f; int a1, a2; b1, b2: float)
-    $dump c, f, a1, a2, b1, b2
+    $dump($(FunctionName)) c,f,a1,a2,b1,b2
 
 fncode: B( a,b:int;)
-    $dump a, b
+    $dump($(FunctionName)) a, b
