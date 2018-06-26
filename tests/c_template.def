@@ -1,6 +1,12 @@
 page: t, from template/main.c
     module: c
 
+    // Where does this go?
+
+subcode: _autoload
+    // in _autoload
+    $call main
+
 subcode: custom
     # if $in_function main, $has_main==1, no F2 won't be static
     $in_function M

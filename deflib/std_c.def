@@ -319,6 +319,10 @@ fncode: get_s_int(s, int * p_n)
     return s
 
 #---- template -----
+subcode: global_init
+    DUMP_STUB global_init
+    $call @main
+
 subcode: fn_(@line)
     $(set:name=$(line:0:word))
     DUMP_STUB $(name)_pre
