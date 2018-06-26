@@ -101,13 +101,23 @@ page: output_c, output_main
                     $mainfunc->{return}="return 0;"
 
         subcode: process_functions
+            $call @check_func_hook
             $foreach $func in @function_list
                 $if !$func->{processed}
                     process_function_std($func)
+                    $call @func_hook
                     $if !$has_main
                         my $name=$func->{name}
                         $if $function_autolist{$name} eq "static"
                             $func->{declare}="static ".$func->{declare}
+            subcode: check_func_hook
+                my $func_hook
+                $if $MyDef::def->{codes}->{_FUNC_HOOK}
+                    $func_hook = MyDef::compileutil::eval_sub("_FUNC_HOOK")
+                    
+            subcode: func_hook
+                $if $func_hook
+                    eval $func_hook
 
         subcode: process_link_objects
             my @objlist

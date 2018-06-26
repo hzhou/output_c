@@ -2,20 +2,25 @@ page: t, from template/main.c
     module: c
 
 subcode: custom
-    $in_function main
+    # if $in_function main, $has_main==1, no F2 won't be static
+    $in_function M
         $print Hello from custom code
         $global f_x
         f_x = 3.14159
         $print x = $f_x
 
-        tf_x = f_x * 2
+        tf_x = F2(tf_x)
         $print tf_x = x * 2 = $tf_x
 
 subcode: _autoload
-    $list F
-fncode: F(n)
-    return n*n
+    $list F1 # global function
 
+fncode: F1(n)
+    return n*n
+fncode: F2(float x)
+    return x*2
+
+# ----------- 
 subcode: fn_A
     n_scale = 2
     x=3
