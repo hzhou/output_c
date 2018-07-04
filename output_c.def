@@ -28,7 +28,7 @@ page: output_c, output_main
     package: MyDef::output_c
 
     subcode: init_page
-        $call @c_init
+        $call @_initpage # macros_output/functions.def
         $call check_default_data_size
         $if $page->{"use_libmydef"}
             $call load_autodecl, c/libmydef.inc

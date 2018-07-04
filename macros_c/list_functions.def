@@ -1,5 +1,5 @@
 include: macros_output/functions.def
-subcode:: c_init
+subcode:: _initpage
     $call function_init
 
 #---- auto_declare -----------------------------
