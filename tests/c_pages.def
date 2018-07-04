@@ -1,0 +1,10 @@
+page: t, basic_frame
+    $print Hello 1
+
+page: t2, basic_frame
+    $print Hello 2
+
+subcode: _autoload
+    $list F1
+
+fncode: F1
