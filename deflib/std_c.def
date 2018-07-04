@@ -3,10 +3,12 @@ subcode:@ basic_frame
     $include stdio
     $include stdlib
     $call @global
-    $list _basic_main
+    # $list _basic_main
+    $function main
+        $call main
 
 fncode: _basic_main(main)
-    $call main2
+    $call main
 
 ###############################################################
 ## Utility
