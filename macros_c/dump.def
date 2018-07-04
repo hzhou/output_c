@@ -33,7 +33,7 @@ subcode: dump_classes
             push @$dump_out, $l
 
 # ---- Includes ----
-subcode:: _init_page
+subcode:: _initpage
     $global @include_list
     $global %includes, %objects, @object_list
     @include_list=()
@@ -89,7 +89,7 @@ subcode: dump_includes
         push @$dump_out, "\n";
 
 # ---- Defines ----
-subcode:: _init_page
+subcode:: _initpage
     $global $define_id_base, @define_list, %defines
     $define_id_base=1000
     @define_list=()
@@ -117,7 +117,7 @@ subcode: dump_define(k)
     push @$dump_out, "#define $(k) $defines{$(k)}\n";
 
 # ---- TypeDefs ----
-subcode:: _init_page
+subcode:: _initpage
     $global @typedef_list, %typedef_hash
     @typedef_list=()
     %typedef_hash=()
@@ -145,7 +145,7 @@ subcode: dump_typedef(k)
         push @$dump_out, "typedef $t $(k);"
 
 # ---- Enums ----
-subcode:: _init_page
+subcode:: _initpage
     $global %enums, @enum_list
     %enums=()
     @enum_list=()
@@ -222,7 +222,7 @@ subcode: dump_globals
                 $t=~s/\s*$//
 
 #---- Function Delcares ----
-subcode:: _init_page
+subcode:: _initpage
     $global @function_declare_list
     @function_declare_list=()
 
@@ -241,7 +241,7 @@ subcode: dump_function_declares
         push @$dump_out, $func->{declare}.";\n"
 
 # ---- Declares ----
-subcode:: _init_page
+subcode:: _initpage
     $global %declare_hash, @declare_list
     %declare_hash=()
     @declare_list=()
@@ -260,7 +260,7 @@ subcode: dump_declares
         push @$dump_out, "\n";
 
 # ---- Structures ----
-subcode:: _init_page
+subcode:: _initpage
     $global %structs, @struct_list
     %structs=()
     @struct_list=()
@@ -330,7 +330,7 @@ fncode: dump_struct_members($dump_out, $st, $indent)
             push @$dump_out, "$sp$type $p;\n"
 
 # ---- Init codes ----
-subcode:: _init_page
+subcode:: _initpage
     $global @initcodes
     @initcodes=()
 
