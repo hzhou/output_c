@@ -238,7 +238,10 @@ subcode: dump_function_declares
     subcode: declare(k)
         $(if:k!=$func)
             my $func=$functions{$(k)}
-        push @$dump_out, $func->{declare}.";\n"
+        $if $func->{declare_block}
+            push @$dump_out, @{$func->{declare_block}}
+        $else
+            push @$dump_out, $func->{declare}.";\n"
 
 # ---- Declares ----
 subcode:: _initpage

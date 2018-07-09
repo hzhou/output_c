@@ -109,6 +109,8 @@ page: output_c, output_main
                         my $name=$func->{name}
                         $if $function_autolist{$name} eq "static"
                             $func->{declare}="static ".$func->{declare}
+                        $elif $function_autolist{$name} eq "skip_declare"
+                            $func->{skip_declare} = 1
             subcode: check_func_hook
                 my $func_hook
                 $if $MyDef::def->{codes}->{_FUNC_HOOK}

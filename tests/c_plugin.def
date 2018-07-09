@@ -1,0 +1,15 @@
+page: t, basic_frame
+    module: c
+
+    $P test
+    $P2 test
+
+subcode: _autoload
+    $plugin(P) P
+    $plugin(P2) P2
+
+subcode: P(@msg)
+    $print $(msg)
+
+perlcode: P2
+    push @$out, 'printf("%s\n", "'.uc($param).'");'
