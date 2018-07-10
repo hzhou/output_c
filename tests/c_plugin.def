@@ -1,12 +1,11 @@
-page: t, basic_frame
+page: test, basic_frame
     module: c
 
     $P test
     $P2 test
 
 subcode: _autoload
-    $plugin(P) P
-    $plugin(P2) P2
+    $plugin P, P2
 
 subcode: P(@msg)
     $print $(msg)

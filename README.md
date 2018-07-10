@@ -38,6 +38,8 @@
     In doubt? Just use straight C syntax.
 ```
 
+Explain: I assume you understand how MyDef generally works. `basic_frame` is a subcode defined in `std_c.def`, automatically included for module c. It included a definition of `main` function and puts your `main` code inside. For other `c` code, simply drop `basic_frame` or use a custom frame code of yours.
+
 Remember, you are writing C code. So read `test.c` for what you have wrote.
 
 * For-loops
