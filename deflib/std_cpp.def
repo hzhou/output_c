@@ -57,6 +57,10 @@ subcode: vector_append(vec, val)
 subcode: set_insert(set, val)
     $(set).insert($(val))
 
+subcode: map_add(map, k, v)
+    $get_type(type) $(map)
+    $(map).insert(std::pair$(type:regex:(<.*>))($(k), $(v)));
+
 #---- std algorithm ----
 subcode: std_sort(v)
     $include <algorithm>
