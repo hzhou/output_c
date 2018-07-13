@@ -1,6 +1,4 @@
 include: macros_output/functions.def
-subcode:: c_init
-    $call function_init
 
 #---- auto_declare -----------------------------
 # relying on utils to export external functions

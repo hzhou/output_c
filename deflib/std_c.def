@@ -3,10 +3,12 @@ subcode:@ basic_frame
     $include stdio
     $include stdlib
     $call @global
-    $list _basic_main
+    # $list _basic_main
+    $function main
+        $call main
 
 fncode: _basic_main(main)
-    $call main2
+    $call main
 
 ###############################################################
 ## Utility
@@ -322,3 +324,15 @@ fncode: get_s_int(s, int * p_n)
     $while *s==' '
         s++
     return s
+
+#---- template -----
+subcode: global_init
+    DUMP_STUB global_init
+    $call @main
+
+subcode: fn_(@line)
+    $(set:name=$(line:0:word))
+    DUMP_STUB $(name)_pre
+    $in_function $(line)
+        $call fn_$(name)
+        

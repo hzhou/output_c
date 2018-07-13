@@ -8,6 +8,22 @@ page: test, basic_frame
     $(else)
         hello()
 
+fncode: hello
+    $print Hello!
+
+#----------------------------------------------- 
+subcode: test_param
+    # also test $(FunctionName)
+    A('a', 0.1, 2, 3, 0.4, 0.5)
+    B(1, 2)
+
+fncode: A(c, f; int a1, a2; b1, b2: float)
+    $dump($(FunctionName)) c,f,a1,a2,b1,b2
+
+fncode: B( a,b:int;)
+    $dump($(FunctionName)) a, b
+
+#----------------------------------------------- 
 subcode: test_anonymous
     $function t
         $print function t
@@ -17,17 +33,9 @@ subcode: test_anonymous
         $print function t second time
     $(lambda)()
 
-
-fncode: hello
-    $print Hello!
-
 #----------------------------------------------- 
-subcode: test_param
-    A('a', 0.1, 2, 3, 0.4, 0.5)
-    B(1, 2)
+perlcode: _FUNC_HOOK
+    my $open = $func->{openblock}
+    my $name = $func->{name}
+    unshift @$open, "// Test _FUNC_HOOK - $name"
 
-fncode: A(c, f; int a1, a2; b1, b2: float)
-    $dump c, f, a1, a2, b1, b2
-
-fncode: B( a,b:int;)
-    $dump a, b

@@ -6,7 +6,9 @@ macros:
 ## frame
 subcode: basic_frame
     $call @global
-    $list _basic_main
+    # $list _basic_main
+    $function main
+        $call main
 
 #---- stl containers ---------------
 subcode:: _autoload

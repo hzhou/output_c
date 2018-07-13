@@ -33,7 +33,7 @@ subcode: dump_classes
             push @$dump_out, $l
 
 # ---- Includes ----
-subcode:: c_init
+subcode:: on_init_page
     $global @include_list
     $global %includes, %objects, @object_list
     @include_list=()
@@ -89,7 +89,7 @@ subcode: dump_includes
         push @$dump_out, "\n";
 
 # ---- Defines ----
-subcode:: c_init
+subcode:: on_init_page
     $global $define_id_base, @define_list, %defines
     $define_id_base=1000
     @define_list=()
@@ -117,7 +117,7 @@ subcode: dump_define(k)
     push @$dump_out, "#define $(k) $defines{$(k)}\n";
 
 # ---- TypeDefs ----
-subcode:: c_init
+subcode:: on_init_page
     $global @typedef_list, %typedef_hash
     @typedef_list=()
     %typedef_hash=()
@@ -145,7 +145,7 @@ subcode: dump_typedef(k)
         push @$dump_out, "typedef $t $(k);"
 
 # ---- Enums ----
-subcode:: c_init
+subcode:: on_init_page
     $global %enums, @enum_list
     %enums=()
     @enum_list=()
@@ -222,7 +222,7 @@ subcode: dump_globals
                 $t=~s/\s*$//
 
 #---- Function Delcares ----
-subcode:: c_init
+subcode:: on_init_page
     $global @function_declare_list
     @function_declare_list=()
 
@@ -238,10 +238,13 @@ subcode: dump_function_declares
     subcode: declare(k)
         $(if:k!=$func)
             my $func=$functions{$(k)}
-        push @$dump_out, $func->{declare}.";\n"
+        $if $func->{declare_block}
+            push @$dump_out, @{$func->{declare_block}}
+        $else
+            push @$dump_out, $func->{declare}.";\n"
 
 # ---- Declares ----
-subcode:: c_init
+subcode:: on_init_page
     $global %declare_hash, @declare_list
     %declare_hash=()
     @declare_list=()
@@ -260,7 +263,7 @@ subcode: dump_declares
         push @$dump_out, "\n";
 
 # ---- Structures ----
-subcode:: c_init
+subcode:: on_init_page
     $global %structs, @struct_list
     %structs=()
     @struct_list=()
@@ -330,7 +333,7 @@ fncode: dump_struct_members($dump_out, $st, $indent)
             push @$dump_out, "$sp$type $p;\n"
 
 # ---- Init codes ----
-subcode:: c_init
+subcode:: on_init_page
     $global @initcodes
     @initcodes=()
 
