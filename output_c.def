@@ -36,7 +36,6 @@ page: output_c, output_main
             $foreach $f in @tlist
                 $call load_autodecl, $f
         $call @autoload_hack
-        $call function_init
 
         $call autolist_functions, static
         $if $page->{autolist} eq "page"

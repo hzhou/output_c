@@ -34,8 +34,8 @@ subcode: parse_add_var_cases
     $elif $func eq "temp"
         temp_add_var($(v))
     $elif $func eq "static"
-        my $name=global_add_var($(v))
-        $global_hash->{$name}->{attr}="static"
+        my $var=global_add_var($(v))
+        $var->{attr}="static"
     $elif $func eq "extern"
         my $name=global_add_symbol($(v))
         my $decl=var_declare($global_hash->{$name}, 1)
