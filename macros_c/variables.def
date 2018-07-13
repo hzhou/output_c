@@ -333,7 +333,7 @@ subcode: find_var_element
             return find_var($name)
 
 #-###############################################
-subcode:: _initpage
+subcode:: on_init_page
     $global @extern_binary
     @extern_binary=()
 
