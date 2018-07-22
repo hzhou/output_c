@@ -21,7 +21,7 @@ subcode:: parsecode_callback
         $foreach $l in @$codelist
             $if $l=~/^NOOP/
                 $l=''
-            $elif $l=~/;/
+            $elif $l=~/[:;]/
                 $l = join ', ', split_var_line($l)
         my $t = join(', ', @$codelist)
         declare_struct($param, $t)
@@ -137,7 +137,9 @@ fncode: declare_struct($name, $param, $is_union)
                 $p="$1$2";
                 push @$s_init, "$2=$3";
         subcode: parse_m_name_type
-            $if $p=~/^(.*?)\{(.*)\}\s*$/ -> $t1, $t2
+            $if $p=~/^(\w+)\s*:\s*(.+)/
+                ($m_name, $type)=($1,$2)
+            $elif $p=~/^(.*?)\{(.*)\}\s*$/ -> $t1, $t2
                 # nesed struct/union
                 $type = "nest"
                 my $is_union=0

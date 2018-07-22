@@ -15,9 +15,9 @@ subcode:: parsecode_func_other
 #---------------------------------------- 
 subcode: for_i0_i1_step
     $call for_i0_i1_step_default, loop_var
+    $param = "int $param"
 
     subcode: loop_var
-        $my="int "
         $if !$var
             $var = "i"
             $var=MyDef::utils::uniq_name("i", \%protected_var)

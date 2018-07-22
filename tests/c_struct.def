@@ -23,7 +23,7 @@ page: test, basic_frame
 
 subcode: test_block
     $struct T
-        c, i, j, k: uint8_t;
+        c, i, j, k: uint8_t
         b_1,
         b_2
 
