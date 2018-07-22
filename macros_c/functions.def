@@ -65,11 +65,13 @@ subcode: function_param_c_style
             $name="p_$1"
             $type.=" *"
             $call set_macro, $1, "(*p_$1)"
-        push @$param_list, "$type $name"
-        my $var={name=>$name, type=>$type}
-        $if $type_class{$type}
-            $var->{class}=$type_class{$type}
-        $var_hash->{$name}=$var
+
+        $call @check_param_special
+        $call add_param, $name, $type
+    subcode: add_param(name, type)
+        push @$param_list, "$(type) $(name)"
+        my $var={name=>$(name), type=>$(type)}
+        $var_hash->{$(name)}=$var
 
 subcode: function_param_api
     # C style api: $fntype ... defines interface
