@@ -8,21 +8,21 @@ subcode:: _autoload
 #-   $my array P[n]: int
 subcode: array_init(var, scope, @type)
     $(set:N=$(var:regex:\[(.+)\]))
-    $(set:var=$(var:word))
+    $(set:var=$(var:0:word))
     $(if:$(type:list:n)=1)
         $$(scope) $(type) $(var)[$(N)]
     $(else)
         $tuple $(type)
         $$(scope) struct $(T) $(var)[$(N)]
 
-    $set_var_attr $(var), class=darray, dimension=$(var)_size
+    $set_var_attr $(var), class=array, dimension=$(var)_size
     $$(scope) int $(var)_len=0
     $$(scope) int $(var)_size=$(N)
 
 macros:
     # e.g. fncode F(array int A)
     array_param: $2* $1, int $1_len, int $1_size
-    array_attrs: class=array, dimension=$(var)_size
+    array_attrs: class=array, dimension=$1_size
     #      F($(array_arg:A))
     array_arg: $1, $1_len, $1_size
 

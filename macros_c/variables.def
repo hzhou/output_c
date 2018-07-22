@@ -16,13 +16,20 @@ subcode:: check_var_special(scope)
         my $initname=$class."_init"
         $if $debug eq "type"
             $print "$red{$class} - $param"
-        $if $param=~/^(\w+)\s*$/
+        my $name
+        $if $param=~/^(\w+)(.*)/
+            $name = $1
+            $param = $2
+        $if $param=~/^(\[.*\])(.*)/
+            $name .= $1
+            $param = $2
+        $if $param=~/^\s*$/
             $if $(hascode:$initname)
-                MyDef::compileutil::call_sub("$initname, $1, $scope, default")
+                MyDef::compileutil::call_sub("$initname, $name, $scope, default")
                 return
-        $elif $param=~/^(\w+)\s*:\s*(.*)/
+        $elif $param=~/^\s*:\s*(.*)/
             $if $(hascode:$initname)
-                MyDef::compileutil::call_sub("$initname, $1, $scope, $2")
+                MyDef::compileutil::call_sub("$initname, $name, $scope, $1")
                 return
         $else
             $call warn, "class syntax invalid [$param]"
@@ -30,10 +37,11 @@ subcode:: check_var_special(scope)
 # ref: macros_c/functions.def
 subcode:: check_param_special
     $if $type=~/^(\w+)\s+(.+)/ and $class_names{$1}
-        my $class= $class_names{$1}
-        $var->{type}=$2
-        my @plist = split /,\s*/, MyDef::compileutil::get_macro_word("$class\_param:$name,$2", 1)
-        my @attrs = split /,\s*/, MyDef::compileutil::get_macro_word("$class\_attrs:$name", 1)
+        my $class= $1
+        my $type = $2
+        $print class param: $class - $type
+        my @plist = split /,\s*/, MyDef::compileutil::get_macro("$class\_param:$name,$type", 1)
+        my @attrs = split /,\s*/, MyDef::compileutil::get_macro("$class\_attrs:$name", 1)
         $foreach $p in @plist
             $if $p=~/(.+)\s+(\w+)$/
             $call add_param, $2, $1

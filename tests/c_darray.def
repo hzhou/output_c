@@ -1,6 +1,9 @@
 include: c/darray.def
+include: c/array.def
 page: test, basic_frame
-    $(if:0)
+    $(if:1)
+        $call test_array
+    $(elif:1)
         $call test_basic
     $(else)
         $call test_tuple
@@ -26,3 +29,21 @@ subcode: test_tuple
 
     (n, c)=P.$pop()
     $print n = $n, c = $c
+
+#---------------------------------------- 
+subcode: test_array
+    $global array A[4]: int
+    $foreach A
+        $(t)=$(i)
+    $for 4
+        $print "A[%d]=%d", $(i), A[$(i)]
+    F($(array_arg:A))
+
+fncode: F(array int L)
+    L.$push 2
+    L.$push 3
+    L.$push 5
+    L.$push 7
+    L.$push 11
+    $foreach L
+        $print "$$(i): %d", $(t)
