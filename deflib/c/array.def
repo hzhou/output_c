@@ -32,8 +32,12 @@ subcode: array_push(var, @p)
     $if $(var)_len<$(var)_size
         $(var)[$(var)_len] = $(p)
         $(var)_len++
+    $else
+        $call die, $(var) overflow
 
 subcode: array_pop(var)
+    $if $(var)_len<=0
+        $call die, $(var) underflow
     $(var)_len--
     $yield $(var)[$(var)_len]
 
