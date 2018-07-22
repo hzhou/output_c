@@ -7,6 +7,7 @@ subcode:: parsecode_func_param_other
 subcode: _autoload
     $(setmacro:add_vars=global|symbol|local|my|temp|static|extern)
 
+#---- class ------------------------------------ 
 # ref: macros_output/variables.def parse_add_vars
 subcode:: check_var_special(scope)
     $if $param=~/(\w+)\s+(.*)$/ and $class_names{$1}
@@ -15,17 +16,42 @@ subcode:: check_var_special(scope)
         my $initname=$class."_init"
         $if $debug eq "type"
             $print "$red{$class} - $param"
-        $if $param=~/^(\w+)\s*$/
+        my $name
+        $if $param=~/^(\w+)(.*)/
+            $name = $1
+            $param = $2
+        $if $param=~/^(\[.*\])(.*)/
+            $name .= $1
+            $param = $2
+        $if $param=~/^\s*$/
             $if $(hascode:$initname)
-                MyDef::compileutil::call_sub("$initname, $1, $scope, default")
+                MyDef::compileutil::call_sub("$initname, $name, $scope, default")
                 return
-        $elif $param=~/^(\w+)\s*:\s*(.*)/
+        $elif $param=~/^\s*:\s*(.*)/
             $if $(hascode:$initname)
-                MyDef::compileutil::call_sub("$initname, $1, $scope, $2")
+                MyDef::compileutil::call_sub("$initname, $name, $scope, $1")
                 return
         $else
             $call warn, "class syntax invalid [$param]"
 
+# ref: macros_c/functions.def
+subcode:: check_param_special
+    $if $type=~/^(\w+)\s+(.+)/ and $class_names{$1}
+        my $class= $1
+        my $type = $2
+        $print class param: $class - $type
+        my @plist = split /,\s*/, MyDef::compileutil::get_macro("$class\_param:$name,$type", 1)
+        my @attrs = split /,\s*/, MyDef::compileutil::get_macro("$class\_attrs:$name", 1)
+        $foreach $p in @plist
+            $if $p=~/(.+)\s+(\w+)$/
+            $call add_param, $2, $1
+            $if $name eq $2
+                $foreach $a in @attrs
+                    $if $a=~/(\w+)=(.+)/
+                        $var->{$1}=$2
+        next
+
+#---------------------------------------- 
 subcode: parse_add_var_cases
     $elif $func eq "symbol"
         global_add_symbol($(v))
@@ -78,9 +104,6 @@ subcode:: parsecode_func_other
                 $class_names{$t}=1
         return
 
-subcode:: parse_var_attrs
-    $if $type_class{$type}
-        $var->{class}=$type_class{$type}
 #---------------------------------------- 
 #- Scopes:   
 #-     global/external, function, block
@@ -127,7 +150,6 @@ fncode: parse_var($name, $type, $value)
         $call @fix_var_array_type
 
     $call @debug
-    $call @parse_var_attrs
     return $var
 
     # --------------------

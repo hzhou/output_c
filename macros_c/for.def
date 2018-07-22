@@ -19,9 +19,15 @@ subcode: for_i0_i1_step
 
     subcode: loop_var
         $if !$var
+            $my = "int "
             $var = "i"
             $var=MyDef::utils::uniq_name("i", \%protected_var)
             MyDef::compileutil::set_current_macro("i", $var)
+        $elif $var=~/^(.*\S)\s+(\w+)$/
+            $my= "$1 "
+            $var = $2
+        $else
+            $my="int "
         protect_var($var)
 
 subcode: for_c_style_protect
