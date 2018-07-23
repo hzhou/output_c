@@ -30,7 +30,8 @@ macros:
 #- P.push ("me", 30)
 subcode: array_push(var, @p)
     $if $(var)_len<$(var)_size
-        $(var)[$(var)_len] = $(p)
+        $(if:p!=-)
+            $(var)[$(var)_len] = $(p)
         $(var)_len++
     $else
         $call die, $(var) overflow

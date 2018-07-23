@@ -14,20 +14,18 @@ subcode:: parsecode_func_other
 
 #---------------------------------------- 
 subcode: for_i0_i1_step
+    my $T="int "
     $call for_i0_i1_step_default, loop_var
-    $param = "int $param"
+    $param = "$T $param"
 
     subcode: loop_var
         $if !$var
-            $my = "int "
             $var = "i"
             $var=MyDef::utils::uniq_name("i", \%protected_var)
             MyDef::compileutil::set_current_macro("i", $var)
         $elif $var=~/^(.*\S)\s+(\w+)$/
-            $my= "$1 "
+            $T= "$1 "
             $var = $2
-        $else
-            $my="int "
         protect_var($var)
 
 subcode: for_c_style_protect
