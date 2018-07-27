@@ -158,7 +158,7 @@ fncode: type_default($type)
 
 # ref: macros_output/types.def -- get_type_word
 macros:
-    type_prefix_char: tp
+    type_prefix_chars:! tp
 
 subcode: type_word_prefix
     $elif $c eq "p"

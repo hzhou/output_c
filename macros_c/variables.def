@@ -4,8 +4,8 @@ subcode:: parsecode_func_param_other
         MyDef::compileutil::set_current_macro($param1, $type)
         return
 
-subcode: _autoload
-    $(setmacro:add_vars=global|symbol|local|my|temp|static|extern)
+macros:
+    add_vars:! global|symbol|local|my|temp|static|extern
 
 #---- class ------------------------------------ 
 # ref: macros_output/variables.def parse_add_vars
