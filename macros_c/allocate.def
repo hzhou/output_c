@@ -96,10 +96,7 @@ fncode: allocate($dim, $param2, $alloc_type)
                 $else
                     push @$out, "memset($p, 0, $dim*sizeof($type));"
             $else
-                my $var = temp_add_var("i", $type_name{i})
-                my $i = $var->{name}
-                $init_value=~s/\bi\b/$i/g
-                push @$out, "for($i=0;$i<$dim;$i++){";
-                push @$out, "    $p\[$i]=$init_value;";
+                push @$out, "for(int i=0;i<$dim;i++){";
+                push @$out, "    $p\[i]=$init_value;";
                 push @$out, "}";
 
