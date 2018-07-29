@@ -45,3 +45,14 @@ subcode: parse_command_line
         $elif $(a) $eq "$(name)="
             $global n_$(name)=$(default)
             n_$(name) = atoi($(a)+$(name:length)+1)
+
+    subcode: get_arg(var, name, default)
+        $elif $(a) $eq "$(name)="
+            $global $(var)=$(default)
+            $(eval:i=$(name:length)+1)
+            $(if:var~n_)
+                $(var) = atoi($(a)+$(i))
+            $(elif:var~f_)
+                $(var) = atof($(a)+$(i))
+            $(else)
+                $call warn, get_arg: variable require prefix [nf]_
