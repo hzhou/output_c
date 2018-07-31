@@ -1,9 +1,9 @@
 include: c/darray.def
 include: c/array.def
 page: test, basic_frame
-    $(if:1)
+    $(if:0)
         $call test_array
-    $(elif:1)
+    $(elif:0)
         $call test_basic
     $(else)
         $call test_tuple
