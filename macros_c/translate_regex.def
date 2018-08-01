@@ -1,24 +1,25 @@
-#--  requires DefParser/lex.def 
+#--  requires c/lex.def 
 
 fncode: translate_regex($re, $option)
     $call check_cache
+    # compiles [ $if /\s+/ ] --> [ $if match_re_1(input) ]
+    my $opt={group_idx=>0}
     $call parse_regex
-
     $call inject_match_function
-
-    return $re_hash{$pat}
+    return $(cache)
 
     # ------------------------
     subcode: parse_regex
         my $r=MyDef::utils::parse_regex($re)
-        $if $debug
-            $print translate_regex: [$re]
-            MyDef::utils::debug_regex($r)
-
-        my $opt={group_idx=>0}
+        $call @debug
         $(for:i in i, s, m)
             $if $option=~/$(i)/
                 $opt->{$(i)}=1
+        # -----------
+        subcode: debug
+            $if $debug
+                $print translate_regex: [$re]
+                MyDef::utils::debug_regex($r)
 
     subcode: check_cache
         $global %re_hash
@@ -30,6 +31,7 @@ fncode: translate_regex($re, $option)
         $re_index++
         my $name="match_re_$re_index"
         $re_hash{$pat}="$name(input)"
+        $(export:cache=$re_hash{$pat})
 
     # ----------------------------
     subcode: inject_match_function

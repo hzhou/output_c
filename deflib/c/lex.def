@@ -2,26 +2,27 @@ subcode:: _autoload
     $struct(input_buffer) unsigned char * buffer, n_pos, n_end
     $register_name(input) struct input_buffer *
     $include ctype
-
     $register_name(tn_c) int
 #---------------------------------------- 
-subcode: input_get_c(c)
+#-TODO: only support local_input, it's simpler and more useful
+subcode:@ input_get_c(c)
     $(c) = input_get_char(input)
 
-subcode: input_back_c
+subcode:@ input_back_c
     input_back_char(input)
 
-#---------------------------------------- 
+#---- regex captures ------------------
 subcode:: _autoload
     #-- capture buffers
     $struct(input_buffer) int s[10], int e[10]
 
 subcode: get_ts_group(i)
-    ts_group=input->buffer+input->s[$(i)]
+    ts_group=(char*)(input->buffer+input->s[$(i)])
+    $set_var_attr ts_group, strlen=input->e[$(i)]-input->s[$(i)]
 
 subcode: with_ts_group(i)
     #- group as null-terminated string 
-    ts_group=input->buffer+input->s[$(i)]
+    $call get_ts_group, $(i)
     tn_c=input->buffer[input->e[$(i)]]
     input->buffer[input->e[$(i)]] = 0
     BLOCK
@@ -101,10 +102,19 @@ fncode: match_keyword_i(s_key)
 fncode: match_eof
     lexical: input
     $return_type bool
-    $call input_get_c, tn_c
-    $if tn_c<=0 && input->n_pos>=input->n_end
-        return 1
-    $else
-        $call input_back_c
-        return 0
+    &call with_input
+        return $(i)>=$(e)
+
+#------------------------------------------
+subcode: with_input
+    $(set:i=input->n_pos)
+    $(set:e=input->n_end)
+    $(set:c=input->buffer[input->n_pos])
+    $(set:S=input->s)
+    $(set:E=input->e)
+    BLOCK
+subcode: skip_spaces
+    &call with_input
+        $while $(i)<$(e) && $(c)==' '
+            $(i)++
 

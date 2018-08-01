@@ -170,8 +170,7 @@ fncode: get_c_type($name)
         my $count = length($1)
         return "void".('*'x$count)
 
-    $if $type eq "bool"
-        $page->{use_bool}=1
+    $call @check_type, $type
     # ----
     $type=~s/\s+(\*+)$/\1/
     # --------------------------
@@ -186,7 +185,10 @@ fncode: pointer_type($t)
     $t=~s/\s*\*\s*$//;
     return $t;
 
-# --------------------------------------------
+subcode:: check_type(type)
+    $if $(type) eq "bool"
+        $page->{use_bool}=1
+#----------------------------------------
 subcode:: parsecode_func_param_other
     $elif $func eq "register_fmt"
         $foreach $t in split /,\s*/, $param1

@@ -104,9 +104,7 @@ fncode: declare_struct($name, $param, $is_union)
             $i++
             $call @check_init
             $call parse_m_name_type
-
-            $if $type eq "bool"
-                $page->{use_bool}=1
+            $call @check_type, $type # eg use_bool
             #---------------------------------------- 
             $if !$s_hash->{$m_name}
                 push @$s_list, $m_name
@@ -138,6 +136,7 @@ fncode: declare_struct($name, $param, $is_union)
                 push @$s_init, "$2=$3";
         subcode: parse_m_name_type
             $if $p=~/^(\w+)\s*:\s*(.+)/
+                # explicit type: pascal style
                 ($m_name, $type)=($1,$2)
             $elif $p=~/^(.*?)\{(.*)\}\s*$/ -> $t1, $t2
                 # nesed struct/union
@@ -168,6 +167,9 @@ fncode: declare_struct($name, $param, $is_union)
                 my $v = parse_var($p)
                 $m_name=$v->{name}
                 $type=$v->{type}
+                $if $v->{array}
+                    $type=~s/\s*\*$//
+                    $type.='['.$v->{array}.']'
     # ------------------------------
 
 #- structure_autolist: 
