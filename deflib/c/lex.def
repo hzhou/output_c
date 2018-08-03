@@ -1,17 +1,34 @@
 subcode:: _autoload
-    $struct(input_buffer) unsigned char * buffer, n_pos, n_end
+    $struct(input_buffer) unsigned char * buffer, n_pos
     $register_name(input) struct input_buffer *
     $include ctype
     $register_name(tn_c) int
-#---------------------------------------- 
-#-TODO: only support local_input, it's simpler and more useful
-subcode:@ input_get_c(c)
-    $(c) = input_get_char(input)
 
-subcode:@ input_back_c
-    input_back_char(input)
+#---------------------------------------- 
+subcode: local_input(s)
+    $local struct input_buffer local_input_buffer
+    $local input
+    input=&local_input_buffer
+    input->buffer=(unsigned char*)$(s)
+    input->n_pos=0
+
+subcode: local_input_n(s, n)
+    $call local_input, $(s)
+    $(s)[$(n)] = '\0'
+
+#---------------------------------------- 
+subcode: input_get_c(var)
+    &call with_input
+        $(var) = $(c)
+        $(i)++
+
+subcode: input_back_c
+    &call with_input
+        $call @assert, $(i)>0
+        $(i)--
 
 #---- regex captures ------------------
+# ref: macros_c/translate_regex.def
 subcode:: _autoload
     #-- capture buffers
     $struct(input_buffer) int s[10], int e[10]
@@ -32,16 +49,6 @@ subcode: get_group(i)
     $local string g$(i)
     g$(i) = input->buffer+input->s[$(i)]
     g$(i)_len = input->e[$(i)] - input->s[$(i)]
-
-#-----------------------
-subcode: sub_input(vs, ve)
-    $(vs)=input->e[1]
-    $(ve)=input->n_end
-    input->n_pos=input->s[1]
-    input->n_end=input->e[1]
-    BLOCK
-    input->n_pos=$(vs)
-    input->n_end=$(ve)
 
 #---------------------------------------- 
 subcode: match_char_sub(cond)
@@ -81,7 +88,7 @@ subcode: match_keyword_sub(notcond)
             $call input_get_c, tn_c2
             $if tn_c2<=0
                 return true
-            $elif $(isword) && !$(isword2) || !$(isword) 
+            $elif ($(isword) && !$(isword2)) || !$(isword) 
                 $call input_back_c
                 return true
             $else
@@ -98,23 +105,16 @@ fncode: match_keyword_i(s_key)
     $return_type bool
     $call match_keyword_sub, toupper(tn_c) != toupper(*s_key)
 
-#---------------------------------------- 
-fncode: match_eof
-    lexical: input
-    $return_type bool
-    &call with_input
-        return $(i)>=$(e)
-
 #------------------------------------------
 subcode: with_input
     $(set:i=input->n_pos)
-    $(set:e=input->n_end)
     $(set:c=input->buffer[input->n_pos])
     $(set:S=input->s)
     $(set:E=input->e)
     BLOCK
+
 subcode: skip_spaces
     &call with_input
-        $while $(i)<$(e) && $(c)==' '
+        $while $(c)==' '
             $(i)++
 

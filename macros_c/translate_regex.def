@@ -223,35 +223,40 @@ subcode: check_regex_Any
         $if $r->{type}=~/^(group|seq)/
             my $rlist=$r->{list}
             my $n=$r->{n}
-            my $i=0
-            $while $i<$n
-                my $t=$rlist->[$i]
-                $if $t->{type} eq "Any" or $t->{type} eq "group" && $t->{n}==1 && $t->{list}->[0]->{type} eq "Any"
-                    last
-                $i++
+            $call find_any
             my ($pre, $any, $post)
-            # begin
-            $if $i==1
-                $pre=$rlist->[0]
-            $elif $i>1
-                my @t1=@$rlist[0..($i-1)]
-                $pre={type=>"seq", n=>$i, list=>\@t1}
-            # .*
+            $call merge_seq_pre
             $if $rlist->[$i]->{type} eq "group"
+                # (.*)
                 $any=$rlist->[$i]->{list}->[0]
                 $any->{capture}=1
             $else
+                # .*
                 $any=$rlist->[$i]
-            # end
-            $if $n-($i+1)==1
-                $post=$rlist->[$i+1]
-            $elif $n-($i+1)>1
-                my @t1=@$rlist[($i+1)..($n-1)]
-                $post={type=>"seq", n=>($n-$i-1), list=>\@t1}
+            $call merge_seq_post
             $call translate_regex_Any
 
         $else
             die "Lex Regex .* not supported\n"
+
+    subcode: merge_seq_pre
+        $if $i==1
+            $pre=$rlist->[0]
+        $elif $i>1
+            my @t1=@$rlist[0..($i-1)]
+            $pre={type=>"seq", n=>$i, list=>\@t1}
+    subcode: merge_seq_post
+        $if $n-($i+1)==1
+            $post=$rlist->[$i+1]
+        $elif $n-($i+1)>1
+            my @t1=@$rlist[($i+1)..($n-1)]
+            $post={type=>"seq", n=>($n-$i-1), list=>\@t1}
+    subcode: find_any
+        my $i=0
+        $while $i<$n; $i++
+            my $t=$rlist->[$i]
+            $if $t->{type} eq "Any" or $t->{type} eq "group" && $t->{n}==1 && $t->{list}->[0]->{type} eq "Any"
+                last
 
 subcode: translate_regex_Any
     $if !$post
