@@ -156,8 +156,8 @@ fncode: parse_condition($param)
     $if $param=~/^\$(\w+)\s+(.*)/
         my ($func, $param)=($1, $2)
         $call parse_condition_check_plugin
-    $elif $param=~/^\/(.*)\/(i?)\s*$/
-        return translate_regex($1, $2)
+    $elif $param=~/^\/(.*)\/(i?)\s*(.*)$/
+        return translate_regex($1, $2, $3)
     $elif $param=~/^(\S+)\s+in\s+(.+)/ -> $v, $t
         my @tlist = split /,\s*/, $t
         $foreach $t in @tlist

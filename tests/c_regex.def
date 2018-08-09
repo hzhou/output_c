@@ -1,4 +1,3 @@
-include: c/files.def
 include: c/regex.def
 
 # Reference: http://hz2.org/blog/pcre_regex.html
@@ -7,17 +6,13 @@ page: test, basic_frame
     module: c
 
     #-- assume you have this file --
-    s_file="t.html"
-
-    #-- load file ----------------
-    $call stat_file, s_file
-    n=$(fsize)
-    $local_allocate(n+1, 0) s
-
-    &call open_r, s_file
-        fread(s, 1, n, file_in)
+    $call get_file_in_s, "c_regex.def"
 
     #-- regular expression ------------
-    $while s=~/class="title [^"]*" href="(http[^"]*)"/g
+    $while s=~/Reference:\s*(http:\S*)/g
         $regex_capture ts_url
         $print link: $ts_url
+
+/* expect output:
+link: http://hz2.org/blog/pcre_regex.html
+*/

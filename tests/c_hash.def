@@ -42,7 +42,7 @@ subcode: test_str_hash_int
 
 #---------------------------------------- 
 subcode: test_str_hash_str
-    $my hash H # default as $my str_hash H: int
+    $my hash H # default as $my str_hash H: str
     
     $local string s
     $local s_buf[100]

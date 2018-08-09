@@ -84,7 +84,9 @@ fncode: declare_struct($name, $param, $is_union)
         $T="union"
     $st->{type}=$T
     $if $name
-        $type_prefix{"st$name"}="struct $name"
+        $type_prefix{"st$name"}="$T $name"
+        $if length($name)>4 and !$type_name{$name}
+            $type_name{$name} = "$T $name"
     # struct(name) darray P: type(s)
     $call @check_var_special, "struct($name)"
     $call declare_struct_elements
@@ -169,7 +171,7 @@ fncode: declare_struct($name, $param, $is_union)
                 $type=$v->{type}
                 $if $v->{array}
                     $type=~s/\s*\*$//
-                    $type.='['.$v->{array}.']'
+                    $type.=$v->{array}
     # ------------------------------
 
 #- structure_autolist: 

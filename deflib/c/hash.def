@@ -1,4 +1,4 @@
-include: c/str_pool.def
+include: c/strpool.def
 subcode:: _autoload
     $class hash, int_hash, str_hash
     $include stdlib

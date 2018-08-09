@@ -1,7 +1,8 @@
 #--  requires c/lex.def 
-
-fncode: translate_regex($re, $option)
+# ref: macros_c/parsing.def: parse_condition
+fncode: translate_regex($re, $option, $tail)
     $call check_cache
+    $call get_name
     # compiles [ $if /\s+/ ] --> [ $if match_re_1(input) ]
     my $opt={group_idx=>0}
     $call parse_regex
@@ -9,29 +10,29 @@ fncode: translate_regex($re, $option)
     return $(cache)
 
     # ------------------------
-    subcode: parse_regex
-        my $r=MyDef::utils::parse_regex($re)
-        $call @debug
-        $(for:i in i, s, m)
-            $if $option=~/$(i)/
-                $opt->{$(i)}=1
-        # -----------
-        subcode: debug
-            $if $debug
-                $print translate_regex: [$re]
-                MyDef::utils::debug_regex($r)
-
     subcode: check_cache
         $global %re_hash
         my $pat="/$re/$option"
         $if $re_hash{$pat}
             return $re_hash{$pat}
 
+    subcode: get_name
         $global $re_index=0
         $re_index++
         my $name="match_re_$re_index"
+        
+        $if $tail=~/->\s*(\w+)/
+            $name = "match_$1"
         $re_hash{$pat}="$name(input)"
         $(export:cache=$re_hash{$pat})
+
+    # ------------------------
+    subcode: parse_regex
+        my $r=MyDef::utils::parse_regex($re)
+        $call @debug_regex
+        $(for:i in i, s, m)
+            $if $option=~/$(i)/
+                $opt->{$(i)}=1
 
     # ----------------------------
     subcode: inject_match_function
@@ -48,42 +49,39 @@ fncode: translate_regex($re, $option)
         push @output, "\$return_type bool"
         #----
         $if $r->{has_Any}>0
-            $call @check_regex_Any
+            &call @check_regex_Any
+                $call translate_regex_Any
         $else
             $r->{0}="return false;"
-            $r->{1}="input->e[0]=input->n_pos;return true;"
+            $r->{1}="return true;"
+            $call end_capture_0
             my $subout=translate_regex_atom($r, $opt, 1)
-            push @output, "input->s[0]=input->n_pos"
+            $call start_capture_0
             push @output, @$subout
 
+#-----------------------------------------
 fncode: translate_regex_atom($r, $opt, $level)
     my ($condition, @output)
     my $v_res="tb_res_$level"
     my $v_pos="tn_pos_$level"
+    # ----------------------------------------
     $if $r->{type} =~/^(group|seq|alt|\?!|\?=)/
-        my $gid
-        $if $r->{type} eq "group"
-            $opt->{group_idx}++
-            $gid=$opt->{group_idx}
-        push @output, "\$do"
-        push @output, "SOURCE_INDENT"
-        $if $gid and $gid<10
-            push @output, "input->s[$gid]=input->n_pos"
-        push @output, "$v_pos = input->n_pos"
-        push @output, "$v_res = false"
-        $foreach $t in @{$r->{list}}
-            $if $r->{type} eq "alt"
-                $t->{1}="break;"
-                $t->{0}=""
-            $else
-                $t->{1}=""
-                $t->{0}="break;"
-            my $subout=translate_regex_atom($t, $opt, $level+1)
-            push @output, @$subout
-        $if $gid and $gid<10
-            push @output, "input->e[$gid]=input->n_pos"
-        push @output, "$v_res = true"
-        push @output, "SOURCE_DEDENT"
+        $call @init_capture
+        &call output_do
+            $call @start_capture
+            push @output, "$v_pos = input->n_pos"
+            push @output, "$v_res = false"
+            $foreach $t in @{$r->{list}}
+                $if $r->{type} eq "alt"
+                    $t->{1}="break;"
+                    $t->{0}=""
+                $else
+                    $t->{1}=""
+                    $t->{0}="break;"
+                my $subout=translate_regex_atom($t, $opt, $level+1)
+                push @output, @$subout
+            $call @end_capture
+            push @output, "$v_res = true"
         $if $r->{type} eq "alt"
             $call track_result, !$v_res, $v_res, NOOP
         $elif $r->{type} eq "?="
@@ -101,10 +99,8 @@ fncode: translate_regex_atom($r, $opt, $level)
         $t->{1}=""
         $t->{0}="break;"
         my $subout=translate_regex_atom($t, $opt, $level+1)
-        push @output, "\$while 1"
-        push @output, "SOURCE_INDENT"
-        push @output, @$subout
-        push @output, "SOURCE_DEDENT"
+        &call output_while_1
+            push @output, @$subout
         $if $r->{1}
             push @output, $r->{1}
 
@@ -124,13 +120,10 @@ fncode: translate_regex_atom($r, $opt, $level)
         $t->{0}="break;"
         my $subout=translate_regex_atom($t, $opt, $level+1)
         push @output, "\$my $v_cnt=0;"
-        push @output, "\$while 1"
-        push @output, "SOURCE_INDENT"
-        push @output, @$subout
-        push @output, "SOURCE_DEDENT"
+        &call output_while_1
+            push @output, @$subout
         $if $r->{0} or $r->{1}
             push @output, "if($v_cnt>0){$r->{1}}else{$r->{0}}"
-
     $else
         push @output, "\$call input_get_c, tn_c"
         my $cond
@@ -160,30 +153,18 @@ fncode: translate_regex_atom($r, $opt, $level)
             $elif $r->{char} eq "W"
                 $cond="!isalnum(tn_c) && tn_c!='_'"
         $else
+            # $print match_char: $r->{char}
             $if $opt->{i} and $r->{char} ne uc($r->{char})
                 push @output, "tn_c = toupper(tn_c)"
                 $r->{char}=uc($r->{char})
-            $cond= "tn_c=='$r->{char}'"
+            $if $r->{char} eq "\\"
+                $cond= "tn_c=='\\\\'"
+            $else
+                $cond= "tn_c=='$r->{char}'"
 
         $call track_result, $cond, !($cond), \$call input_back_c
 
     return \@output
-
-#----
-subcode: track_result(cond1, cond0, back)
-    $if $r->{1}
-        push @output, "if($(cond1)){"
-        push @output, "    $r->{1}"
-        push @output, "}"
-        push @output, "else{"
-    $else
-        push @output, "if($(cond0)){"
-    push @output, "INDENT"
-    push @output, "$(back)"
-    $if $r->{0}
-        push @output, "$r->{0}"
-    push @output, "DEDENT"
-    push @output, "}"
 
 #---------------------------------------- 
 fncode: translate_class($r)
@@ -194,7 +175,7 @@ fncode: translate_class($r)
 
     $foreach $c in @$r
         $if $c=~/(\w+)-(\w+)/
-            push @tlist, "tn_c>='$1' && tn_c<='$2'"
+            push @tlist, "(tn_c>='$1' && tn_c<='$2')"
         $elif $c eq "\\s"
             push @tlist, "isspace(tn_c)" 
         $elif $c eq "\\S"
@@ -206,9 +187,12 @@ fncode: translate_class($r)
         $elif $c eq "\\w"
             push @tlist, "(isalnum(tn_c) || tn_c=='_')"
         $elif $c eq "\\W"
-            push @tlist, "!isalnum(tn_c) && tn_c!='_'"
+            push @tlist, "(!isalnum(tn_c) && tn_c!='_')"
         $else
             push @tlist, "tn_c=='$c'"
+
+    $if @tlist==1 and $tlist[0]=~/^\((.*)\)$/
+        $tlist[0]=$1
 
     $if $negate
         return "!(". join(' || ', @tlist). ")"
@@ -234,7 +218,7 @@ subcode: check_regex_Any
                 # .*
                 $any=$rlist->[$i]
             $call merge_seq_post
-            $call translate_regex_Any
+            BLOCK
 
         $else
             die "Lex Regex .* not supported\n"
@@ -258,69 +242,149 @@ subcode: check_regex_Any
             $if $t->{type} eq "Any" or $t->{type} eq "group" && $t->{n}==1 && $t->{list}->[0]->{type} eq "Any"
                 last
 
+#-----------------------------------------
 subcode: translate_regex_Any
     $if !$post
         die "Lex Regex: trailing .* not supported\n"
 
-    my ($gid0, $sub_pre, $gid, $sub_post)
-    $if $r->{type} eq "group"
-        $opt->{group_idx}++
-        $gid0=$opt->{group_idx}
-
+    my ($sub_pre, $sub_post)
+    # -------------------
+    $call init_capture_any_0
     $if $pre
         $pre->{0}="return false"
         $pre->{1}=""
         $sub_pre=translate_regex_atom($pre, $opt, 1)
 
-    $if $any->{capture}
-        $opt->{group_idx}++
-        $gid=$opt->{group_idx}
-
+    $call init_capture_any
     $if $post
         $post->{0}=""
         $post->{1}="return true"
-        $if $gid0>0
-            $post->{1}="if(level==0){input->s[$gid0]=tn_pos_0;input->e[$gid0]=input->n_pos;} return true;"
+        $call set_capture_any_0
         $sub_post=translate_regex_atom($post, $opt, 1)
 
     $re_hash{$pat}="$name(input, 0)"
     push @{$t_code->{params}}, "int level"
     push @output, "tn_pos_0 = input->n_pos"
     $if !$pre
-        &call lex_any_block
-            $call lex_any_skip
+        $call lex_any_block, -
     $else
         push @output, @$sub_pre
-        &call lex_any_block
-            push @output, "\$if !$name(input, level+1)"
-            push @output, "SOURCE_INDENT"
-            $call lex_any_skip
-            push @output, "SOURCE_DEDENT"
+        $call lex_any_block, 1
 
+    # -----------------
+    subcode: lex_any_block(recurse)
+        $call start_capture_any
+        &call output_while_1
+            $call end_capture_any
+            # fail: get next c
+            # success: return true
+            push @output, @$sub_post
+            $(if:recurse=1)
+                &call output_if, !$name(input, level+1)
+                    $call skip_one
+            $(else)
+                $call skip_one
+        push @output, "return false"
 
-subcode: lex_any_block
+    subcode: skip_one
+        # skip one char, return false if end
+        push @output, "\$call input_get_c, tn_c"
+        &call output_if, tn_c==0
+            push @output, "input->n_pos=tn_pos_0"
+            push @output, "return false"
+
+#---- handle captures -----------------
+macros:
+    _cap_s: input->s[$1]=input->n_pos
+    _cap_e: input->e[$1]=input->n_pos
+
+# ref: inject_match_function
+subcode: start_capture_0
+    push @output, "$(_cap_s:0)"
+subcode: end_capture_0
+    $r->{1}="$(_cap_e:0);return true;"
+
+# ref: translate_regex_atom
+subcode: init_capture
+    my $gid
+    $if $r->{type} eq "group"
+        $opt->{group_idx}++
+        $gid=$opt->{group_idx}
+subcode: start_capture
+    $if $gid and $gid<10
+        push @output, "$(_cap_s:$gid)"
+subcode: end_capture
+    $if $gid and $gid<10
+        push @output, "$(_cap_e:$gid)"
+
+# ref: translate_regex_Any
+subcode: init_capture_any_0
+    my $gid0
+    $if $r->{type} eq "group"
+        $opt->{group_idx}++
+        $gid0=$opt->{group_idx}
+    &call output_if, level==0
+        push @output, "$(_cap_s:0)"
+        $if $gid0>0
+            push @output, "$(_cap_s:$gid0)"
+subcode: set_capture_any_0
+    my $r = "$(_cap_e:0);"
+    $if $gid0>0
+        $r.="$(_cap_e:$gid0);"
+    $post->{1}="if(level==0){$r} return true;"
+# -----------------------
+subcode: init_capture_any
+    my $gid
+    $if $any->{capture}
+        $opt->{group_idx}++
+        $gid=$opt->{group_idx}
+subcode: start_capture_any
     $if $gid>0
-        push @output, "\$if level==0"
-        push @output, "SOURCE_INDENT"
-        push @output, "input->s[$gid]=input->n_pos"
-        push @output, "SOURCE_DEDENT"
-    push @output, "\$while 1"
+        &call output_if, level==0
+            push @output, "$(_cap_s:$gid)"
+subcode: end_capture_any
+    $if $gid>0
+        &call output_if, level==0
+            push @output, "$(_cap_e:$gid)"
+
+#---------------------------------------
+subcode: output_if(@cond)
+    push @output, "\$if $(cond)"
     push @output, "SOURCE_INDENT"
-    $if $gid>0
-        push @output, "\$if level==0"
-        push @output, "SOURCE_INDENT"
-        push @output, "input->e[$gid]=input->n_pos"
-        push @output, "SOURCE_DEDENT"
-    push @output, @$sub_post
     BLOCK
     push @output, "SOURCE_DEDENT"
-    push @output, "return false"
 
-subcode: lex_any_skip
-    push @output, "\$call input_get_c, tn_c"
-    push @output, "\$if tn_c==-1"
+subcode: output_do
+    push @output, "\$do"
     push @output, "SOURCE_INDENT"
-    push @output, "input->n_pos=tn_pos_0"
-    push @output, "return false"
+    BLOCK
     push @output, "SOURCE_DEDENT"
 
+subcode: output_while_1
+    push @output, "\$while 1"
+    push @output, "SOURCE_INDENT"
+    BLOCK
+    push @output, "SOURCE_DEDENT"
+
+#----
+# ref: translate_regex_atom
+subcode: track_result(cond1, cond0, back)
+    $if $r->{1}
+        push @output, "if($(cond1)){"
+        push @output, "    $r->{1}"
+        push @output, "}"
+        push @output, "else{"
+    $else
+        push @output, "if($(cond0)){"
+    push @output, "INDENT"
+    push @output, "$(back)"
+    $if $r->{0}
+        push @output, "$r->{0}"
+    push @output, "DEDENT"
+    push @output, "}"
+
+#---------------------------------------
+subcode: debug_regex
+    $if $debug
+        $print translate_regex: [$re]
+        MyDef::utils::debug_regex($r)

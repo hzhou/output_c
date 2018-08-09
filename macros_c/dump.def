@@ -268,37 +268,12 @@ subcode:: on_init_page
     %structs=()
     @struct_list=()
 
-subcode: sort_structs
-    my @sorted
-    $foreach $name in @struct_list
-        my $st = $structs{$name}
-        $if $st->{sort}==1
-            die "circular structure dependency\n"
-        $elif $st->{sort}==2
-            NOOP
-        $else
-            $st->{sort}=1
-            f_check_struct_depend($name, $st, \@sorted)
-    @struct_list = @sorted
-
-fncode: f_check_struct_depend($name, $st, $sorted)
-    my $s_list=$st->{list}
-    my $s_hash=$st->{hash}
-    $foreach $p in @$s_list
-        my $type = $s_hash->{$p}
-        $if $type=~/^(struct|union)\s+(\w+)/
-            my $st2 = $structs{$2}
-            $if $st2 and !$st2->{sort}
-                f_check_struct_depend($1, $st2, $sorted)
-    $st->{sort}=2
-    push @$sorted, $name
-
 subcode: dump_structs
-    $call sort_structs
-    $foreach $name in @struct_list
-        my $st = $structs{$name}
-        my $s_list=$st->{list}
-        my $s_hash=$st->{hash}
+    my %forward
+    $call gather_forward
+    $foreach $t in keys %forward
+        push @$dump_out, "$t;\n"
+    &call each_struct
         my $T=$st->{type}
         $if $st->{opaque}
             push @$dump_out, "$T $name;\n"
@@ -309,6 +284,21 @@ subcode: dump_structs
                 push @$dump_out, "$T $name {\n";
             dump_struct_members($dump_out, $st, 1)
             push @$dump_out, "};\n\n";
+    # ------------------------
+    subcode: each_struct
+        $foreach $name in @struct_list
+            my $st = $structs{$name}
+            my $s_list=$st->{list}
+            my $s_hash=$st->{hash}
+            BLOCK
+    subcode: gather_forward
+        my %visited
+        &call each_struct
+            $visited{$name}=1
+            $foreach $p in @$s_list
+                my $type = $s_hash->{$p}
+                $if $type=~/^(struct|union)\s+(\w+)/ && $structs{$2} && !$visited{$2}
+                    $forward{"$1 $2"}++
 
 fncode: dump_struct_members($dump_out, $st, $indent)
     my $s_list=$st->{list}

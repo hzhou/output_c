@@ -14,3 +14,8 @@ page: test, basic_frame
     $if s=~/She|He/
         $print "s match /She|He/"
 
+/* expect output:
+s[0] match [abcHLK]
+s match /H[ie]/
+s match /She|He/
+*/

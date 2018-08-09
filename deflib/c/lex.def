@@ -16,6 +16,8 @@ subcode: local_input_n(s, n)
     $call local_input, $(s)
     $(s)[$(n)] = '\0'
 
+subcode: set_input_s
+    s = (char*)(input->buffer+input->n_pos)
 #---------------------------------------- 
 subcode: input_get_c(var)
     &call with_input
@@ -51,59 +53,77 @@ subcode: get_group(i)
     g$(i)_len = input->e[$(i)] - input->s[$(i)]
 
 #---------------------------------------- 
-subcode: match_char_sub(cond)
-    $call input_get_c, tn_c
-    $if $(cond)
-        return 1
-    $else
-        $if tn_c>0
-            $call input_back_c
-        return 0
+fncode: match_eof
+    lexical: input
+    $return_type bool
+    $call set_input_s
+    return *s==0
 
-#----
+#---------------------------------------- 
 fncode: match_char(tn_char)
     lexical: input
     $return_type bool
-    $call match_char_sub, tn_c==tn_char
+    $call match_char_sub, -
 
 fncode: match_char_i(tn_char)
     lexical: input
     $return_type bool
-    $call match_char_sub, toupper(tn_c)==toupper(tn_char)
+    $call match_char_sub, toupper
+
+subcode: match_char_sub(cond)
+    $call set_input_s
+    $(if:F=-)
+        $(set:c=*$1)
+    $(else)
+        $(set:c=$(F)($1))
+
+    $if $(c:*s)==$(c:tn_char)
+        $call ret_match
+    $else
+        return false
+
+    subcode: ret_match
+        input->n_pos ++
+        return true
 
 #---------------------------------------- 
-subcode: match_keyword_sub(notcond)
-    $return_type int
-    input->s[0]=input->n_pos
-    $(set:isword=(isalnum(tn_c)||tn_c=='_'))
-    $(set:isword2=(isalnum(tn_c2)||tn_c2=='_'))
-    $while 1
-        $call input_get_c, tn_c
-        $if $(notcond)
-            input->n_pos=input->s[0]
-            return false
-        s_key++
-        $if !*s_key
-            #-- check word boundary
-            $call input_get_c, tn_c2
-            $if tn_c2<=0
-                return true
-            $elif ($(isword) && !$(isword2)) || !$(isword) 
-                $call input_back_c
-                return true
-            $else
-                input->n_pos=input->s[0]
-                return false
-
 fncode: match_keyword(s_key)
     lexical: input
     $return_type bool
-    $call match_keyword_sub, tn_c != *s_key
+    $call match_keyword_sub, -
 
 fncode: match_keyword_i(s_key)    
     lexical: input
     $return_type bool
-    $call match_keyword_sub, toupper(tn_c) != toupper(*s_key)
+    $call match_keyword_sub, toupper
+
+subcode: match_keyword_sub(F)
+    $return_type int
+    $call set_input_s
+    $(set:isword=(isalnum($1)||$1=='_'))
+    $(if:F=-)
+        $(set:c=*$1)
+    $(else)
+        $(set:c=$(F)(*$1))
+    $while 1
+        $if $(c:s)!=$(c:s_key)
+            return false
+        s_key++
+        s++
+        $if !*s_key
+            #-- check word boundary
+            $if !*s 
+                $call ret_match
+            $elif !$(isword:s[-1])
+                $call ret_match
+            $elif !$(isword:*s)
+                $call ret_match
+            $else
+                return false
+    # ---------------
+    subcode: ret_match
+        input->n_pos = s-(char*)input->buffer
+        return true
 
 #------------------------------------------
 subcode: with_input
@@ -118,3 +138,9 @@ subcode: skip_spaces
         $while $(c)==' '
             $(i)++
 
+subcode: skip_line
+    &call with_input
+        $while $(c) && $(c)!='\n'
+            $(i)++
+        $if $(c)=='\n'
+            $(i)++

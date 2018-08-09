@@ -1,4 +1,4 @@
-include: c/lex_static.def
+include: c/lex.def
 
 page: test, basic_frame
     $local s
@@ -12,18 +12,18 @@ page: test, basic_frame
     $while 1
         $if match_eof()
             break
-        $elif /\s+/
+        $elif /\s+/ -> space
             NOOP
-        $elif /(?:0x)([0-9a-f]+)/i
+        $elif /(?:0x)([0-9a-f]+)/i -> hex
             &call with_ts_group, 1
                 tn_val=strtol(ts_group, NULL, 16)
                 $print input (hex): $tn_val
-        $elif /(\d+)(?= )/
+        $elif /(\d+)(?= )/ -> decimal
             &call with_ts_group, 1
                 tn_val=atol(ts_group)
                 $print input (dec): $tn_val
-        $elif /(\(.*\))/
-            &call with_ts_group, 1
+        $elif /\(.*\)/ -> parentheses
+            &call with_ts_group, 0
                 $print parenthese: $ts_group
         $else
             $call input_get_c, tn_c

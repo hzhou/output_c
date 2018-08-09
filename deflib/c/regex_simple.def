@@ -1,3 +1,6 @@
+#---- ref: macros_c/regex.def
+#-         tests/c_regex_simple.def
+
 subcode: _autoload
     $plugin(regex) regex_simple_condition
 

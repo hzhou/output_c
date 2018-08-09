@@ -134,8 +134,6 @@ fncode: parse_var($name, $type, $value)
     # ---- for later type includes ----
     $global %all_types
     $all_types{$type}=1
-    $if $debug eq "type"
-        print "    parse_var: name:$name, type:$type, init:$init\n"
 
     #---- put it together ----
     my $var={}
@@ -146,7 +144,8 @@ fncode: parse_var($name, $type, $value)
         $var->{attr}=join(" ", @attrs)
     $if defined $array
         $var->{array}=$array
-        $var->{dimension}=$array
+        $if $array=~/\[(.+)\]/
+        $var->{dimension}=$1
         $call @fix_var_array_type
 
     $call @debug
@@ -191,11 +190,11 @@ fncode: parse_var($name, $type, $value)
     subcode: check_name_postfix
         $(block:parse_var_init)
             my $array
-        $if $name=~/(\w+)\[(.*)\]/
+        $if $name=~/(\w+)(\[.*\])/
             $name=$1;
             $array=$2;
     subcode: filter_array_type
-        $if $type=~/(.*)\[(.+)\]$/
+        $if $type=~/(.*)(\[.+\])$/
             $type =$1
             $array=$2
     subcode: fix_array_type
@@ -290,7 +289,7 @@ fncode: var_declare($var, $need_semi)
         my $name=$var->{name}
         my $type=$var->{type}
         $if defined $var->{array}
-            $t=pointer_type($type)." $name"."[$var->{array}]"
+            $t=pointer_type($type)." $name"."$var->{array}"
         $else
             $t="$type $name"
 
