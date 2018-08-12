@@ -236,12 +236,13 @@ fncode: get_var_fmt($v, $warn)
             $call warn, get_var_fmt: unhandled $v - $type, default to \%d
         return '%d'
 
-    subcode: return_fmts(v)
-        my $t = $(v)
+    subcode: return_fmts(fmt)
+        my $t = $(fmt)
         $if ref($t) eq "ARRAY"
-            $foreach @$t
+            my @fmt = @$t
+            $foreach @fmt
                 s/\$1/$v/g
-            return @$t
+            return @fmt
         $else
             return $t
 

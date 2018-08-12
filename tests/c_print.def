@@ -5,9 +5,10 @@ page: test, basic_frame
     $typedef(fixed) int
     $register_fmt(fixed) [%.2f, $1/100.0]
     $local fixed a = 314
-    $print a = $a
+    $local fixed b = 313
+    $print a = $a, b = $b
 
 /* expect output:
 n = 10
-a = 3.14
+a = 3.14, b = 3.13
 */
