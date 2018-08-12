@@ -192,7 +192,11 @@ subcode:: check_type(type)
 subcode:: parsecode_func_param_other
     $elif $func eq "register_fmt"
         $foreach $t in split /,\s*/, $param1
-            $var_fmts{$t}=$param2
+            $if $param2=~/^\[(.*)\]$/
+                my @t = split /,\s*/, $1
+                $var_fmts{$t}=\@t
+            $else
+                $var_fmts{$t}=$param2
         return 
 
 subcode: _autoload
@@ -212,7 +216,7 @@ fncode: get_var_fmt($v, $warn)
         $type=get_c_type($v);
 
     $if $var_fmts{$type}
-        return $var_fmts{$type}
+        $call return_fmts, $var_fmts{$type}
     $elif $type=~/^char\s*\*/
         return "\%s";
     $elsif $type=~/\*\s*$/
@@ -225,10 +229,19 @@ fncode: get_var_fmt($v, $warn)
             return '%" PRId64 "'
     $elif $type=~/(int|long|u?int\d+_t)\s*$/
         return "\%d";
+    $elif $var_fmts{default}
+        $call return_fmts $var_fmts{default}
     $else
-        $if $var_fmts{default}
-            return $var_fmts{default}
         $if $warn
             $call warn, get_var_fmt: unhandled $v - $type, default to \%d
         return '%d'
+
+    subcode: return_fmts(v)
+        my $t = $(v)
+        $if ref($t) eq "ARRAY"
+            $foreach @$t
+                s/\$1/$v/g
+            return @$t
+        $else
+            return $t
 

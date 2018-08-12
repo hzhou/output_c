@@ -337,7 +337,8 @@ subcode: exp_callsub
     $if $yield
         $call exp_pop, undef
         $call exp_pop, undef
-        $call exp_push, $yield, "atom"
+        $if @stack
+            $call exp_push, $yield, "atom"
         last
     $else
         return

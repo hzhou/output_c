@@ -59,7 +59,8 @@ subcode: parsecode_func
             $param=parse_condition($param)
             return single_block("do{", "}while($param);")
         $else
-            return single_block("while(1){", "break;}")
+            # return single_block("do{", "}while(0);") -- can't continue
+            return single_block("while(1){", "break; }")
     #---------------------------------------- 
     $elif $func eq "include"
         add_include($param)

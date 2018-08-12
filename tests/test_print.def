@@ -1,0 +1,13 @@
+page: test, basic_frame
+    n = 10
+    $print n = $n
+
+    $typedef(fixed) int
+    $register_fmt(fixed) [%.2f, $1/100.0]
+    $local fixed a = 314
+    $print a = $a
+
+/* expect output:
+n = 10
+a = 3.14
+*/

@@ -5,10 +5,10 @@ subcode:: _autoload
     $include string
 
 macros: 
-    hash_size: n_size, n_count, n_val_size
-    hash_key: char* p_exist, int* p_key
-    strhash_member: $(hash_size), $(hash_key), struct strpool pool
-    inthash_member: $(hash_size), $(hash_key)
+    _hash_size: n_size, n_count, n_val_size
+    _hash_key: char* p_exist, int* p_key
+    strhash_member: $(_hash_size), $(_hash_key), struct strpool pool
+    inthash_member: $(_hash_size), $(_hash_key)
 
 subcode: libhash(int)
     $struct($(int)hash) $($(int)hash_member), void * p_val
