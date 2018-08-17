@@ -32,14 +32,12 @@ subcode: hash_init(var, scope, @type)
     # default strhash_str
     $(if:!int)
         $(set:int=str) 
-    $(if:type=default)
-        $(set:type=str)
+    $call libhash, $(int)
     # ----------------------------------
     $(set:hash_member=$($(int)hash_member))
     $call hash_value_type
     $call init_hash_var
 
-    $set_var_attr $(var), member_count=$(type_n)
     $set_var_attr $(var), exit=$(int)_hash_exit
     $set_var_attr $(var), class=$(int)_hash
 
@@ -48,8 +46,7 @@ subcode: hash_init(var, scope, @type)
         $(set:type_n=$(type:list:n))
         $(if:type=default)
             # hash without value (set)
-            $(set:type_n)=0
-            $struct($(int)hash) $(hash_member)
+            # $struct($(int)hash) $(hash_member)
         $(elif:type_n=1)
             # note: only simple type works, no pointers
             $(if:type=str)
@@ -68,55 +65,91 @@ subcode: hash_init(var, scope, @type)
         $(mexport:type,type_n,T)
 
     subcode: init_hash_var
-        $$(scope) struct $(int)hash_$(T) * $(var)
-
-        $allocate $(var)
-        memset($(var), 0, sizeof(*$(var)))
-        $(var)->n_val_size=sizeof($(type))
+        $(if:type=default)
+            $$(scope) struct $(int)hash* $(var)
+            $allocate $(var)
+            memset($(var), 0, sizeof(*$(var)))
+            $(var)->n_val_size=0
+            $set_var_attr $(var), member_count=0
+        $(else)
+            $$(scope) struct $(int)hash_$(T)* $(var)
+            $allocate $(var)
+            memset($(var), 0, sizeof(*$(var)))
+            $(var)->n_val_size=sizeof($(type))
+            $set_var_attr $(var), member_count=$(type_n)
 
 #---- lookup ------------------------------------ 
+subcode: str_hash_set(var, key, @val)
+    $call strhash_check_key, $(key)
+    $temp int k
+    $(k)=f_strhash_lookup_left($(var),$(_key))
+    $get_var_attr $(var), member_count
+    $(if:member_count>0)
+        $(var)->p_val[$(k)] = $(val)
+
+subcode: int_hash_set(var, key, @val)
+    $temp int k
+    $(k)=f_inthash_lookup_left($(var),$(key))
+    $get_var_attr $(var), member_count
+    $(if:member_count>0)
+        $(var)->p_val[$(k)] = $(val)
+
 #-- str_hash -----
 subcode: str_hash_lookup(var, key)
     $call strhash_check_key, $(key)
-
-    $(set:k=f_strhash_lookup($(var),(unsigned char*)$(key),$(keylen)))
-    $yield $(var)->p_val[$(k)]
+    $(set:k=f_strhash_lookup($(var),$(_key)))
+    $get_var_attr $(var), member_count
+    $(if:member_count=0)
+        $yield $(k)
+    $(else)
+        $yield $(var)->p_val[$(k)]
 
 subcode: str_hash_lookup_left(var, key)
     $call strhash_check_key, $(key)
-
     $temp int k
-    $(k)=f_strhash_lookup_left($(var),(unsigned char*)$(key),$(keylen))
-    $yield $(var)->p_val[$(k)]
+    $(k)=f_strhash_lookup_left($(var),$(_key))
+    $get_var_attr $(var), member_count
+    $(if:member_count=0)
+        $yield $(k)
+    $(else)
+        $yield $(var)->p_val[$(k)]
 
 subcode: str_hash_exist(var, key)
     $call strhash_check_key, $(key)
-    $yield f_strhash_exist($(var), $(key), $(keylen))
+    $yield f_strhash_exist($(var), $(_key))
 
 subcode: strhash_check_key(key)
     $(if:key~^")
-        $(export:keylen=$(key:strlen))
+        $(set:_key=(unsigned char*)$(key), $(key:strlen))
     $(else)
         $get_type(keytype) $(key)
         $(if:keytype!~char\s*\*)
-            $(export:key="$(key)")
-            $(export:keylen=$(key:length))
+            $(set:_key=(unsigned char*)"$(key)", $(key:length))
         $(else)
             $get_var_attr $(key), strlen
             $(if:!strlen)
-                $(export:keylen=strlen($(key)))
+                $(set:_key=(unsigned char*)$(key), strlen($(key)))
             $(else)
-                $(export:keylen=$(strlen))
+                $(set:_key=(unsigned char*)$(key), $(strlen))
+    $(export:_key)
 
 #-- int_hash -----
 subcode: int_hash_lookup(var, key)
     $(set:k=f_inthash_lookup($(var),$(key)))
-    $yield $(var)->p_val[$(k)]
+    $get_var_attr $(var), member_count
+    $(if:member_count=0)
+        $yield $(k)
+    $(else)
+        $yield $(var)->p_val[$(k)]
 
 subcode: int_hash_lookup_left(var, key)
     $temp int k
     $(k)=f_inthash_lookup_left($(var),$(key))
-    $yield $(var)->p_val[$(k)]
+    $get_var_attr $(var), member_count
+    $(if:member_count=0)
+        $yield $(k)
+    $(else)
+        $yield $(var)->p_val[$(k)]
 
 subcode: int_hash_exist(var, key)
     $yield f_inthash_exist($(var), $(key))
@@ -154,14 +187,15 @@ subcode: hash_resize(type)
 
     $local tp_exist = h->p_exist
     $local tp_key=h->p_key
-    $local tp_val=h->p_val
     tn_old_size=h->n_size
 
     h->n_size=n_size
     # n_size++
     $(set:n=h->n_val_size)
     $allocate(n_size, 0) h->p_key, h->p_exist
-    $allocate(n_size*$(n), 0) h->p_val
+    $if $(n)>0
+        $local tp_val=h->p_val
+        $allocate(n_size*$(n), 0) h->p_val
 
     $(if:type=str)
         f_resize_strpool_n(&h->pool, n_size)
@@ -177,12 +211,13 @@ subcode: hash_resize(type)
                     k=f_inthash_lookup(h, tp_key[i])
                 h->p_exist[k]=1
                 h->p_key[k]=tp_key[i]
-                memcpy(h->p_val+k*$(n), tp_val+i*$(n), $(n))
+                $if $(n)>0
+                    memcpy(h->p_val+k*$(n), tp_val+i*$(n), $(n))
         free(tp_exist)
         free(tp_key)
-        free(tp_val)
+        $if $(n)>0
+            free(tp_val)
 
-#---------------------------------------- 
 #---------------------------------------- 
 fncode: f_strhash_lookup(void* hash, pc_key, int keylen)
     $if keylen==0
@@ -273,13 +308,15 @@ subcode: hash_lookup_left(type)
         # $print "f_$(type)hash_resize @ %s -> %d", pc_key, h->n_size
 
 #---------------------------------------- 
-fncode: f_strhash_exist(void* h, pc_key, int keylen)
-    $return_type bool
+fncode: f_strhash_exist(void* h, pc_key, int keylen): bool
+    $if ((struct strhash*)h)->n_size==0
+        return false
     k=f_strhash_lookup(h, pc_key, keylen)
     return ((struct strhash *)h)->p_exist[k];
 
-fncode: f_inthash_exist(void* h, int key)
-    $return_type bool
+fncode: f_inthash_exist(void* h, int key): bool
+    $if ((struct inthash*)h)->n_size==0
+        return false
     k=f_inthash_lookup(h, key)
     return ((struct inthash *)h)->p_exist[k];
 
@@ -290,14 +327,16 @@ subcode: str_hash_exit(var)
         f_free_strpool(&$(var)->pool)
         free($(var)->p_exist)
         free($(var)->p_key)
-        free($(var)->p_val)
+        $if $(var)->n_val_size>0
+            free($(var)->p_val)
     free($(var))
 
 subcode: int_hash_exit(var)
     $if $(var)->n_size>0
         free($(var)->p_exist)
         free($(var)->p_key)
-        free($(var)->p_val)
+        $if $(var)->n_val_size>0
+            free($(var)->p_val)
     free($(var))
 
 #---------------------------------------- 

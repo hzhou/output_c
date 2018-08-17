@@ -5,7 +5,6 @@ include: c/string.def
 
 page: test, basic_frame
     module: c
-    output_dir: ./tests
 
     $(if:1)
         $call test_str_hash_int
@@ -68,3 +67,25 @@ subcode: test_int_hash_int
         
     $print "  1: %d", H{1}
     $print "  3: %d", H{3}
+
+/* expect output:
+a0 => 0
+a1 => 1
+a2 => 2
+a3 => 3
+a4 => 4
+a5 => 5
+a6 => 6
+a7 => 7
+a8 => 8
+a9 => 9
+34 => 43
+68 => 86
+hello => 12345
+  34: 43
+  68: 86
+  a7: 7
+  b7: 0
+  hello: 12345
+Got a8
+*/

@@ -337,7 +337,7 @@ subcode: exp_callsub
     $if $yield
         $call exp_pop, undef
         $call exp_pop, undef
-        $if @stack or $left
+        $if @stack or $left or $context eq "condition"
             $call exp_push, $yield, "atom"
         last
     $else

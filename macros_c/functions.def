@@ -12,6 +12,8 @@ subcode: function_open_c_style
     $if !$ret_type
         $ret_type="void"
         $func->{ret_type}=$ret_type
+    $else
+        $call @check_type, $ret_type
 
     my $declare=$func->{declare}
     $if !$declare
