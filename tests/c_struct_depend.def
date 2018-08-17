@@ -1,0 +1,14 @@
+page: test, basic_frame
+    $struct A
+        char a
+        struct B* p_B
+        struct C C
+    $struct B
+        char b
+        struct A* p_A
+    $struct C
+        char c
+    $struct D
+        char d
+
+    $local stA, stB

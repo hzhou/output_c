@@ -269,12 +269,17 @@ subcode:: on_init_page
     @struct_list=()
 
 subcode: dump_structs
-    my %forward
-    $call gather_forward
-    $foreach $t in keys %forward
-        push @$dump_out, "$t;\n"
-    &call each_struct
+    $call build_dependency
+    $call topological_sort
+    my %declared
+    &call each_struct, @L
+        $if $st->{_forward}
+            $foreach $t in @{$st->{_forward}}
+                $if !$declared{$t}
+                    push @$dump_out, "$t;\n"
+                    $declared{$t}=1
         my $T=$st->{type}
+        $declared{"$T $name"}=1
         $if $st->{opaque}
             push @$dump_out, "$T $name;\n"
         $else
@@ -285,20 +290,57 @@ subcode: dump_structs
             dump_struct_members($dump_out, $st, 1)
             push @$dump_out, "};\n\n";
     # ------------------------
-    subcode: each_struct
-        $foreach $name in @struct_list
+    subcode: each_struct(L)
+        $foreach $name in $(L)
             my $st = $structs{$name}
             my $s_list=$st->{list}
             my $s_hash=$st->{hash}
             BLOCK
-    subcode: gather_forward
-        my %visited
-        &call each_struct
-            $visited{$name}=1
+    subcode: build_dependency
+        my (@S, @L, %invdep)
+        &call each_struct, @struct_list
+            my (@forward, @depend)
             $foreach $p in @$s_list
-                my $type = $s_hash->{$p}
-                $if $type=~/^(struct|union)\s+(\w+)/ && $structs{$2} && !$visited{$2}
-                    $forward{"$1 $2"}++
+                $call check_member_dpendency
+            $if @forward
+                $st->{_forward}=\@forward
+            $if @depend
+                $st->{_depend}=\@depend
+            $if !@depend
+                push @S, $name
+        $if !@S
+            die "All cyclic structures"
+        # ---------------------------
+        subcode: check_member_dpendency
+            my $type = $s_hash->{$p}
+            $if $type=~/^(struct|union)\s+(\w+)(.*)/ && $structs{$2}
+                $if $3
+                    push @forward, "$1 $2"
+                $else
+                    push @depend, $2
+                    $if !$invdep{$2}
+                        $invdep{$2}=[$name]
+                    $else
+                        push @{$invdep{$2}}, $name
+    # -----------------------
+    subcode: topological_sort
+        # Kahn's algorithm
+        $while @S
+            my $name = shift @S
+            push @L, $name
+            $if $invdep{$name}
+                $foreach $nm in @{$invdep{$name}}
+                    my $dep = $structs{$nm}->{_depend}
+                    my $cnt=0
+                    $foreach $d in @$dep
+                        $if $d eq "$name"
+                            $d = undef
+                        $else
+                            $cnt++
+                    $if $cnt==0
+                        unshift @S, $nm
+        $if @L<@struct_list
+            die "There is cyclic struct dependency!\n"
 
 fncode: dump_struct_members($dump_out, $st, $indent)
     my $s_list=$st->{list}

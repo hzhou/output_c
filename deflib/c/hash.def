@@ -36,10 +36,6 @@ subcode: hash_init(var, scope, @type)
         $(set:type=str)
     # ----------------------------------
     $(set:hash_member=$($(int)hash_member))
-    $(if:!use_libmydef)
-        # libmydef is experimental, may not be worthwhile
-        $struct($(int)hash) $(hash_member), void * p_val
-
     $call hash_value_type
     $call init_hash_var
 
@@ -50,7 +46,11 @@ subcode: hash_init(var, scope, @type)
     # ----
     subcode: hash_value_type
         $(set:type_n=$(type:list:n))
-        $(if:type_n=1)
+        $(if:type=default)
+            # hash without value (set)
+            $(set:type_n)=0
+            $struct($(int)hash) $(hash_member)
+        $(elif:type_n=1)
             # note: only simple type works, no pointers
             $(if:type=str)
                 $(set:T=str)
