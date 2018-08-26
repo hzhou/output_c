@@ -2,20 +2,24 @@ page: test, basic_frame
     module: c
 
     i=10
+    $print ---- protect_var i ----\n
     $protect_var i
-    $call test_protection, 1
+    $map test_protection, 1, 2
+
+    $print ---- unprotect_var i ----\n
     $unprotect_var i
-    $call test_protection, 2
+    $map test_protection, 1, 2
 
+    $print ---- auto protect_var i (for-loop) ----\n
     $for i=0:10
-        $print  - $i
+        $print  loop var overwritten next
         $call test_protection, 2
-
-
 
 subcode: test_protection(type)
     $(if:type=1)
+        # Variable i protected: [level]
         $for i=1:10
             $print $i
     $(elif:type=2)
+        # Variable i protected: [unmutable]
         i=100

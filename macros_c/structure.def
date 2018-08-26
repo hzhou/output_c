@@ -5,26 +5,29 @@ subcode:: parsecode_func_other
     $elif $func eq "tuple_name"
         get_T_name($param)
         return
-    $elif $func eq "struct"
-        return "CALLBACK struct $param"
+    $elif $func =~/^(struct|union)$/
+        return "CALLBACK $func $param"
 
 subcode:: parsecode_func_param_other
     $elif $func eq "struct"
-        declare_struct($param1, $param2)
+        declare_struct($param1, $param2, 0)
         return
     $elif $func eq "union"
         declare_struct($param1, $param2, 1)
         return
 
 subcode:: parsecode_callback
-    $case $func eq "struct"
+    $case $func =~/^(struct|union)$/
         $foreach $l in @$codelist
             $if $l=~/^NOOP/
                 $l=''
             $elif $l=~/[:;]/
                 $l = join ', ', split_var_line($l)
         my $t = join(', ', @$codelist)
-        declare_struct($param, $t)
+        $if $func eq "struct"
+            declare_struct($param, $t, 0)
+        $else
+            declare_struct($param, $t, 1)
         return
 
 #-----------------------------------------

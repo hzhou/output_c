@@ -154,6 +154,8 @@ subcode: dump_enums
     $if @enum_list
         $foreach $name in @enum_list
             my $t=$enums{$name};
+            $if !$t
+                next
             $if $name=~/^ANONYMOUS/
                 push @$dump_out, "enum {$t};\n";
             $elif $name=~/^typedef,\s*(\w+)/
@@ -269,26 +271,27 @@ subcode:: on_init_page
     @struct_list=()
 
 subcode: dump_structs
-    $call build_dependency
-    $call topological_sort
-    my %declared
-    &call each_struct, @L
-        $if $st->{_forward}
-            $foreach $t in @{$st->{_forward}}
-                $if !$declared{$t}
-                    push @$dump_out, "$t;\n"
-                    $declared{$t}=1
-        my $T=$st->{type}
-        $declared{"$T $name"}=1
-        $if $st->{opaque}
-            push @$dump_out, "$T $name;\n"
-        $else
-            $if $st->{public}
-                push @$dump_out, "$T $name { /*public*/\n";
+    $if @struct_list
+        $call build_dependency
+        $call topological_sort
+        my %declared
+        &call each_struct, @L
+            $if $st->{_forward}
+                $foreach $t in @{$st->{_forward}}
+                    $if !$declared{$t}
+                        push @$dump_out, "$t;\n"
+                        $declared{$t}=1
+            my $T=$st->{type}
+            $declared{"$T $name"}=1
+            $if $st->{opaque}
+                push @$dump_out, "$T $name;\n"
             $else
-                push @$dump_out, "$T $name {\n";
-            dump_struct_members($dump_out, $st, 1)
-            push @$dump_out, "};\n\n";
+                $if $st->{public}
+                    push @$dump_out, "$T $name { /*public*/\n";
+                $else
+                    push @$dump_out, "$T $name {\n";
+                dump_struct_members($dump_out, $st, 1)
+                push @$dump_out, "};\n\n";
     # ------------------------
     subcode: each_struct(L)
         $foreach $name in $(L)

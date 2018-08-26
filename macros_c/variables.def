@@ -294,7 +294,7 @@ fncode: var_declare($var, $need_semi)
             $t="$type $name"
 
         $if defined $var->{init}
-            $if $var->{init} =~/^[(].*[)]\s*$/
+            $if $var->{init} =~/^[(](.*)[)]\s*$/ && is_paren_balanced($1)
                 # ref: output_cpp.def
                 $t.="$var->{init}"
             $else
@@ -305,6 +305,17 @@ fncode: var_declare($var, $need_semi)
     $if $need_semi
         $t .= ';'
     return  $t
+
+fncode: is_paren_balanced($t)
+    my $i=0
+    $foreach $c in split //, $t
+        $if $c eq '('
+            $i++
+        $elif $c eq ')'
+            $i--
+            $if $i<0
+                return 0
+    return $i==0
 
 #---------------------------------------- 
 fncode: get_var_type($name, $nowarn)
