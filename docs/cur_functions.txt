@@ -1,0 +1,16 @@
+Global $cur_function maintains the current function context
+
+  functions.def:c_init          declare and init
+  functions.def: /^(return_type|parameter|lexical)/ 
+  functions.def: fncode: func_return($t)
+
+  list_functions.def, interfaces with macros_output/functions.def: list_function
+      where: $call @function_push and $call @function_pop wraps the block
+
+      func_push is also called from parse_function, from $function
+      func_pop is also called from $function_pop, e.g. "PARSE:\$function_pop"
+
+      This is imitated in output_win32.def to implement $wndproc
+
+  variables.def:        func_add_var()
+
