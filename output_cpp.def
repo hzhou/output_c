@@ -71,10 +71,13 @@ subcode: dump_struct
     my $i=0;
     $foreach $p in @$s_list
         $i++;
-        $if $s_hash->{$p} eq "function"
+        my $type = $s_hash->{$p}
+        $if $type eq "function"
             push @class_dump, "\t".$$(super:fntype){$p}.";\n";
+        $elif $type=~/(.+)(\[.*\])/
+            push @class_dump, "\t$1 $p$2;\n";
         $else
-            push @class_dump, "\t$s_hash->{$p} $p;\n";
+            push @class_dump, "\t$type $p;\n";
     # $call dump_struct_constructor
     push @class_dump, "};\n\n";
 

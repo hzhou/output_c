@@ -282,6 +282,7 @@ subcode: dump_structs
                         push @$dump_out, "$t;\n"
                         $declared{$t}=1
             my $T=$st->{type}
+            # $print dump_structs $T $name
             $declared{"$T $name"}=1
             $if $st->{opaque}
                 push @$dump_out, "$T $name;\n"
@@ -351,6 +352,7 @@ fncode: dump_struct_members($dump_out, $st, $indent)
     my $sp = '    ' x $indent
     $foreach $p in @$s_list
         my $type=$s_hash->{$p}
+        # $print $type - $p
         $if $type eq "function"
             push @$dump_out, "$sp".$fntype{$p}.";\n";
         $elif $type eq "nest" # union or struct
