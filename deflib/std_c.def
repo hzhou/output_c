@@ -110,6 +110,11 @@ subcode: open_a(file)
     &call open_w, $(file)
         BLOCK
 
+subcode: open_W(file)
+    &call open_w, $(file)
+        $(set:print_to=file_out)
+        BLOCK
+
 subcode: open_w(file)
     $include stdio
     $(if:mode!=a)

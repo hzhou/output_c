@@ -5,6 +5,7 @@ macros:
 
 ## frame
 subcode: basic_frame
+    # using namespace std;
     $call @global
     # $list _basic_main
     $function main
