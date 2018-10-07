@@ -20,7 +20,6 @@ subcode:: _autoload
     $register_prefix(rvs) std::vector<std::string> &
 
 subcode: vector_push(v, @list)
-    $include <vector>
     $(for:t in $(list))
         $(v).push_back($(t))
 
@@ -65,11 +64,17 @@ subcode: map_add(map, k, v)
     $(map).insert(std::pair$(type:regex:(<.*>))($(k), $(v)));
 
 #---- std algorithm ----
-subcode: std_sort(v)
+subcode: stl_sort(v)
     $include <algorithm>
     $(if:style=c++11)
         std::sort(begin($(v)), end($(v)))
     $(else)
         std::sort($(v).begin(), $(v).end())
+
+subcode: std_sort(L, N, type)
+    $include <algorithm>
+    std::sort($(L), $(L)+$(N), []($(type) a, $(type) b){
+        BLOCK
+    } );
 
 #---- C++ 11 styles -----
