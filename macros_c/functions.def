@@ -21,7 +21,10 @@ subcode: function_open_c_style
         my $param=join(', ', @$param_list);
         $declare="$ret_type $name($param)"
         $func->{declare}=$declare
-    push @$open, $declare."{"
+    # STYLE: T f(){ or ...
+    # push @$open, $declare."{"
+    push @$open, $declare
+    push @$open, "{"
 
 subcode: function_close_c_style
     push @$close, "}";
@@ -71,7 +74,7 @@ subcode: function_param_c_style
         $call @check_param_special
         $call add_param, $name, $type
     subcode: add_param(name, type)
-        push @$param_list, "$(type) $(name)"
+        push @$param_list, simple_var_declare($(type), $(name))
         my $var={name=>$(name), type=>$(type)}
         $var_hash->{$(name)}=$var
 

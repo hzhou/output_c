@@ -29,12 +29,12 @@ subcode: parsecode_func
     $if $func eq "block"
         return single_block("$param\{", "}", "block")
     $elif $func =~/^except/
-        return single_block("$except\{", "}", "else")
+        return single_block("$except \{", "}", "else")
     $elif $func =~ /^(while|switch)$/
         my $name=$1;
         $if $name eq "while" and $param=~/^(.*?);\s*(.*?);?\s*$/
             &call return_newblock, while
-                push @src, "while($1){"
+                push @src, "while ($1) {"
                 push @src, "INDENT"
                 push @src, "BLOCK"
                 push @src, "$2;"
@@ -42,7 +42,7 @@ subcode: parsecode_func
                 push @src, "}"
         $else
             $param=parse_condition($param)
-            return single_block("$name($param){", "}")
+            return single_block("$name ($param) {", "}")
     $elif $func =~ /^of$/
         &call return_newblock, while
             $if $param eq "others"

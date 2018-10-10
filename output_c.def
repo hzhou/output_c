@@ -70,7 +70,7 @@ page: output_c, output_main
 
     subcode: parsecode
         $(set:parse_condition=1)
-        $call parsecode_case_support, if, else if, c_style
+        $call parsecode_case_support, if, else if, c2_style
 
         $call parsecode_common
 
@@ -83,6 +83,7 @@ page: output_c, output_main
         # ---- Header stuff --------------------------
         $(for:global_init,meta_init)
             $if !$page->{has_stub_$1}
+                # always unless template frame already defines them
                 unshift @$out, "DUMP_STUB $1"
         $call c_dump_init
 
@@ -136,4 +137,16 @@ page: output_c, output_main
             $if @objlist
                 $obj_list=join(" ", @objlist)
                 $page->{lib_list}.=" ".$obj_list
+
+#----------------------------------------------- 
+subcode: if_c2_style
+    $call push_single_block, "if ($cond) {", "}"
+
+subcode: elif_c2_style
+    $call else_merge, }
+    $call push_single_block, "} else if ($cond) {", "}"
+
+subcode: else_c2_style
+    $call else_merge, }
+    $call push_single_block, "} else {", "}"
 

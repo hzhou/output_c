@@ -29,7 +29,7 @@ subcode: for_i0_i1_step
         protect_var($var)
 
 subcode: for_c_style_protect
-    $call push_single_block, "for($param){", "}"
+    $call push_single_block, "for ($param) {", "}"
     $(if:type!=asis)
         push @src, "PARSE:\$unprotect_var $var"
 

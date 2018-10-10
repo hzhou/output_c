@@ -188,7 +188,7 @@ fncode: check_expression($l, $context)
         # -----------------
         subcode: is_atom
             $if $(type1) =~/^op/
-                $if $(type2) !~/^atom/
+                $if $(type2) !~/^atom/ or ($stack[-1] eq '&' and $stack[-2]=~/\*\)$/)
                     #---- unary -------------
                     $call exp_pop, $op
                     $token=$op.$token
@@ -210,10 +210,12 @@ fncode: check_expression($l, $context)
                     #---- e.g. unsigned int, struct something
                     $stack[-1].=" $token"
                 $else
-                    $stack[-1].=$token
                     $if $(type1) eq "atom-("
                         #---- type cast ---- 
                         $types[-1] = "atom"
+                        $stack[-1].=" $token"
+                    $else
+                        $stack[-1].=$token
             $else
                 #---- open bracket ---------
                 $call exp_push, $token, $type
@@ -238,8 +240,11 @@ subcode: check_exp_bracket
         $if $(type1) =~/^atom/ and $stack[-1]!~/^[0-9'"]/ and $stack[-1]=~/(\w+)$/
             $call id_bracket
         $else
+            $if $exp=~/^(.+?)([*]+)$/
+                $exp = "$1 $2"
             $token=$open.$exp.$close
             $type="atom-$open"
+
     # ------------------------
     subcode: find_open_bracket
         my $n=@stack
