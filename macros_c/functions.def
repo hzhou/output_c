@@ -28,7 +28,6 @@ subcode: function_open_c_style
 
 subcode: function_close_c_style
     push @$close, "}";
-    push @$close, "NEWLINE";
 
 #----
 subcode: function_param_c_style

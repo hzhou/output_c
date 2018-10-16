@@ -81,7 +81,7 @@ page: output_c, output_main
         $call process_link_objects
 
         # ---- Header stuff --------------------------
-        $(for:global_init,meta_init)
+        $(for:frame_init,global_init,meta_init)
             $if !$page->{has_stub_$1}
                 # always unless template frame already defines them
                 unshift @$out, "DUMP_STUB $1"

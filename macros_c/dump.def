@@ -1,11 +1,11 @@
-#- global init
+#- global init (DUMP_STUB global_init)
 #-     INCLUDE_BLOCK block_init (@dump_init or $dump_out)
 #-     $(block:global_init) stuff
 #----------------------------------------------- 
 subcode: c_dump_init
+    # $call @debug_out
     my @dump_init
 
-    #  @ <-- $dump->{block_init} <-- DUMP_STUB global_init
     $dump->{block_init}=\@dump_init
     my $global_init=MyDef::compileutil::get_named_block("global_init")
     unshift @$global_init, "INCLUDE_BLOCK block_init"
@@ -29,6 +29,9 @@ subcode: c_dump_init
     # $call dump_structs_functions
     $call dump_globals
     $call dump_code_list
+    
+    $while $dump_out->[-1] eq "\n"
+        pop @$dump_out
 
     subcode: DUMP_H
         my @dump_h
@@ -57,6 +60,10 @@ subcode: c_dump_init
                 $if $t_guard
                     print Out "#endif /* $t_guard */\n"
             $dump_out = $t_dump
+    subcode: debug_out
+        $print debug \@\$out:
+        $foreach $l in @$out
+            $print "    [$l]"
 
 subcode: dump_classes
     $global $dump_classes
