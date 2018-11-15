@@ -1,0 +1,5 @@
+page: t, basic_frame
+    module: cpp
+
+    $my std::string s("hello")
+    $dump s
