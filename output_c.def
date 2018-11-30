@@ -14,6 +14,7 @@ include: macros_c/types.def
 include: macros_c/dump.def
 include: macros_c/list_functions.def
 
+include: macros_c/cpp_hack.def
 include: macros_c/hacks.def
 include: macros_c/regex.def
 
@@ -107,13 +108,15 @@ page: output_c, output_main
             $foreach $func in @function_list
                 $if !$func->{processed}
                     process_function_std($func)
+                    # ----
+                    my $name=$func->{name}
                     $call @func_hook
                     $if !$has_main
-                        my $name=$func->{name}
                         $if $function_autolist{$name} eq "static"
                             $func->{declare}="static ".$func->{declare}
                         $elif $function_autolist{$name} eq "skip_declare"
                             $func->{skip_declare} = 1
+                    $call @process_function_cpp
             subcode: check_func_hook
                 my $func_hook
                 $if $MyDef::def->{codes}->{_FUNC_HOOK}
@@ -134,6 +137,7 @@ page: output_c, output_main
                 $else
                     push @objlist, $i
             my ($lib_list, $obj_list)
+            # NOTE: objlist after liblist, maybe this is undesired
             $if @liblist
                 $lib_list=join(" ", @liblist)
                 $page->{lib_list}=$lib_list

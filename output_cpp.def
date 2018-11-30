@@ -57,7 +57,7 @@ subcode:: on_dumpout
 subcode:: on_dumpout
     my @class_dump
     $$(super:dump_classes)=\@class_dump
-
+    # override dump_structs to support C++ classes
     $foreach $name in @$(super:struct_list)
         $call dump_struct
 

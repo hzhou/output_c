@@ -85,7 +85,7 @@ subcode: function_param_api
             $func->{ret_type}=$1
             $param=$3
     $else
-        die "function $fname($param): api not found\n"
+        die "function $fname($param): api $api_name not found\n"
 
 subcode: function_override
     # C++, Java style class override interface
