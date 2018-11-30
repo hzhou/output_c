@@ -1,0 +1,20 @@
+# class T {
+#     DUMP_STUB T_interface
+subcode: process_function_cpp
+    $if $name=~/^(\w+)::/ -> $C
+        $func->{skip_declare} = 1
+        my $block = MyDef::compileutil::get_named_block($C."_interface")
+        my $t = $func->{declare}
+        $if $name eq $C."::" # constructor
+            $t=~s/^.*::/$C/
+            $func->{openblock}->[0]=~s/^.*::/$C\:\:$C/
+            $if $func->{inherit}
+                $func->{openblock}->[0]=~s/({?)$/: $func->{inherit} $1/
+        $else
+            $t=~s/$C\:\://
+        push @$block, "$t;"
+
+# ref: macros_output/functions.def
+subcode: autolist_custom
+    $if $name=~/^\w+::/
+        $autolist = "class_member"
