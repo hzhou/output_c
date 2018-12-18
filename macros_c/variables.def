@@ -271,6 +271,7 @@ fncode: name_type_authortative($name, $type)
     return 0
 
 #---------------------------------------- 
+#- used here and macros_c/function.def for params
 subcode: check_pointer_type_name
     $if $name=~/^(\*+)(.+)/
         $type.=" $1"
@@ -279,6 +280,14 @@ subcode: check_pointer_type_name
     $elif $name=~/^(&)(.+)/
         $type.=" $1"
         $name=$2
+
+fncode: simple_var_declare($type, $name)
+    # STYLE: int *p or int* p or int * p
+    $if $type=~/^(.+?)([* ]+)$/ -> $T, $stars
+        $stars=~s/ //g
+        return "$T $stars$name"
+    $else
+        return "$type $name"
 
 #---------------------------------------- 
 fncode: var_declare($var, $need_semi)
@@ -291,7 +300,7 @@ fncode: var_declare($var, $need_semi)
         $if defined $var->{array}
             $t=pointer_type($type)." $name"."$var->{array}"
         $else
-            $t="$type $name"
+            $t = simple_var_declare($type, $name)
 
         $if defined $var->{init}
             $if $var->{init} =~/^[(](.*)[)]\s*$/ && is_paren_balanced($1)

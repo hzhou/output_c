@@ -1,0 +1,14 @@
+page: test, basic_frame
+    module: c
+
+    F(1)
+    f_A(2)
+
+subcode: _autoload
+    $fntype void(*A)(int a)
+
+fncode: F(api A)
+    $print F called with param $a
+
+fncode: f_A(api)
+    $print f_A called with param $a

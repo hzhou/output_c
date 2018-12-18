@@ -1,0 +1,19 @@
+page: t, basic_frame
+    module: cpp
+
+    $my T t;
+    t.print()
+
+
+subcode: _autoload
+    class T {
+    public:
+        int m;
+        DUMP_STUB T_interface
+    };
+
+fncode: T::
+    m= 42;
+
+fncode: T::print
+    $print Hello World (from T m = $m)

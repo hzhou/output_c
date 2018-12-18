@@ -38,18 +38,16 @@ subcode: set_has(m, key)
         BLOCK
 
 #---- stl iteration ----
+# TODO: plugin interface for &call
 subcode: stl_iter(v)
     $for auto it=$(v).begin();it!=$(v).end();++it
         $(set:it=*it)
         BLOCK
+
 subcode: map_iter(m)
     &call stl_iter, $(m)
         $(set:key=it->first)
         $(set:value=it->second)
-        BLOCK
-subcode: set_iter(m)
-    &call stl_iter, $(m)
-        $(set:item=(*it))
         BLOCK
 
 #---- stl initilization ----

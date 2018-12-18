@@ -1,13 +1,15 @@
+#- global init (DUMP_STUB global_init)
+#-     INCLUDE_BLOCK block_init (@dump_init or $dump_out)
+#-     $(block:global_init) stuff
 #----------------------------------------------- 
 subcode: c_dump_init
+    # $call @debug_out
     my @dump_init
 
-    #  @ <-- $dump->{block_init} <-- DUMP_STUB global_init
     $dump->{block_init}=\@dump_init
     my $global_init=MyDef::compileutil::get_named_block("global_init")
     unshift @$global_init, "INCLUDE_BLOCK block_init"
 
-    # @ --> $dump_out
     my $dump_out=\@dump_init
 
     $if %objects
@@ -15,16 +17,53 @@ subcode: c_dump_init
 
     $call @check_type_includes
     $call dump_includes
-    $call dump_defines
-    $call dump_enums
-    $call dump_typedefs
-    $call @dump_classes
-    $call dump_structs
-    $call dump_function_declares
+    &call DUMP_H
+        $call dump_defines
+        $call dump_enums
+        $call dump_typedefs
+        $call @dump_classes
+        $call dump_structs
+        $call dump_function_declares, nonstatic
+    $call dump_function_declares, static
     $call dump_declares
     # $call dump_structs_functions
     $call dump_globals
     $call dump_code_list
+    
+    $while $dump_out->[-1] eq "\n"
+        pop @$dump_out
+
+    subcode: DUMP_H
+        my @dump_h
+        my ($t_hfile, $t_dump, $t_template, $t_guard)
+        $t_hfile = $page->{dump_h}
+        $if $t_hfile
+            $if $t_hfile=~/^(\S+)\s+from\s+(.*)/
+                ($t_hfile, $t_template) = ($1, $2)
+            $if $t_hfile=~/(\w+.h)$/
+                push @$dump_out, "#include \"$1\"\n\n"
+                $t_guard = uc($1)."_INCLUDED"
+                $t_guard=~s/\./_/g
+            $t_dump = $dump_out
+            $dump_out = \@dump_h
+        BLOCK
+        $if $t_hfile
+            &call open_w, $t_hfile
+                $if $t_template
+                    &call open_r, $t_template
+                        print Out $_
+                $if $t_guard
+                    print Out "#ifndef $t_guard\n"
+                    print Out "#define $t_guard\n\n"
+                $foreach $l in @dump_h
+                    print Out $l
+                $if $t_guard
+                    print Out "#endif /* $t_guard */\n"
+            $dump_out = $t_dump
+    subcode: debug_out
+        $print debug \@\$out:
+        $foreach $l in @$out
+            $print "    [$l]"
 
 subcode: dump_classes
     $global $dump_classes
@@ -228,11 +267,16 @@ subcode:: on_init_page
     $global @function_declare_list
     @function_declare_list=()
 
-subcode: dump_function_declares
+subcode: dump_function_declares(is_static)
     $foreach $t in @function_declare_list
         my $func=$functions{$t}
         $if !$func->{skip_declare}
-            $call declare, $func
+            $(if:is_static=static)
+                $if $func->{declare}=~/^static /
+                    $call declare, $func
+            $(else)
+                $if $func->{declare}!~/^static /
+                    $call declare, $func
     $if $#$dump_out>-1 and $dump_out->[-1] ne "\n"
         push @$dump_out, "\n";
 

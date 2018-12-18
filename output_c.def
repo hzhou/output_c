@@ -14,6 +14,7 @@ include: macros_c/types.def
 include: macros_c/dump.def
 include: macros_c/list_functions.def
 
+include: macros_c/cpp_hack.def
 include: macros_c/hacks.def
 include: macros_c/regex.def
 
@@ -70,7 +71,7 @@ page: output_c, output_main
 
     subcode: parsecode
         $(set:parse_condition=1)
-        $call parsecode_case_support, if, else if, c_style
+        $call parsecode_case_support, if, else if, c2_style
 
         $call parsecode_common
 
@@ -81,9 +82,13 @@ page: output_c, output_main
         $call process_link_objects
 
         # ---- Header stuff --------------------------
-        $(for:global_init,meta_init)
+        my @t
+        $(for:frame_init,global_init,meta_init)
             $if !$page->{has_stub_$1}
-                unshift @$out, "DUMP_STUB $1"
+                # always unless template frame already defines them
+                push @t, "DUMP_STUB $1"
+        $if @t
+            unshift @$out, @t
         $call c_dump_init
 
         # -------------------------------
@@ -103,13 +108,15 @@ page: output_c, output_main
             $foreach $func in @function_list
                 $if !$func->{processed}
                     process_function_std($func)
+                    # ----
+                    my $name=$func->{name}
                     $call @func_hook
                     $if !$has_main
-                        my $name=$func->{name}
                         $if $function_autolist{$name} eq "static"
                             $func->{declare}="static ".$func->{declare}
                         $elif $function_autolist{$name} eq "skip_declare"
                             $func->{skip_declare} = 1
+                    $call @process_function_cpp
             subcode: check_func_hook
                 my $func_hook
                 $if $MyDef::def->{codes}->{_FUNC_HOOK}
@@ -130,10 +137,23 @@ page: output_c, output_main
                 $else
                     push @objlist, $i
             my ($lib_list, $obj_list)
+            # NOTE: objlist after liblist, maybe this is undesired
             $if @liblist
                 $lib_list=join(" ", @liblist)
                 $page->{lib_list}=$lib_list
             $if @objlist
                 $obj_list=join(" ", @objlist)
                 $page->{lib_list}.=" ".$obj_list
+
+#----------------------------------------------- 
+subcode: if_c2_style
+    $call push_single_block, "if ($cond) {", "}"
+
+subcode: elif_c2_style
+    $call else_merge, }
+    $call push_single_block, "} else if ($cond) {", "}"
+
+subcode: else_c2_style
+    $call else_merge, }
+    $call push_single_block, "} else {", "}"
 

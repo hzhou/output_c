@@ -3,6 +3,8 @@
 # -- the syntax highlighting may not be so easy to fix
 
 page: test
+    module: c
+
     #include "t.c"
     #define name Hui
     #undef name
@@ -14,3 +16,17 @@ page: test
     #line 1
     #error 1
     #pragma 2
+
+/* expect test.c:
+#include "t.c"
+#define name Hui
+#undef name
+#if 1
+#ifndef name
+#elif 1
+#else blah
+#endif
+#line 1
+#error 1
+#pragma 2
+*/

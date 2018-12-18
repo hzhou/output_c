@@ -1,0 +1,32 @@
+page: t, basic_frame
+    module: c
+
+    $print Hello World!
+
+subcode: _autoload
+    $(block:global_init)
+        // global_init
+    $(block:meta_init)
+        // meta_init
+    $(block:main_init)
+        // main_init
+    $(block:main_exit)
+        // main_exit
+    $(block:frame_init)
+        // frame_init
+
+/* expect t.c:
+//frame_init;
+#include <stdio.h>
+#include <stdlib.h>
+//global_init;
+//meta_init;
+
+int main(int argc, char** argv)
+{
+    //main_init;
+    puts("Hello World!");
+    //main_exit;
+    return 0;
+}
+*/
