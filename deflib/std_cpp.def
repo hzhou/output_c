@@ -73,7 +73,7 @@ subcode: stl_sort(v)
 
 subcode: std_sort(L, N, type)
     $include <algorithm>
-    std::sort($(L), $(L)+$(N), []($(type) a, $(type) b){
+    std::sort($(L), $(L)+$(N), [&]($(type) a, $(type) b){
         BLOCK
     } );
 
