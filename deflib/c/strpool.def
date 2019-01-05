@@ -2,24 +2,28 @@
 #---- currently being used by c/hash.def
 
 macros:
-    strpool_member: i_str, i_pool, n_str, n_pool, pn_str, pc_pool
+    strpool_member: i_str, i_pool, n_str, size_t pool_size, pn_str, pc_pool
 
 subcode:: _autoload
     $struct(strpool) $(strpool_member)
     $register_name(p_strpool) struct strpool *
 
-    $list f_resize_strpool_n, f_addto_strpool, f_free_strpool
+    # $list f_resize_strpool_n, f_addto_strpool, f_free_strpool
 
 #---------------------------------------- 
-fncode: f_resize_strpool_n(p_strpool, n_size)
+fncode: f_resize_strpool_n(p_strpool, n_size, n_avg)
     $(set:this=p_strpool->)
-    $call @get_tn_avg_str_size
+    $if n_size <= $.n_str
+        return
     $.n_str = n_size
-    $.n_pool = tn_avg_str_size * $.n_str
     $.pn_str = realloc($.pn_str, $.n_str * sizeof(int))
-    $.pc_pool = realloc($.pc_pool, $.n_pool)
 
-    $.pc_pool[$.n_pool-1]=0
+    $if n_avg==0
+        $call @get_avg_str_size, n_avg
+    $if n_avg*$.n_str > $.pool_size
+        $.pool_size = n_avg * $.n_str
+        $.pc_pool = realloc($.pc_pool, $.pool_size)
+        $.pc_pool[$.pool_size-1]=0
 
     $if $.i_str==0
         $.pn_str[0]=0
@@ -30,13 +34,19 @@ fncode: f_addto_strpool(p_strpool, s, n)
     # assert $.i_str + 2 <$.n_str
     $if $.i_str + 2 >=$.n_str
         n_size = $.i_str*3/2 + 10
-        f_resize_strpool_n(p_strpool, n_size)
+        f_resize_strpool_n(p_strpool, n_size, 0)
 
-    $if $.i_pool+n >= $.n_pool
+    $if n==0
+        n = strlen(s)
+    $if $.i_pool+n >= $.pool_size
         $call resize_str_pool_c, n
     memcpy($.pc_pool+$.i_pool, s, n)
     $.i_str++
     $.i_pool+=n
+    $(if:1)
+        $include assert
+        assert($.i_str>0)
+        assert($.i_pool>0)
     # lets zero-terminate it for convenience
     $.pc_pool[$.i_pool]='\0'
     $.i_pool+=1
@@ -45,15 +55,15 @@ fncode: f_addto_strpool(p_strpool, s, n)
     return $.i_str-1
     
     subcode: resize_str_pool_c(len)
-        $call @get_tn_avg_str_size
-        $.n_pool = tn_avg_str_size*$.n_str + $(len)
-        $.pc_pool = realloc($.pc_pool, $.n_pool)
+        $call get_avg_str_size, tn_avg_str_size
+        $.pool_size = tn_avg_str_size*$.n_str + $(len)
+        $.pc_pool = realloc($.pc_pool, $.pool_size)
 
 # -----
-subcode: get_tn_avg_str_size
-    tn_avg_str_size=6
+subcode: get_avg_str_size(var)
+    $(var)=6
     $if $.i_str>0
-        tn_avg_str_size = $.i_pool/$.i_str + 1
+        $(var) = $.i_pool/$.i_str + 1
 
 #---------------------------------------- 
 fncode: f_free_strpool(p_strpool)
