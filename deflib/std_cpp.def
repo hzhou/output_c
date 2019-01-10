@@ -62,12 +62,15 @@ subcode: map_add(map, k, v)
     $(map).insert(std::pair$(type:regex:(<.*>))($(k), $(v)));
 
 #---- std algorithm ----
-subcode: stl_sort(v)
+subcode: stl_sort(v, type)
     $include <algorithm>
     $(if:style=c++11)
-        std::sort(begin($(v)), end($(v)))
+        $(set:T=begin($(v)), end($(v)))
     $(else)
-        std::sort($(v).begin(), $(v).end())
+        $(set:T=$(v).begin(), $(v).end())
+    std::sort($(T), [&]($(type) a, $(type) b){
+        BLOCK
+    } );
 
 subcode: std_sort(L, N, type)
     $include <algorithm>

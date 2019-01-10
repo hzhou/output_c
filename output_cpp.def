@@ -15,7 +15,7 @@ subcode:: on_parsecode
         push @$out, $1
         return
     $elif $l=~/^\$foreach\s+(.+?)\s+in\s+(.+)/ -> $v, $list
-        $if $v=~/^\w+$/
+        $if $v=~/^&?\w+$/
             $v = "auto $v"
         return $(super:single_block)("for($v : $list){", "}", "foreach")
     # call other
@@ -39,19 +39,18 @@ subcode:: on_dumpout
         $if $type=~/(?:std::)?(string|bitset|deque|list|unordered_map|map|queue|set|stack|vector)\b/
             $(super:add_include_direct)("<$1>")
     # ---- include ----
+    my @tlist
     my $cnt=0
     $foreach $k in sort {$b cmp $a} (@$(super:include_list))
         $if $k=~/<(stdio|stdlib|string|math|time|errno)\.h>/
-            push @$f, "#include <c$1>\n"
+            push @tlist, "#include <c$1>"
         $else
-            push @$f, "#include $k\n"
+            push @tlist, "#include $k"
         $cnt++
     $if $MyDef::page->{namespace}
-        push @$f, "using namespace $MyDef::page->{namespace};\n"
-    $if $cnt>0
-        push @$f, "\n"
+        push @tlist, "using namespace $MyDef::page->{namespace};"
 
-    @$(super:include_list)=()
+    @$(super:include_list)=@tlist
 
 #---- structs/classes -------------------------------------------------------
 subcode:: on_dumpout
@@ -62,6 +61,12 @@ subcode:: on_dumpout
         $call dump_struct
 
     @$(super:struct_list)=()
+
+    $foreach %$(super:functions)
+        $if $k=~/^operator_(\w+)/
+            my %ops=(Lt=>'<')
+            $if $ops{$1}
+                $v->{name}="operator".$ops{$1}
 
 subcode: dump_struct
     # TODO: class interface
