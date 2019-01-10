@@ -132,7 +132,7 @@ fncode: infer_value_type($val)
             $print infer_value_type: function $1 [$func]
         $if $func and $func->{ret_type}
             return $func->{ret_type}
-    $elif $val=~/NULL/
+    $elif $val=~/^NULL$/
         return "void*"
     $elif $val=~/(\w+)(.*)/
         my $type=get_var_type($val, 1)

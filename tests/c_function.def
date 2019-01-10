@@ -1,6 +1,10 @@
 page: test, basic_frame
     module: c
 
+    $list C
+    n=C()
+    $dump(C) n
+
     $(if:1)
         $call test_param
     $(elif:1)
@@ -22,6 +26,9 @@ fncode: A(c, f; int a1, a2; b1, b2: float)
 
 fncode: B( a,b:int;)
     $dump($(FunctionName)) a, b
+
+fncode: C:int
+    return 42
 
 #----------------------------------------------- 
 subcode: test_anonymous

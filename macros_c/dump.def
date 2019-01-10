@@ -48,7 +48,9 @@ subcode: c_dump_init
             $dump_out = \@dump_h
         BLOCK
         $if $t_hfile
-            &call open_w, $t_hfile
+            $if $t_hfile!~/\//
+                $t_hfile = $page->{_outdir}."/".$t_hfile
+            &call open_W, $t_hfile
                 $if $t_template
                     &call open_r, $t_template
                         print Out $_
@@ -179,9 +181,9 @@ subcode: dump_typedefs
 subcode: dump_typedef(k)
     my $t=$typedef_hash{$(k)}
     $if $t=~/\(\*\s*(\w+)\)/
-        push @$dump_out, "typedef $t;"
+        push @$dump_out, "typedef $t;\n"
     $else
-        push @$dump_out, "typedef $t $(k);"
+        push @$dump_out, "typedef $t $(k);\n"
 
 # ---- Enums ----
 subcode:: on_init_page
