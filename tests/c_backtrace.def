@@ -1,0 +1,16 @@
+include: c/backtrace.def
+
+page: test, basic_frame
+    module: c
+    CFLAGS: -g -rdynamic
+
+    A()
+    $call catch_segfault
+    B()
+
+fncode: A
+    $call print_trace
+
+fncode: B
+    pn_t = NULL
+    $print "%d", *pn_t
