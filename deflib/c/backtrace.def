@@ -1,0 +1,13 @@
+fncode: print_trace
+    $my void* array[10]
+    $my char** strings
+    $my size_t size
+
+    $include <execinfo.h>
+    size = backtrace(array, 10)
+    strings = backtrace_symbols(array, size)
+
+    $print "Obtained %ld stack frames. \n", size
+    $for i=0:size
+        $print "%s", strings[i]
+
