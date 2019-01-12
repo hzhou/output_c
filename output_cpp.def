@@ -39,19 +39,9 @@ subcode:: on_dumpout
         $if $type=~/(?:std::)?(string|bitset|deque|list|unordered_map|map|queue|set|stack|vector)\b/
             $(super:add_include_direct)("<$1>")
     # ---- include ----
-    my $cnt=0
-    $foreach $k in sort {$b cmp $a} (@$(super:include_list))
+    $foreach $k in @$(super:include_list)
         $if $k=~/<(stdio|stdlib|string|math|time|errno)\.h>/
-            push @$f, "#include <c$1>\n"
-        $else
-            push @$f, "#include $k\n"
-        $cnt++
-    $if $MyDef::page->{namespace}
-        push @$f, "using namespace $MyDef::page->{namespace};\n"
-    $if $cnt>0
-        push @$f, "\n"
-
-    @$(super:include_list)=()
+            $k = "<c$1>"
 
 #---- structs/classes -------------------------------------------------------
 subcode:: on_dumpout
