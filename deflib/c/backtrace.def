@@ -1,0 +1,32 @@
+subcode: print_trace(@skip)
+    $include <execinfo.h>
+
+    $my void* array[50]
+    $my size_t size, char** strs
+
+    size = backtrace(array, 50)
+    strs = backtrace_symbols(array, size)
+
+    $(if:!skip)
+        $(set:skip=0)
+
+    $for i=$(skip):size
+        $print "%s", strs[i]
+    $print
+
+#---------------------------------------- 
+#- this often neglects the address that causes the signal
+#- the alternative -- sigaction - ucontext -- is too messy
+#- Instead: `ulimit -c ulimited` to generate core dump
+#-    `gdb -batch -ex "backtrace" ./prog ./core
+fncode: segfault_handler(int sig)
+    $print signal $sig:
+    $call print_trace, 1
+    exit(1)
+
+subcode: catch_segfault
+    $list segfault_handler
+    $include <signal.h>
+    signal(SIGSEGV, segfault_handler)
+
+
