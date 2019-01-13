@@ -40,13 +40,11 @@ subcode:: on_dumpout
             $(super:add_include_direct)("<$1>")
     # ---- include ----
     my @tlist
-    my $cnt=0
     $foreach $k in sort {$b cmp $a} (@$(super:include_list))
-        $if $k=~/<(stdio|stdlib|string|math|time|errno)\.h>/
-            push @tlist, "#include <c$1>"
+        $if $k=~/<(std(io|lib|def|int|arg)|string|math|time|type|limits|signal|errno|assert)\.h>/
+            push @tlist, "<c$1>"
         $else
-            push @tlist, "#include $k"
-        $cnt++
+            push @tlist, $k
     $if $MyDef::page->{namespace}
         push @tlist, "using namespace $MyDef::page->{namespace};"
 

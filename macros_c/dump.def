@@ -16,8 +16,9 @@ subcode: c_dump_init
         push @$dump_out, "/* link: $lib_list $obj_list */\n"
 
     $call @check_type_includes
-    $call dump_includes
     &call DUMP_H
+        $call dump_includes
+        $call @dump_namespace
         $call dump_defines
         $call dump_enums
         $call dump_typedefs
@@ -46,6 +47,7 @@ subcode: c_dump_init
                 $t_guard=~s/\./_/g
             $t_dump = $dump_out
             $dump_out = \@dump_h
+            $print dump_h ...
         BLOCK
         $if $t_hfile
             $if $t_hfile!~/\//
@@ -66,6 +68,15 @@ subcode: c_dump_init
         $print debug \@\$out:
         $foreach $l in @$out
             $print "    [$l]"
+
+# ----- c++ specific ----
+subcode: dump_namespace
+    my $dump_to = $dump_out
+    $if $t_dump
+        $dump_to = $t_dump
+
+    $if $MyDef::page->{namespace}
+        push @$dump_to, "using namespace $MyDef::page->{namespace};\n"
 
 subcode: dump_classes
     $global $dump_classes
