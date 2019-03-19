@@ -17,4 +17,4 @@ subcode: process_function_cpp
 # ref: macros_output/functions.def
 subcode: autolist_custom
     $if $name=~/^\w+::/
-        $autolist = "class_member"
+        $func->{autolist} = "class_member"

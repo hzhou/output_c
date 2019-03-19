@@ -8,18 +8,18 @@ macros:
     function_style: c_style
 
 subcode: function_open_c_style
-    my $ret_type = $func->{ret_type}
-    $if !$ret_type
-        $ret_type="void"
-        $func->{ret_type}=$ret_type
+    my $return_type = $func->{return_type}
+    $if !$return_type
+        $return_type="void"
+        $func->{return_type}=$return_type
     $else
-        $call @check_type, $ret_type
+        $call @check_type, $return_type
 
     my $declare=$func->{declare}
     $if !$declare
         my $param_list=$func->{"param_list"};
         my $param=join(', ', @$param_list);
-        $declare="$ret_type $name($param)"
+        $declare="$return_type $name($param)"
         $func->{declare}=$declare
     # STYLE: T f(){ or ...
     # push @$open, $declare."{"
@@ -79,10 +79,11 @@ subcode: function_param_c_style
 
 subcode: function_param_api
     # C style api: $fntype ... defines interface
+    # NOTE (*name) strictly no spaces -- The function pointer syntax is complicated enough that strictness helps here
     $if $fntype{$api_name}
         my $t=$fntype{$api_name}
-        $if $t=~/^(.*?)\s*\(\s*\*\s*(\w+)\s*\)\s*\(\s*(.*)\)/
-            $func->{ret_type}=$1
+        $if $t=~/^(.*?)\s*\(\*(\w+)\)\s*\(\s*(.*)\)/
+            $func->{return_type}=$1
             $param=$3
     $else
         die "function $fname($param): api $api_name not found\n"
@@ -92,16 +93,16 @@ subcode: function_override
     $if $fntype{$fname}=~/^override\s+(.*)/
         my $t=$1
         $if $t=~/^(.*?)\s*(\w+)\s*\(\s*(.*)\)/
-            $func->{ret_type}=$1
+            $func->{return_type}=$1
             $param=$3
 
 # -----------------------
 subcode: infer_return_c_style
     $if $t=~/^[^(]+,/
-        $cur_function->{ret_type}="void";
+        $cur_function->{return_type}="void";
         $call set_return_tuple
     $else
-        $cur_function->{ret_type}=infer_value_type($t)
+        $cur_function->{return_type}=infer_value_type($t)
 
     # -- hack return tuple --
     subcode: set_return_tuple

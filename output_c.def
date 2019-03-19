@@ -98,7 +98,7 @@ page: output_c, output_main
                 $global $has_main
                 $has_main=1
                 $mainfunc->{skip_declare}=1;
-                $mainfunc->{ret_type}="int";
+                $mainfunc->{return_type}="int";
                 $mainfunc->{param_list}=["int argc", "char** argv"];
                 $if !$mainfunc->{return}
                     $mainfunc->{return}="return 0;"
