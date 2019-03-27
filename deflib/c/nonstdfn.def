@@ -1,0 +1,6 @@
+fncode: strdup(s_from): char *
+    n = strlen(s_from) + 1
+    $allocate(n) s_ret
+    $if s_ret
+        memcpy(s_ret, s_from, n)
+    return s_ret
