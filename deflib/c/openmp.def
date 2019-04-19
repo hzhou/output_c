@@ -1,6 +1,0 @@
-subcode: omp
-    $(set:omp_id=omp_get_thread_num())
-    $: #pragma omp parallel
-    {
-        BLOCK
-    }
