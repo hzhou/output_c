@@ -1,0 +1,23 @@
+subcode: _autoload
+    $include <omp.h>
+
+macros:
+    num_threads: omp_get_num_threads()
+    omp_id: omp_get_thread_num()
+
+subcode: omp_parallel(@num_threads)
+    $(if:num_threads)
+        omp_set_num_threads($(num_threads))
+    $call omp, parallel
+    {
+        BLOCK
+    }
+
+subcode: omp_barrier
+    $call omp, barrier
+
+#---------------------------------------- 
+subcode: omp(@P)
+    PUSHDENT
+    #pragma omp $(P)
+    POPDENT

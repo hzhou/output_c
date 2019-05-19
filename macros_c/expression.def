@@ -3,12 +3,15 @@ subcode:: parsecode_func_other
         $global $yield
         $yield=$param
         return
-    $elif $func eq "set_function_defaults"
-        $global %function_defaults
-        my @plist=MyDef::utils::proper_split($param)
-        my $pattern=shift @plist
-        $foreach $name in @plist
-            $function_defaults{$name}=$pattern
+
+subcode:: parsecode_func_param_other
+    $elif $func =~/^set_function_(prepend|append)$/
+        my $F = $functions{$param1}
+        $if !$F
+            $F = {}
+            $functions{$param1} = $F
+
+        $F->{$1} = $param2
         return
 
 #----------------------------------------------- 
@@ -361,20 +364,20 @@ subcode: check_exp_fcall(primary, token)
     $else
         $if $function_autolist{$(primary)}
             $call add_list_function, $(primary)
-        $if $function_defaults{$(primary)}
-            #-- prepend: essentiall implements lexical function parameters
-            $if $function_defaults{$(primary)}=~/^prepend:(.*)/
-                $if $(token) eq ""
-                    $(token)=$1
-                $else
-                    $(token)=$1.",".$(token)
-            $elif $function_defaults{$(primary)}=~/^append:(.*)/
-                $if $(token) eq ""
-                    $(token)=$1
-                $else
-                    $(token)=$(token).",".$1
+
+        #-- prepend/append
+        #-- essentially implements lexical function parameters
+        my $F = $functions{$(primary)}
+        $if $F and $F->{prepend}
+            $if $(token) eq ""
+                $(token)=$F->{prepend}
             $else
-                # Not Implemented
+                $(token)=$F->{prepend}.",".$(token)
+        $elif $F and $F->{append}
+            $if $(token) eq ""
+                $(token)=$F->{append}
+            $else
+                $(token)=$(token).",".$F->{append}
 
 subcode: check_exp_subscript(primary, token)
     # print "subscript: $(primary)  $(token)\n"

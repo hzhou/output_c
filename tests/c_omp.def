@@ -1,0 +1,6 @@
+include: c/openmp.def
+
+page: test, basic_frame
+    CFLAGS: -fopenmp
+    &call omp_parallel, 4
+        $print "Hello from OMP thread %d", $(omp_id)
