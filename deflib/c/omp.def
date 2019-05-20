@@ -3,6 +3,7 @@ subcode: _autoload
 
 macros:
     num_threads: omp_get_num_threads()
+    omp_N: omp_get_num_threads()
     omp_id: omp_get_thread_num()
 
 subcode: omp_parallel(@num_threads)
