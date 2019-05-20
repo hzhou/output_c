@@ -18,7 +18,6 @@ subcode: c_dump_init
     $call @check_type_includes
     &call DUMP_H
         $call dump_includes
-        $call @dump_namespace
         $call dump_defines
         $call dump_enums
         $call dump_typedefs
@@ -70,14 +69,6 @@ subcode: c_dump_init
             $print "    [$l]"
 
 # ----- c++ specific ----
-subcode: dump_namespace
-    my $dump_to = $dump_out
-    $if $t_dump
-        $dump_to = $t_dump
-
-    $if $MyDef::page->{namespace}
-        push @$dump_to, "using namespace $MyDef::page->{namespace};\n"
-
 subcode: dump_classes
     $global $dump_classes
     $if $dump_classes

@@ -36,7 +36,7 @@ subcode:: on_parsecode
 subcode:: on_dumpout
     # ---- type include ----
     $foreach $type in keys %$(super:all_types)
-        $if $type=~/(?:std::)?(string|bitset|deque|list|unordered_map|map|queue|set|stack|vector)\b/
+        $if $type=~/(?:std::)?(string|bitset|deque|list|(unordered_)?(map|set)|queue|set|stack|vector)\b/
             $(super:add_include_direct)("<$1>")
     # ---- include ----
     my @tlist
@@ -76,11 +76,11 @@ subcode: dump_struct
         $i++;
         my $type = $s_hash->{$p}
         $if $type eq "function"
-            push @class_dump, "\t".$$(super:fntype){$p}.";\n";
+            push @class_dump, "    ".$$(super:fntype){$p}.";\n";
         $elif $type=~/(.+)(\[.*\])/
-            push @class_dump, "\t$1 $p$2;\n";
+            push @class_dump, "    $1 $p$2;\n";
         $else
-            push @class_dump, "\t$type $p;\n";
+            push @class_dump, "    $type $p;\n";
     # $call dump_struct_constructor
     push @class_dump, "};\n\n";
 
