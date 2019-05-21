@@ -295,11 +295,17 @@ subcode: check_exp_exponential
 
 subcode: check_exp_member
     $if $(type1) =~/^op/ && ($stack[-1] eq "." or $stack[-1] eq "->")
-        $if $(type2) !~/^atom/
-            #error
-        $token=join("", splice(@stack, -2)).$token
+        $if @stack>1
+            $if $(type2) !~/^atom/
+                #error
+            $token=join("", splice(@stack, -2)).$token
+            splice(@types, -2)
+        $else
+            $call warn, "Is this C99 struct named initialization? Missing ','..."
+            $token = $stack[0].$token
+            pop @stack
+            pop @types
         $type="atom-exp"
-        splice(@types, -2)
 
 subcode: check_exp_tuple_member
     $call exp_pop, $primary
