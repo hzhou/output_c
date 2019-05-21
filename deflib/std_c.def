@@ -80,6 +80,10 @@ subcode: clamp(v, min, max)
         $(v)=$(min)
     $elif $(v)>$(max)
         $(v)=$(max)
+
+subcode: _autoload
+    $plugin swap, min_set(update_min), max_set(update_max)
+    # how about missing_set, over_set?
 #----
 subcode: get_2d_l(i, j, ldi)
     $(export:l=$(i)*$(ldi)+$(j))

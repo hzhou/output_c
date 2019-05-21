@@ -15,7 +15,7 @@ subcode:: on_parsecode
         push @$out, $1
         return
     $elif $l=~/^\$foreach\s+(.+?)\s+in\s+(.+)/ -> $v, $list
-        $if $v=~/^\w+$/
+        $if $v=~/^&?\w+$/
             $v = "auto $v"
         return $(super:single_block)("for($v : $list){", "}", "foreach")
     # call other
@@ -36,12 +36,19 @@ subcode:: on_parsecode
 subcode:: on_dumpout
     # ---- type include ----
     $foreach $type in keys %$(super:all_types)
-        $if $type=~/(?:std::)?(string|bitset|deque|list|unordered_map|map|queue|set|stack|vector)\b/
+        $if $type=~/(?:std::)?(string|bitset|deque|list|(unordered_)?(map|set)|queue|set|stack|vector)\b/
             $(super:add_include_direct)("<$1>")
     # ---- include ----
-    $foreach $k in @$(super:include_list)
-        $if $k=~/<(stdio|stdlib|string|math|time|errno)\.h>/
-            $k = "<c$1>"
+    my @tlist
+    $foreach $k in sort {$b cmp $a} (@$(super:include_list))
+        $if $k=~/<(std(io|lib|def|int|arg)|string|math|time|type|limits|signal|errno|assert)\.h>/
+            push @tlist, "<c$1>"
+        $else
+            push @tlist, $k
+    $if $MyDef::page->{namespace}
+        push @tlist, "using namespace $MyDef::page->{namespace};"
+
+    @$(super:include_list)=@tlist
 
 #---- structs/classes -------------------------------------------------------
 subcode:: on_dumpout
@@ -53,6 +60,12 @@ subcode:: on_dumpout
 
     @$(super:struct_list)=()
 
+    $foreach %$(super:functions)
+        $if $k=~/^operator_(\w+)/
+            my %ops=(Lt=>'<')
+            $if $ops{$1}
+                $v->{name}="operator".$ops{$1}
+
 subcode: dump_struct
     # TODO: class interface
     push @class_dump, "struct $name {\n";
@@ -63,11 +76,11 @@ subcode: dump_struct
         $i++;
         my $type = $s_hash->{$p}
         $if $type eq "function"
-            push @class_dump, "\t".$$(super:fntype){$p}.";\n";
+            push @class_dump, "    ".$$(super:fntype){$p}.";\n";
         $elif $type=~/(.+)(\[.*\])/
-            push @class_dump, "\t$1 $p$2;\n";
+            push @class_dump, "    $1 $p$2;\n";
         $else
-            push @class_dump, "\t$type $p;\n";
+            push @class_dump, "    $type $p;\n";
     # $call dump_struct_constructor
     push @class_dump, "};\n\n";
 

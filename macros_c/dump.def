@@ -18,7 +18,6 @@ subcode: c_dump_init
     $call @check_type_includes
     &call DUMP_H
         $call dump_includes
-        $call @dump_namespace
         $call dump_defines
         $call dump_enums
         $call dump_typedefs
@@ -70,14 +69,6 @@ subcode: c_dump_init
             $print "    [$l]"
 
 # ----- c++ specific ----
-subcode: dump_namespace
-    my $dump_to = $dump_out
-    $if $t_dump
-        $dump_to = $t_dump
-
-    $if $MyDef::page->{namespace}
-        push @$dump_to, "using namespace $MyDef::page->{namespace};\n"
-
 subcode: dump_classes
     $global $dump_classes
     $if $dump_classes
@@ -102,7 +93,7 @@ fncode: add_include($l)
     $foreach $f in @flist
         # some header file requires feature test macro -- stupid!
         $if $f=~/^define\s+(.*)/
-            push @include_list, $f
+            push @include_list, "#define $1"
             next
 
         my $key
@@ -134,8 +125,8 @@ subcode: check_type_includes
 subcode: dump_includes
     $if @include_list
         $foreach $k in @include_list
-            $if $k=~/^define\s+(.*)/
-                push @$dump_out, "#define $1\n"
+            $if $k=~/^(using namespace|#\w+)/
+                push @$dump_out, "$k\n"
             $else
                 push @$dump_out, "#include $k\n";
         push @$dump_out, "\n";
