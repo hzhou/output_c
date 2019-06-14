@@ -90,18 +90,6 @@ subcode: _autoload
         "double complex"=>"complex",
     );
 
-    # TODO: limit to function call?
-    #-- deprecated, directly test in expression.def
-    %text_include=(
-        "printf|perror"=>"stdio",
-        "malloc"=>"stdlib",
-        "str(len|dup|cpy)|memcpy"=>"string",
-        "\\bopen\\("=>"fcntl",
-        "sin|cos|sqrt|pow"=>"math",
-        "fstat"=>"sys/stat",
-        "assert"=>"assert",
-    );
-
 fncode: infer_value_type($val)
     $val=~s/^[+-]//
     $if $val=~/^\((float|int|char|unsigned .*|.+\*)\)/

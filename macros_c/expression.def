@@ -367,6 +367,8 @@ subcode: check_exp_fcall(primary, token)
         add_include("string")
     $elif $(primary)=~/^(malloc|free)$/
         add_include("stdlib")
+    $elif $(primary)=~/^(assert)$/
+        add_include("assert")
     $else
         $if $function_autolist{$(primary)}
             $call add_list_function, $(primary)
