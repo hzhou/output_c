@@ -121,7 +121,8 @@ subcode:: parsecode_func_param_other
 subcode: parsecode_other
     $if !$l or $l=~/^\s*$/
         # NOOP
-    $elif $l=~/^\s*#/
+    $elif $l=~/^#/
+        $l='<-|'.$l
         # Preprocessor
     $elif $l=~/^\s*(for|while|if|else if)\b/
         # NOOP

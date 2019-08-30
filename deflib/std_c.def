@@ -91,6 +91,9 @@ subcode: get_2d_l(i, j, ldi)
 subcode: free(v)
     free($(v))
 
+subcode: autoflush
+    setvbuf(stdout, NULL, _IONBF, 0)
+
 ## FILE IO
 subcode: get_file_in_s(file)
     s = get_file_s($(file), NULL)
