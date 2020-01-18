@@ -16,9 +16,16 @@ subcode: c_dump_init
         push @$dump_out, "/* link: $lib_list $obj_list */\n"
 
     $call @check_type_includes
+    $(set:ns=$MyDef::page->{namespace})
+    $(set:ns_wrap=$MyDef::page->{namespace_wrap})
+    my @ns_parts
+    $if $(ns_wrap)
+        @ns_parts = split /::/, $(ns_wrap)
+
     &call DUMP_H
         $call dump_includes
         $call dump_defines
+        $call @mark_dump_h
         $call dump_enums
         $call dump_typedefs
         $call @dump_classes
@@ -35,6 +42,7 @@ subcode: c_dump_init
 
     subcode: DUMP_H
         my @dump_h
+        my $mark_dump_h
         my ($t_hfile, $t_dump, $t_template, $t_guard)
         $t_hfile = $page->{dump_h}
         $if $t_hfile
@@ -54,15 +62,31 @@ subcode: c_dump_init
             &call open_W, $t_hfile
                 $if $t_template
                     &call open_r, $t_template
-                        print Out $_
-                $if $t_guard
-                    print Out "#ifndef $t_guard\n"
-                    print Out "#define $t_guard\n\n"
-                $foreach $l in @dump_h
-                    print Out $l
-                $if $t_guard
-                    print Out "#endif /* $t_guard */\n"
+                        $if /^BLOCK\b/
+                            $foreach $l in @dump_h
+                                print Out $l
+                        $elif /^BLOCK_1/
+                            $for $i=0:$mark_dump_h
+                                print Out $dump_h[$i]
+                        $elif /^BLOCK_2/
+                            $for $i=$mark_dump_h:@dump_h
+                                print Out $dump_h[$i]
+                        $else
+                            print Out $_
+                $else
+                    $if $t_guard
+                        print Out "#ifndef $t_guard\n"
+                        print Out "#define $t_guard\n\n"
+                    $foreach $l in @dump_h
+                        print Out $l
+                    $if $t_guard
+                        print Out "#endif /* $t_guard */\n"
             $dump_out = $t_dump
+
+    subcode: mark_dump_h
+        $if $t_hfile
+            $mark_dump_h = @dump_h
+
     subcode: debug_out
         $print debug \@\$out:
         $foreach $l in @$out
@@ -125,10 +149,7 @@ subcode: check_type_includes
 subcode: dump_includes
     $if @include_list
         $foreach $k in @include_list
-            $if $k=~/^(using namespace|#\w+)/
-                push @$dump_out, "$k\n"
-            $else
-                push @$dump_out, "#include $k\n";
+            push @$dump_out, "#include $k\n";
         push @$dump_out, "\n";
 
 # ---- Defines ----

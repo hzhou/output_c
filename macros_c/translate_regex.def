@@ -219,7 +219,6 @@ subcode: check_regex_Any
                 $any=$rlist->[$i]
             $call merge_seq_post
             BLOCK
-
         $else
             die "Lex Regex .* not supported\n"
 

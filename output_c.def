@@ -89,6 +89,9 @@ page: output_c, output_main
                 push @t, "DUMP_STUB $1"
         $if @t
             unshift @$out, @t
+        $(for:meta_exit,global_exit,frame_exit)
+            $if !$page->{has_stub_$1}
+                push @$out, "DUMP_STUB $1"
         $call c_dump_init
 
         # -------------------------------
@@ -116,7 +119,11 @@ page: output_c, output_main
                             $func->{declare}="static ".$func->{declare}
                         $elif $function_autolist{$name} eq "skip_declare"
                             $func->{skip_declare} = 1
+                    $if $func->{decl_append}
+                        $func->{declare} .=$func->{decl_append}
                     $call @process_function_cpp
+
+            # -- similar to -finstrument-functions but totaly customary
             subcode: check_func_hook
                 my $func_hook
                 $if $MyDef::def->{codes}->{_FUNC_HOOK}

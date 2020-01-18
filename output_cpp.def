@@ -45,8 +45,6 @@ subcode:: on_dumpout
             push @tlist, "<c$1>"
         $else
             push @tlist, $k
-    $if $MyDef::page->{namespace}
-        push @tlist, "using namespace $MyDef::page->{namespace};"
 
     @$(super:include_list)=@tlist
 
