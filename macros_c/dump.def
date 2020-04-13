@@ -149,7 +149,10 @@ subcode: check_type_includes
 subcode: dump_includes
     $if @include_list
         $foreach $k in @include_list
-            push @$dump_out, "#include $k\n";
+            $if $k=~/^#define/
+                push @$dump_out, "$k\n"
+            $else
+                push @$dump_out, "#include $k\n";
         push @$dump_out, "\n";
 
 # ---- Defines ----

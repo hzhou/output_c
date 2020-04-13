@@ -81,7 +81,12 @@ subcode: parsecode_func
     $elif $func eq "uselib"
         my @flist=split /,\s*/, $param;
         $foreach $f in @flist
-            $if $f=~/^\w+$/
+            $if $f=~/^(\w+_SOURCE|POSIX)$/ -> $t
+                $if $t eq "POSIX"
+                    unshift @include_list, "#define _POSIX_C_SOURCE 200809L"
+                $else
+                    unshift @include_list, "#define $t"
+            $elif $f=~/^\w+$/
                 add_object("lib$f")
                 $if $lib_include{$f}
                     add_include($lib_include{$f})
