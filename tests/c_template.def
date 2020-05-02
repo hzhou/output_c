@@ -1,9 +1,11 @@
+run: t
+
 page: t, from template/main.c
     module: c
 
     // Where does this go? (end of framecode)
 
-page: t2, from template/main.c
+page: t2, from template/main2.c
     module: c
 
     // Where does this go? (end of framecode)
@@ -14,6 +16,9 @@ subcode: _autoload
 
 subcode: custom
     # if $in_function main, $has_main==1, no F2 won't be static
+    // notice the difference between t.c and t2.c
+    DUMP_STUB M_pre
+
     $in_function M
         $print Hello from custom code
         $global f_x
