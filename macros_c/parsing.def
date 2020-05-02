@@ -131,7 +131,7 @@ subcode: parsecode_other
         # Preprocessor
     $elif $l=~/^\s*(for|while|if|else if)\b/
         # NOOP
-    $elif $l=~/[:\(\{;,]\s*$/
+    $elif $l=~/[:\(\{\\;,]\s*$/
         # NOOP
     $elif $l=~/^\s*[)\]}].*$/
         # NOOP
