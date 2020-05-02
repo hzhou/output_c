@@ -1,4 +1,4 @@
-run: t
+run: t3
 
 page: t, from template/main.c
     module: c
@@ -9,6 +9,16 @@ page: t2, from template/main2.c
     module: c
 
     // Where does this go? (end of framecode)
+
+page: t3, from template/main3.c
+    module: c
+
+    // disable DUMP_STUB global_init
+    SINK_STUB global_init
+
+    float f_x;
+    $list F1, F2
+    NOOP POST_MAIN
 
 #----------------------------------------------- 
 subcode: _autoload
