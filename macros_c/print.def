@@ -64,6 +64,15 @@ fncode: debug_dump($param, $prefix, $out)
             # %8.2e:f_val
             push @a2, $2
             push @a1, "$2=$1"
+        $elif $v=~/^(\d+):(%.*):(.*)/
+            $for $i=0:$1
+                my ($h, $t)
+                $if $i==0
+                    $h = "$3=["
+                $if $i==$1-1
+                    $t = "]"
+                push @a1, "$h$2$t"
+                push @a2, "$3\[$i\]"
         $elif $v=~/^(\w+):(.*)/
             # green:f_val
             my ($color,$v)=($1,$2)
