@@ -1,6 +1,5 @@
 page: test, basic_frame
     module: c
 
-    $global char* S[3]={"a","b","c"}
-    $print "%s-%s-%s", S[0],S[1],S[2]
-
+    $call get_file_in_s, "test.def"
+    $dump s

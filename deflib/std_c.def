@@ -99,6 +99,7 @@ subcode: get_file_in_s(file)
     s = get_file_s($(file), NULL)
 
 fncode: get_file_s(s_file, pn_size)
+    $autolist skip
     &call2 try_open_r, s_file
         $my n, s
         $call get_size, n
@@ -322,6 +323,7 @@ subcode: numcmp(na, nb)
 
 #---- scanf ------------------------------------ 
 fncode: get_s_int(s, int * p_n)
+    $autolist skip
     $return_type char *
     n=0
     $while *s>='0' && *s<='9'

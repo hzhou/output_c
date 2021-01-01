@@ -29,6 +29,12 @@ subcode:: parsecode_func_other
                 $elif $print_type
                     MyDef::compileutil::call_sub("$print_type, $fmt")
         return
+    $elif $func eq "warn" or $func eq "die"
+        my ($n, $fmt)=fmt_string($param, 1)
+        push @$out, "fprintf(stderr, $fmt);"
+        $if $func eq "die"
+            push @$out, "exit(1);"
+        return
 
     subcode: print_1
         $if $n==0 and $fmt=~/^"(.*)\\n"/
