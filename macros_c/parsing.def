@@ -131,6 +131,8 @@ subcode: parsecode_other
     $elif $l=~/^#/
         $l='<-|'.$l
         # Preprocessor
+    $elif $l=~/^(NEWLINE|INDENT|DEDENT)/
+        # dump directives
     $elif $l=~/^\s*(for|while|if|else if)\b/
         # NOOP
     $elif $l=~/[:\(\{\\;,]\s*$/

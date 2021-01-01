@@ -1,3 +1,4 @@
+module: c
 page: test, basic_frame
     $local i, j, k, l, m, n
     $local b, c, s
@@ -21,6 +22,7 @@ typedef int bool;
 #define true 1
 #define false 0
 
+struct list;
 struct list {
     int n;
     char s[10];
@@ -30,7 +32,8 @@ struct list {
 char* strs[] = {"test", "test"};
 char s[10];
 
-int main(int argc, char** argv){
+int main(int argc, char** argv)
+{
     int i;
     int j;
     int k;
@@ -39,16 +42,16 @@ int main(int argc, char** argv){
     int n;
     bool b;
     unsigned char c;
-    char* s;
-    int* pn_temp;
+    char *s;
+    int *pn_temp;
     int tn_temp;
-    int** ppn_temp;
-    int*** pppn_temp;
+    int **ppn_temp;
+    int ***pppn_temp;
     int t_id;
     int atom_id;
     int my_arbitary_id;
     int i_id;
-    int* tp_id;
+    int *tp_id;
     return 0;
 }
 

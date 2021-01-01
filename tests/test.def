@@ -1,5 +1,10 @@
 page: test, basic_frame
     module: c
 
-    $call get_file_in_s, "test.def"
+    $local s
+
+
+
+
+    s = "Hello World!"
     $dump s
