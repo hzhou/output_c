@@ -9,7 +9,7 @@ subcode: process_function_cpp
             $t=~s/^.*::/$C/
             $func->{openblock}->[0]=~s/^.*::/$C\:\:$C/
             $if $func->{inherit}
-                $func->{openblock}->[0]=~s/({?)$/: $func->{inherit} $1/
+                $func->{openblock}->[0]=~s/(\{?)$/: $func->{inherit} $1/
         $else
             $t=~s/$C\:\://
         push @$block, "$t;"

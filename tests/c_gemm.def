@@ -12,7 +12,7 @@ page: test, basic_frame
     $call start_clock
     $(if:0)
         $sumcode C[i,j]=A[i,k]*B[k,j]
-    $(elif:1)
+    $(elif:0)
         $call matrix_mult, A, B, C
     $(else)
         $call gemm
