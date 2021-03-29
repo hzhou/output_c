@@ -12,9 +12,6 @@ subcode: c_dump_init
 
     my $dump_out=\@dump_init
 
-    $if %objects
-        push @$dump_out, "/* link: $lib_list $obj_list */\n"
-
     $call @check_type_includes
     $(set:ns=$MyDef::page->{namespace})
     $(set:ns_wrap=$MyDef::page->{namespace_wrap})
