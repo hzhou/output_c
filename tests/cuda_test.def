@@ -1,0 +1,9 @@
+page: test.cu
+    module: c
+
+    $print Hello world
+    $list add
+
+fncode: add(n, pf_x, pf_y): __global__ void
+    $for i=0:n
+        pf_y[i] += pf_x[i]

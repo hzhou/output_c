@@ -23,7 +23,11 @@ subcode: function_open_c_style
         $func->{declare}=$declare
     # STYLE: T f(){ or ...
     # push @$open, $declare."{"
-    push @$open, $declare
+    $if $declare=~/^(__global__)\s+(.*)/
+        push @$open, $1
+        push @$open, $2
+    $else
+        push @$open, $declare
     push @$open, "{"
 
 subcode: function_close_c_style
