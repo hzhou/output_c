@@ -4,8 +4,7 @@ subcode: _autoload
     $register_prefix(mutex) pthread_mutex_t
 
 subcode: run_threads(num_threads)
-    $function thread_fn(void* p)
-        $return_type void*
+    $function thread_fn(void* p): void *
         $local int thread_id = (intptr_t)p
         BLOCK
         return NULL
@@ -20,8 +19,7 @@ subcode: run_threads(num_threads)
 
 # ----------------------
 subcode: spawn_thread(sub_child)
-    $function thread_fn(void* p)
-        $return_type void*
+    $function thread_fn(void* p): void *
         $call $(sub_child)
         return NULL
     # --------------

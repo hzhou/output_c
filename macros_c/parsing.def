@@ -132,8 +132,9 @@ subcode: parsecode_other
     $if !$l or $l=~/^\s*$/
         # NOOP
     $elif $l=~/^#/
-        $l='<-|'.$l
         # Preprocessor
+        $if $l=~/^#(if|else|endif|define)/
+            $l='<-|'.$l
     $elif $l=~/^(NEWLINE|INDENT|DEDENT)/
         # dump directives
     $elif $l=~/^\s*(for|while|if|else if)\b/

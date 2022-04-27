@@ -221,16 +221,15 @@ subcode: hash_resize(type)
             free(tp_val)
 
 #---------------------------------------- 
-fncode: f_strhash_lookup(void* hash, pc_key, int keylen)
+fncode: f_strhash_lookup(void* hash, pc_key, int keylen): int
     $if keylen==0
         keylen=strlen((char*)pc_key)
     $call hash_lookup, str
 
-fncode: f_inthash_lookup(void * hash, int key)
+fncode: f_inthash_lookup(void * hash, int key): int
     $call hash_lookup, int
 
 subcode: hash_lookup(type)
-    $return_type int
     $local struct $(type)hash * h = hash
     $if h->n_size==0
         return 0
