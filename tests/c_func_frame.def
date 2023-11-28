@@ -1,0 +1,23 @@
+page: test
+    T1()
+    T2()
+
+fncode: T1
+    frame: A
+    $print in T1 - frame A
+
+fncode: T2
+    frame: B
+    $print in T2 - frame: B
+
+subcode: A_pre
+    $print A_pre
+
+subcode: A_post
+    $print A_post
+
+subcode: B_pre
+    $print B_pre
+
+subcode: B_post
+    $print B_post
