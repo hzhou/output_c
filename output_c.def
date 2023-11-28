@@ -116,7 +116,8 @@ page: output_c, output_main
                     $call @func_hook
                     $if !$has_main
                         $if $function_autolist{$name} eq "static"
-                            $func->{declare}="static ".$func->{declare}
+                            $if $func->{return_type} !~/\bstatic\b/
+                                $func->{declare}="static ".$func->{declare}
                         $elif $function_autolist{$name} eq "skip_declare"
                             $func->{skip_declare} = 1
                     $if $func->{decl_append}

@@ -103,6 +103,7 @@ subcode:: on_init_page
     @include_list=()
     %includes=()
     %objects=()
+    @object_list = ()
 
 fncode: add_object($l)
     $if !$objects{$l}
