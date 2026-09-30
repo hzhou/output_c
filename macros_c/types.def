@@ -215,7 +215,7 @@ fncode: get_var_fmt($v, $warn)
             return '%" PRIu64 "'
         $else
             return '%" PRId64 "'
-    $elif $type=~/(int|long|u?int\d+_t)\s*$/
+    $elif $type=~/\b(int|long|u?int\d+_t)\s*$/
         return "\%d";
     $elif $var_fmts{default}
         $call return_fmts $var_fmts{default}
