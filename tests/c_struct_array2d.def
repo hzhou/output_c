@@ -1,0 +1,15 @@
+page: test, basic_frame
+    $define(N) 4
+    $define(M) 8
+    $struct(req) int op, char cvar_val[N][M], int b[3], double *p, int c
+    $struct(cube) int v[2][3][4]
+
+    $local struct req r
+    $local struct cube q
+    r.op = 1
+    r.b[2] = 5
+    r.p = NULL
+    r.c = 7
+    strcpy(r.cvar_val[N-1], "abc")
+    q.v[1][2][3] = 42
+    $print "%s, cube: %d, size %d, sum %d", r.cvar_val[N-1], q.v[1][2][3], (int) sizeof(r.cvar_val), r.op+r.b[2]+r.c
