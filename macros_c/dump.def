@@ -434,7 +434,7 @@ fncode: dump_struct_members($dump_out, $st, $indent)
                 push @$dump_out, "$sp};\n"
             $else
                 push @$dump_out, "$sp} $p;\n"
-        $elif $type=~/(.*)(\[.*\])/
+        $elif $type=~/^([^\[]*)(\[.*\])/
             push @$dump_out, "$sp$1 $p$2;\n"
         $else
             push @$dump_out, "$sp$type $p;\n"

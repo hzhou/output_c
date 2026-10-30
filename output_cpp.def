@@ -75,7 +75,7 @@ subcode: dump_struct
         my $type = $s_hash->{$p}
         $if $type eq "function"
             push @class_dump, "    ".$$(super:fntype){$p}.";\n";
-        $elif $type=~/(.+)(\[.*\])/
+        $elif $type=~/^([^\[]+)(\[.*\])/
             push @class_dump, "    $1 $p$2;\n";
         $else
             push @class_dump, "    $type $p;\n";
