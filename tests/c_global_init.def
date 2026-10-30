@@ -1,7 +1,6 @@
 page: test
     module: c
 
-    $list f_sum, f_mul
     printf("%s %d %s %d\n", sa.name, sa.x, sb.name, sb.x)
     printf("%s %d %s %d\n", sc.name, sc.x, sd.name, sd.x)
     printf("%s %d %d %d\n", op_sum.name, op_sum.pt.x, op_sum.pt.y, op_sum.call(op_sum.pt.x, op_sum.pt.y))

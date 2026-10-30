@@ -172,6 +172,8 @@ fncode: declare_struct($name, $param, $is_union)
                 my $v = parse_var($p)
                 $m_name=$v->{name}
                 $type=$v->{type}
+                $if $v->{attr}=~/\bconst\b/
+                    $type="const $type"
                 $if $v->{array}
                     $type=~s/\s*\*$//
                     $type.=$v->{array}

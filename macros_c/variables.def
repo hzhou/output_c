@@ -104,8 +104,70 @@ subcode:: parsecode_func_other
                 $class_names{$t}=1
         return
 
-#---------------------------------------- 
-#- Scopes:   
+#---- C declaration line ------------------
+#- split at top-level commas (and ;), outside (), [], {}, literals and
+#-     the <> of a template type; a bare name after a typed declaration
+#-     takes its base type as in C: int *p, q, r[2] = { 1, 2 }
+#- ref: macros_output/variables.def split_var_line
+fncode: split_c_var_line($l)
+    my @plist
+    $foreach $group in split_c_top_level($l, ';')
+        my @tlist = split_c_top_level($group, ',')
+        $if @tlist>1 and $tlist[-1]=~/^(\w+)\s*:(?!:)\s*(.+)$/
+            # a, b, c : int
+            my $type = $2
+            my $n = @tlist
+            $if (grep {/^\w+$/} @tlist[0..$n-2]) == $n-1
+                $tlist[-1]=$1
+                $foreach $w in @tlist
+                    push @plist, "$w:$type"
+                next
+        my $base
+        $foreach $t in @tlist
+            $if defined $base and $t=~/^\**\s*\w+\s*(\[|=|$)/
+                push @plist, "$base $t"
+            $else
+                push @plist, $t
+                $base = c_base_type($t)
+    return @plist
+
+fncode: c_base_type($t)
+    $t=~s/\s*=.*//s
+    $t=~s/\s*\[.*\]$//
+    $if $t=~/^\s*\w+\s*:/
+        return undef
+    $elif $t=~/^(.*?[\w>])[\s*]+\w+$/
+        return $1
+    return undef
+
+fncode: split_c_top_level($l, $sep)
+    my @plist
+    my ($t, $level, $angle, $has_init)=("", 0, 0, 0)
+    $while $l=~/\G("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|->|[^"'()\[\]{}<>=,;]+|.)/gcs
+        my $s=$1
+        $if $s eq $sep and $level==0 and $angle==0
+            push @plist, $t
+            ($t, $has_init)=("", 0)
+            next
+        $if $s=~/^[(\[{]$/
+            $level++
+        $elif $s=~/^[)\]}]$/
+            $level--
+        $elif $s eq '=' and $level==0
+            $has_init=1
+        $elif $s eq '<' and !$has_init
+            $angle++
+        $elif $s eq '>' and !$has_init and $angle>0
+            $angle--
+        $t.=$s
+    push @plist, $t
+    $foreach $t in @plist
+        $t=~s/^\s+//
+        $t=~s/\s+$//
+    return grep {$_ ne ""} @plist
+
+#----------------------------------------
+#- Scopes:
 #-     global/external, function, block
 #- At each scope level:
 #-     _list: list of, names
@@ -158,6 +220,7 @@ fncode: parse_var($name, $type, $value)
         # split at the first =, e.g. { .name = "a", .x = 1 }
         $if $name=~/^([^=]*\S)\s*=\s*(.*)/
             ($name, $init)=($1, $2)
+            list_function_calls($init)
             $call value_from_file
             $if !$value
                 $value=$init

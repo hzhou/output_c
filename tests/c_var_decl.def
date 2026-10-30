@@ -1,0 +1,42 @@
+page: test
+    module: c
+
+    # literals and operators in initializers are kept as written
+    $my int k = 1
+    $my int eq = k == 1, int ne = k != 2
+    $my const char *lit = "a=b, c"
+    $my char ch = '='
+    # a comma inside a nested call or subscript does not split
+    $my struct pair *p = &g_pair
+    $my int v = add(p->a[k], p->a[0])
+    # brace initializers in a combined declaration
+    $my int arr[2] = { 1, 2 }, int m = 3
+    # a bare name takes the base type of the declaration before it
+    $my int a1, b1, *pa = &a1, arr2[2] = { 5, 6 }
+    a1 = 7
+    b1 = 8
+    # functions called only from an initializer, a ; line or a C-form $for
+    $my int y = f_init(k)
+    m += f_semi(k);
+    $for int i = f_for(0); i < 1; i++
+        k++
+    printf("%d %d %d %s %c %d\n", k, eq, ne, lit, ch, v)
+    printf("%d %d %d %d %d %d %d\n", arr[1], m, *pa, b1, arr2[1], y, g_b)
+    printf("%s %d\n", g_st.name, g_st.x)
+
+fncode: add(int a, int b): int
+    return a + b
+fncode: f_init(int a): int
+    return a + 10
+fncode: f_semi(int a): int
+    return a + 20
+fncode: f_for(int a): int
+    return a
+
+subcode: _autoload
+    $include stdio
+    $struct(pair) int a[2]
+    $struct(st) const char *name, int x
+    $global struct pair g_pair = { { 4, 5 } }
+    $global int g_a = 1, g_b = 2
+    $global const struct st g_st = { .name = "st", .x = 9 }

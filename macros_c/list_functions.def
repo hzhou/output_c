@@ -68,3 +68,11 @@ fncode: inject_function($name, $params, $source)
         $list_function_hash{$name}++
 
 
+
+#- text that is not parsed as an expression: initializers, lines ending
+#-     in ;, the C-form $for header. List the functions it names.
+fncode: list_function_calls($t)
+    $t=~s/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'//g
+    $while $t=~/(\.|->)?\s*\b(\w+)\b/g
+        $if !$1 and $function_autolist{$2}
+            $call add_list_function, $2

@@ -37,6 +37,7 @@ page: output_c, output_main
             $foreach $f in @tlist
                 $call load_autodecl, $f
         $call @autoload_hack
+        $custom_split_add_vars = \&split_c_var_line
 
         $call autolist_functions, static
         $if $page->{autolist} eq "page"
