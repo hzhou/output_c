@@ -1,0 +1,35 @@
+page: test
+    module: c
+
+    $list f_sum, f_mul
+    printf("%s %d %s %d\n", sa.name, sa.x, sb.name, sb.x)
+    printf("%s %d %s %d\n", sc.name, sc.x, sd.name, sd.x)
+    printf("%s %d %d %d\n", op_sum.name, op_sum.pt.x, op_sum.pt.y, op_sum.call(op_sum.pt.x, op_sum.pt.y))
+    printf("%s %d %d %d\n", op_mul.name, op_mul.pt.x, op_mul.pt.y, op_mul.call(op_mul.pt.x, op_mul.pt.y))
+    printf("%d %d\n", a, b)
+
+fncode: f_sum(int a, int b): int
+    return a + b
+
+fncode: f_mul(int a, int b): int
+    return a * b
+
+subcode: _autoload
+    $include stdio
+    $struct(st) const char *name, int x
+    $struct(point) int x, int y
+    $struct(op) const char *name, struct point pt, int (*call)(int, int)
+
+    # designated initializers
+    $global const struct st sa = { .name = "a", .x = 1 }
+    $global const struct st sb = { .name = "b", .x = 2 }
+    # positional initializers
+    $global const struct st sc = { "c", 3 }
+    $global const struct st sd = { "d", 4 }
+    # nested braces and a function-pointer member
+    $global const struct op op_sum = { .name = "sum", .pt = { .x = 1, .y = 2 }, .call = f_sum }
+    $global const struct op op_mul = { .name = "mul", .pt = { .x = 3, .y = 4 }, .call = f_mul }
+    # the declared name decides duplicates
+    $global int a = 5
+    $global int a
+    $global int b = 6
