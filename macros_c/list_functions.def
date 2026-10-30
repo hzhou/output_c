@@ -69,8 +69,8 @@ fncode: inject_function($name, $params, $source)
 
 
 
-#- text that is not parsed as an expression: initializers, lines ending
-#-     in ;, the C-form $for header. List the functions it names.
+#- text that is not parsed as an expression: initializers and the
+#-     C-form $for header. List the functions it names.
 fncode: list_function_calls($t)
     $t=~s/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'//g
     $while $t=~/(\.|->)?\s*\b(\w+)\b/g

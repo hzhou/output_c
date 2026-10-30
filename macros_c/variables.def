@@ -106,39 +106,34 @@ subcode:: parsecode_func_other
 
 #---- C declaration line ------------------
 #- split at top-level commas (and ;), outside (), [], {}, literals and
-#-     the <> of a template type; a bare name after a typed declaration
-#-     takes its base type as in C: int *p, q, r[2] = { 1, 2 }
+#-     the <> of a template type. A bare name is typed by its name; the
+#-     type is distributed only as in split_var_line: int a, b; or a, b: int
 #- ref: macros_output/variables.def split_var_line
 fncode: split_c_var_line($l)
     my @plist
+    my $distribute = ($l=~/;/ or $l=~/\w+\s*:[^:]/)
     $foreach $group in split_c_top_level($l, ';')
         my @tlist = split_c_top_level($group, ',')
-        $if @tlist>1 and $tlist[-1]=~/^(\w+)\s*:(?!:)\s*(.+)$/
-            # a, b, c : int
-            my $type = $2
-            my $n = @tlist
-            $if (grep {/^\w+$/} @tlist[0..$n-2]) == $n-1
-                $tlist[-1]=$1
-                $foreach $w in @tlist
-                    push @plist, "$w:$type"
-                next
-        my $base
-        $foreach $t in @tlist
-            $if defined $base and $t=~/^\**\s*\w+\s*(\[|=|$)/
-                push @plist, "$base $t"
-            $else
-                push @plist, $t
-                $base = c_base_type($t)
+        $if $distribute and @tlist>1
+            $call distribute_type
+        $else
+            push @plist, @tlist
     return @plist
 
-fncode: c_base_type($t)
-    $t=~s/\s*=.*//s
-    $t=~s/\s*\[.*\]$//
-    $if $t=~/^\s*\w+\s*:/
-        return undef
-    $elif $t=~/^(.*?[\w>])[\s*]+\w+$/
-        return $1
-    return undef
+    subcode: distribute_type
+        my @idx = grep {$tlist[$_]!~/^\w+$/} 0..$#tlist
+        $if @idx==1 and $tlist[0]=~/^(.*\S)\s+(\w+)$/
+            # int a, b, c;
+            my $type = $1
+            $tlist[0]=$2
+            push @plist, map {"$type $_"} @tlist
+        $elif @idx==1 and $tlist[-1]=~/^(\w+)\s*:(?!:)\s*(.+)$/
+            # a, b, c : int
+            my $type = $2
+            $tlist[-1]=$1
+            push @plist, map {"$_:$type"} @tlist
+        $else
+            push @plist, @tlist
 
 fncode: split_c_top_level($l, $sep)
     my @plist

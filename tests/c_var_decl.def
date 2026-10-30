@@ -11,25 +11,24 @@ page: test
     $my int v = add(p->a[k], p->a[0])
     # brace initializers in a combined declaration
     $my int arr[2] = { 1, 2 }, int m = 3
-    # a bare name takes the base type of the declaration before it
-    $my int a1, b1, *pa = &a1, arr2[2] = { 5, 6 }
+    # one type per declaration, or distributed with a, b: int
+    $my int a1, int *pa = &a1, int arr2[2] = { 5, 6 }
+    $my b1, c1: int
     a1 = 7
     b1 = 8
-    # functions called only from an initializer, a ; line or a C-form $for
+    c1 = 9
+    # functions called only from an initializer or a C-form $for
     $my int y = f_init(k)
-    m += f_semi(k);
     $for int i = f_for(0); i < 1; i++
         k++
     printf("%d %d %d %s %c %d\n", k, eq, ne, lit, ch, v)
-    printf("%d %d %d %d %d %d %d\n", arr[1], m, *pa, b1, arr2[1], y, g_b)
+    printf("%d %d %d %d %d %d %d %d\n", arr[1], m, *pa, b1, c1, arr2[1], y, g_b)
     printf("%s %d\n", g_st.name, g_st.x)
 
 fncode: add(int a, int b): int
     return a + b
 fncode: f_init(int a): int
     return a + 10
-fncode: f_semi(int a): int
-    return a + 20
 fncode: f_for(int a): int
     return a
 

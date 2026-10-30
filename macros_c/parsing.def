@@ -139,9 +139,7 @@ subcode: parsecode_other
         # dump directives
     $elif $l=~/^\s*(for|while|if|else if)\b/
         # NOOP
-    $elif $l=~/;\s*$/
-        list_function_calls($l)
-    $elif $l=~/[:\(\{\\,]\s*$/
+    $elif $l=~/[:\(\{\\;,]\s*$/
         # NOOP
     $elif $l=~/^\s*[)\]}].*$/
         # NOOP
